@@ -23,9 +23,7 @@ export function HeroSection() {
             
             <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 animate-fade-up" style={{
             animationDelay: "0.1s"
-          }}>A Maior Plataforma de
-testes de desenvolvimento
-pessoal do Brasil<span className="block text-accent">testes de desenvolvimento</span>
+          }}>A Maior Plataforma de <span className="block text-accent">testes de desenvolvimento</span>
               pessoal do Brasil
             </h1>
             
