@@ -27,7 +27,7 @@ export function CTASection() {
 
           <p className="text-primary-foreground/80 text-lg mb-8 max-w-xl mx-auto">
             Faça seu primeiro teste gratuitamente e receba um relatório completo 
-            gerado por inteligência artificial.
+            com análises profundas e recomendações personalizadas.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

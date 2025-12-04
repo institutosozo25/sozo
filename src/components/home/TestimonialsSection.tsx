@@ -5,7 +5,7 @@ const testimonials = [
     name: "Maria Silva",
     role: "Psicóloga Clínica",
     image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face",
-    content: "Os relatórios gerados por IA são incríveis! Economizo horas de trabalho e meus pacientes adoram a profundidade das análises.",
+    content: "Os relatórios são incríveis! Economizo horas de trabalho e meus pacientes adoram a profundidade das análises.",
     rating: 5,
   },
   {
