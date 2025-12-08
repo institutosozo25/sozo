@@ -140,7 +140,7 @@ export default function TesteDetalhe() {
               </div>
               <div className="flex items-center gap-2 text-primary-foreground">
                 <Sparkles className="w-5 h-5" />
-                <span>Relatório por IA</span>
+                <span>Relatório Completo</span>
               </div>
             </div>
 
@@ -213,7 +213,7 @@ export default function TesteDetalhe() {
                   </div>
                   <div>
                     <h3 className="font-heading font-bold text-foreground">Prévia do Relatório</h3>
-                    <p className="text-muted-foreground text-sm">Gerado por IA</p>
+                    <p className="text-muted-foreground text-sm">Relatório Completo</p>
                   </div>
                 </div>
                 

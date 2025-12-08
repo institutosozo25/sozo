@@ -13,7 +13,7 @@ const Index = () => {
     <>
       <Helmet>
         <title>Instituto Plenitude Sozo | Marketplace de Testes de Desenvolvimento Pessoal</title>
-        <meta name="description" content="O maior marketplace de testes de desenvolvimento pessoal do Brasil. Testes DISC, Inteligência Emocional, Temperamento e muito mais com relatórios gerados por IA." />
+        <meta name="description" content="O maior marketplace de testes de desenvolvimento pessoal do Brasil. Testes DISC, Inteligência Emocional, Temperamento e muito mais com relatórios profissionais completos." />
       </Helmet>
       <div className="min-h-screen">
         <Header />
