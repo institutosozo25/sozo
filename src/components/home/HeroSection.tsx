@@ -18,7 +18,7 @@ export function HeroSection() {
           <div className="text-primary-foreground">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-foreground/10 border border-primary-foreground/20 mb-6 animate-fade-up">
               <Sparkles className="w-4 h-4 text-accent" />
-              <span className="text-sm font-medium">Relatórios gerados por IA</span>
+              <span className="text-sm font-medium">Relatórios Profissionais Completos</span>
             </div>
             
             <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 animate-fade-up" style={{

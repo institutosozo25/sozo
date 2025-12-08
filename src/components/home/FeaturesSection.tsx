@@ -9,8 +9,8 @@ const features = [
   },
   {
     icon: Sparkles,
-    title: "Relatórios por IA",
-    description: "Relatórios detalhados gerados por inteligência artificial com insights personalizados.",
+    title: "Relatórios Completos",
+    description: "Relatórios detalhados com análises profundas e insights personalizados.",
     color: "bg-accent/10 text-accent",
   },
   {

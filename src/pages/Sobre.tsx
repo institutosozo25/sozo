@@ -51,8 +51,8 @@ export default function Sobre() {
                 as áreas da vida - emocional, comportamental, profissional e espiritual.
               </p>
               <p>
-                Com mais de 50 testes cientificamente validados e relatórios gerados por 
-                inteligência artificial, oferecemos as ferramentas mais avançadas para 
+                Com mais de 50 testes cientificamente validados e relatórios profissionais 
+                completos, oferecemos as ferramentas mais avançadas para 
                 autoconhecimento disponíveis no mercado.
               </p>
             </div>
