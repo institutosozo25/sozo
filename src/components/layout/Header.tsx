@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User, Building2, Briefcase, LogIn } from "lucide-react";
+import { Menu, X, LogIn, LogOut, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 const navigation = [
   { name: "Início", href: "/" },
@@ -16,6 +17,7 @@ const navigation = [
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { user, isAdmin, signOut } = useAuth();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
@@ -52,15 +54,34 @@ export function Header() {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-3">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/login">
-                <LogIn className="w-4 h-4 mr-2" />
-                Entrar
-              </Link>
-            </Button>
-            <Button variant="default" size="sm" asChild>
-              <Link to="/cadastro">Começar Agora</Link>
-            </Button>
+            {user ? (
+              <>
+                {isAdmin && (
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/admin">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Admin
+                    </Link>
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={() => signOut()}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sair
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/auth">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Entrar
+                  </Link>
+                </Button>
+                <Button variant="default" size="sm" asChild>
+                  <Link to="/auth">Começar Agora</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -92,15 +113,34 @@ export function Header() {
                 </Link>
               ))}
               <div className="flex flex-col gap-2 pt-4 mt-2 border-t border-border">
-                <Button variant="outline" asChild>
-                  <Link to="/login" onClick={() => setIsOpen(false)}>
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Entrar
-                  </Link>
-                </Button>
-                <Button variant="default" asChild>
-                  <Link to="/cadastro" onClick={() => setIsOpen(false)}>Começar Agora</Link>
-                </Button>
+                {user ? (
+                  <>
+                    {isAdmin && (
+                      <Button variant="outline" asChild>
+                        <Link to="/admin" onClick={() => setIsOpen(false)}>
+                          <Settings className="w-4 h-4 mr-2" />
+                          Admin
+                        </Link>
+                      </Button>
+                    )}
+                    <Button variant="outline" onClick={() => { signOut(); setIsOpen(false); }}>
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sair
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="outline" asChild>
+                      <Link to="/auth" onClick={() => setIsOpen(false)}>
+                        <LogIn className="w-4 h-4 mr-2" />
+                        Entrar
+                      </Link>
+                    </Button>
+                    <Button variant="default" asChild>
+                      <Link to="/auth" onClick={() => setIsOpen(false)}>Começar Agora</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>

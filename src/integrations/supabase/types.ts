@@ -14,16 +14,356 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      answer_options: {
+        Row: {
+          created_at: string
+          dimension: string | null
+          id: string
+          option_order: number
+          option_text: string
+          question_id: string
+          weight: number | null
+        }
+        Insert: {
+          created_at?: string
+          dimension?: string | null
+          id?: string
+          option_order: number
+          option_text: string
+          question_id: string
+          weight?: number | null
+        }
+        Update: {
+          created_at?: string
+          dimension?: string | null
+          id?: string
+          option_order?: number
+          option_text?: string
+          question_id?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "answer_options_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      generated_reports: {
+        Row: {
+          created_at: string
+          id: string
+          report_content: string | null
+          scores: Json | null
+          submission_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          report_content?: string | null
+          scores?: Json | null
+          submission_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          report_content?: string | null
+          scores?: Json | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_reports_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "test_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      questions: {
+        Row: {
+          created_at: string
+          id: string
+          question_order: number
+          question_text: string
+          question_type: string | null
+          test_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          question_order: number
+          question_text: string
+          question_type?: string | null
+          test_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          question_order?: number
+          question_text?: string
+          question_type?: string | null
+          test_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_templates: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          output_format: string | null
+          system_prompt: string | null
+          template_name: string
+          test_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          output_format?: string | null
+          system_prompt?: string | null
+          template_name: string
+          test_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          output_format?: string | null
+          system_prompt?: string | null
+          template_name?: string
+          test_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_templates_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submission_answers: {
+        Row: {
+          answer_option_id: string | null
+          created_at: string
+          id: string
+          question_id: string | null
+          submission_id: string
+        }
+        Insert: {
+          answer_option_id?: string | null
+          created_at?: string
+          id?: string
+          question_id?: string | null
+          submission_id: string
+        }
+        Update: {
+          answer_option_id?: string | null
+          created_at?: string
+          id?: string
+          question_id?: string | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submission_answers_answer_option_id_fkey"
+            columns: ["answer_option_id"]
+            isOneToOne: false
+            referencedRelation: "answer_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submission_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submission_answers_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "test_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      test_submissions: {
+        Row: {
+          completed_at: string | null
+          id: string
+          report_generated_at: string | null
+          respondent_email: string
+          respondent_name: string
+          started_at: string
+          status: string | null
+          test_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          report_generated_at?: string | null
+          respondent_email: string
+          respondent_name: string
+          started_at?: string
+          status?: string | null
+          test_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          report_generated_at?: string | null
+          respondent_email?: string
+          respondent_name?: string
+          started_at?: string
+          status?: string | null
+          test_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_submissions_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tests: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          gradient: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          long_description: string | null
+          price: number | null
+          slug: string
+          subtitle: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          gradient?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          long_description?: string | null
+          price?: number | null
+          slug: string
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          gradient?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          long_description?: string | null
+          price?: number | null
+          slug?: string
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "professional" | "company" | "reseller" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +490,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "professional", "company", "reseller", "user"],
+    },
   },
 } as const
