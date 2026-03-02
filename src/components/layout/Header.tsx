@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const navigation = [
   { name: "Início", href: "/" },
+  { name: "MAPSO", href: "/mapso", highlight: true },
   { name: "Testes", href: "/testes" },
   { name: "Para Profissionais", href: "/profissionais" },
   { name: "Para Empresas", href: "/empresas" },
@@ -41,10 +42,12 @@ export function Header() {
                 key={item.name}
                 to={item.href}
                 className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                  location.pathname === item.href
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  "px-4 py-2 rounded-lg text-sm transition-colors",
+                  location.pathname === item.href || (item.href !== "/" && location.pathname.startsWith(item.href))
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : (item as any).highlight
+                    ? "text-primary font-bold hover:bg-primary/5"
+                    : "text-muted-foreground font-medium hover:text-foreground hover:bg-muted"
                 )}
               >
                 {item.name}

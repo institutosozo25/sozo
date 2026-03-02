@@ -20,6 +20,7 @@ import AdminPerguntas from "./pages/admin/AdminPerguntas";
 import AdminRelatorios from "./pages/admin/AdminRelatorios";
 import AdminUsuarios from "./pages/admin/AdminUsuarios";
 import AdminConfig from "./pages/admin/AdminConfig";
+import MapsoApp from "./modules/mapso/MapsoApp";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="/planos" element={<Planos />} />
               <Route path="/sobre" element={<Sobre />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/mapso/*" element={<MapsoApp />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="testes" element={<AdminTestes />} />
