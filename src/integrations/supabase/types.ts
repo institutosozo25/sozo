@@ -52,6 +52,88 @@ export type Database = {
           },
         ]
       }
+      colaboradores: {
+        Row: {
+          created_at: string
+          data_nascimento: string | null
+          empresa_id: string
+          id: string
+          nome: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_nascimento?: string | null
+          empresa_id: string
+          id?: string
+          nome?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_nascimento?: string | null
+          empresa_id?: string
+          id?: string
+          nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "colaboradores_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      empresas: {
+        Row: {
+          celular: string | null
+          cep: string | null
+          cnpj: string | null
+          created_at: string
+          email: string | null
+          id: string
+          numero: string | null
+          profile_id: string
+          razao_social: string | null
+          rua: string | null
+          telefone: string | null
+        }
+        Insert: {
+          celular?: string | null
+          cep?: string | null
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          numero?: string | null
+          profile_id: string
+          razao_social?: string | null
+          rua?: string | null
+          telefone?: string | null
+        }
+        Update: {
+          celular?: string | null
+          cep?: string | null
+          cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          numero?: string | null
+          profile_id?: string
+          razao_social?: string | null
+          rua?: string | null
+          telefone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresas_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       generated_reports: {
         Row: {
           created_at: string
@@ -84,6 +166,53 @@ export type Database = {
           },
         ]
       }
+      pacientes: {
+        Row: {
+          created_at: string
+          email: string | null
+          endereco: string | null
+          estado_civil: string | null
+          id: string
+          idade: number | null
+          nome: string | null
+          profissional_id: string
+          sexo: string | null
+          telefone: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          estado_civil?: string | null
+          id?: string
+          idade?: number | null
+          nome?: string | null
+          profissional_id: string
+          sexo?: string | null
+          telefone?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          estado_civil?: string | null
+          id?: string
+          idade?: number | null
+          nome?: string | null
+          profissional_id?: string
+          sexo?: string | null
+          telefone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pacientes_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -91,6 +220,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          telefone: string | null
           updated_at: string
         }
         Insert: {
@@ -99,6 +229,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          telefone?: string | null
           updated_at?: string
         }
         Update: {
@@ -107,9 +238,48 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          telefone?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      profissionais: {
+        Row: {
+          created_at: string
+          endereco: string | null
+          estado_civil: string | null
+          id: string
+          idade: number | null
+          profile_id: string
+          sexo: string | null
+        }
+        Insert: {
+          created_at?: string
+          endereco?: string | null
+          estado_civil?: string | null
+          id?: string
+          idade?: number | null
+          profile_id: string
+          sexo?: string | null
+        }
+        Update: {
+          created_at?: string
+          endereco?: string | null
+          estado_civil?: string | null
+          id?: string
+          idade?: number | null
+          profile_id?: string
+          sexo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profissionais_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       questions: {
         Row: {
@@ -348,6 +518,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      usuarios_testes: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          nome: string | null
+          profile_id: string
+          telefone: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string | null
+          profile_id: string
+          telefone?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string | null
+          profile_id?: string
+          telefone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuarios_testes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

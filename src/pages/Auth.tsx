@@ -8,6 +8,10 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
+import { Building2, Stethoscope, User } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type AccountType = "empresa" | "profissional" | "usuario";
 
 const loginSchema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -17,10 +21,17 @@ const loginSchema = z.object({
 const signupSchema = loginSchema.extend({
   fullName: z.string().min(2, "Nome deve ter no mínimo 2 caracteres"),
   confirmPassword: z.string(),
+  telefone: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],
 });
+
+const accountTypes: { value: AccountType; label: string; description: string; icon: typeof Building2 }[] = [
+  { value: "empresa", label: "Empresa", description: "Gerencie colaboradores e clima organizacional", icon: Building2 },
+  { value: "profissional", label: "Profissional", description: "Gerencie pacientes e aplique testes", icon: Stethoscope },
+  { value: "usuario", label: "Usuário", description: "Acesse testes e resultados pessoais", icon: User },
+];
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -28,18 +39,27 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [accountType, setAccountType] = useState<AccountType>("usuario");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, accountType: userAccountType } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
+    if (user && userAccountType) {
+      const redirectMap: Record<string, string> = {
+        empresa: "/dashboard/empresa",
+        profissional: "/dashboard/profissional",
+        usuario: "/dashboard/usuario",
+      };
+      navigate(redirectMap[userAccountType] || "/");
+    } else if (user) {
       navigate("/");
     }
-  }, [user, navigate]);
+  }, [user, userAccountType, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,17 +83,16 @@ export default function Auth() {
         if (error) {
           toast({
             title: "Erro ao entrar",
-            description: error.message === "Invalid login credentials" 
-              ? "E-mail ou senha incorretos" 
+            description: error.message === "Invalid login credentials"
+              ? "E-mail ou senha incorretos"
               : error.message,
             variant: "destructive",
           });
         } else {
           toast({ title: "Bem-vindo de volta!" });
-          navigate("/");
         }
       } else {
-        const result = signupSchema.safeParse({ email, password, confirmPassword, fullName });
+        const result = signupSchema.safeParse({ email, password, confirmPassword, fullName, telefone });
         if (!result.success) {
           const fieldErrors: Record<string, string> = {};
           result.error.errors.forEach((err) => {
@@ -84,28 +103,19 @@ export default function Auth() {
           return;
         }
 
-        const { error } = await signUp(email, password, fullName);
+        const { error } = await signUp(email, password, fullName, accountType, telefone);
         if (error) {
           let message = error.message;
           if (error.message.includes("already registered")) {
             message = "Este e-mail já está cadastrado";
           }
-          toast({
-            title: "Erro ao criar conta",
-            description: message,
-            variant: "destructive",
-          });
+          toast({ title: "Erro ao criar conta", description: message, variant: "destructive" });
         } else {
           toast({ title: "Conta criada com sucesso!" });
-          navigate("/");
         }
       }
-    } catch (err) {
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro inesperado",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: "Erro", description: "Ocorreu um erro inesperado", variant: "destructive" });
     }
 
     setIsSubmitting(false);
@@ -114,7 +124,6 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-
       <section className="pt-32 pb-20">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="max-w-md mx-auto">
@@ -123,108 +132,87 @@ export default function Auth() {
                 {isLogin ? "Entrar" : "Criar Conta"}
               </h1>
               <p className="text-muted-foreground text-center mb-8">
-                {isLogin
-                  ? "Acesse sua conta para continuar"
-                  : "Preencha seus dados para criar sua conta"}
+                {isLogin ? "Acesse sua conta para continuar" : "Preencha seus dados para criar sua conta"}
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {!isLogin && (
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName">Nome completo</Label>
-                    <Input
-                      id="fullName"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Seu nome"
-                      className={errors.fullName ? "border-destructive" : ""}
-                    />
-                    {errors.fullName && (
-                      <p className="text-destructive text-sm">{errors.fullName}</p>
-                    )}
-                  </div>
+                  <>
+                    {/* Account Type Selector */}
+                    <div className="space-y-2">
+                      <Label>Tipo de conta</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {accountTypes.map((type) => (
+                          <button
+                            key={type.value}
+                            type="button"
+                            onClick={() => setAccountType(type.value)}
+                            className={cn(
+                              "flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all text-center",
+                              accountType === type.value
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border hover:border-muted-foreground text-muted-foreground"
+                            )}
+                          >
+                            <type.icon className="w-5 h-5" />
+                            <span className="text-xs font-semibold">{type.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground text-center">
+                        {accountTypes.find(t => t.value === accountType)?.description}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="fullName">Nome completo</Label>
+                      <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome" className={errors.fullName ? "border-destructive" : ""} />
+                      {errors.fullName && <p className="text-destructive text-sm">{errors.fullName}</p>}
+                    </div>
+                  </>
                 )}
 
                 <div className="space-y-2">
                   <Label htmlFor="email">E-mail</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                    className={errors.email ? "border-destructive" : ""}
-                  />
-                  {errors.email && (
-                    <p className="text-destructive text-sm">{errors.email}</p>
-                  )}
+                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" className={errors.email ? "border-destructive" : ""} />
+                  {errors.email && <p className="text-destructive text-sm">{errors.email}</p>}
                 </div>
+
+                {!isLogin && (
+                  <div className="space-y-2">
+                    <Label htmlFor="telefone">Telefone</Label>
+                    <Input id="telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(11) 99999-0000" />
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="password">Senha</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className={errors.password ? "border-destructive" : ""}
-                  />
-                  {errors.password && (
-                    <p className="text-destructive text-sm">{errors.password}</p>
-                  )}
+                  <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className={errors.password ? "border-destructive" : ""} />
+                  {errors.password && <p className="text-destructive text-sm">{errors.password}</p>}
                 </div>
 
                 {!isLogin && (
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword">Confirmar senha</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className={errors.confirmPassword ? "border-destructive" : ""}
-                    />
-                    {errors.confirmPassword && (
-                      <p className="text-destructive text-sm">{errors.confirmPassword}</p>
-                    )}
+                    <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" className={errors.confirmPassword ? "border-destructive" : ""} />
+                    {errors.confirmPassword && <p className="text-destructive text-sm">{errors.confirmPassword}</p>}
                   </div>
                 )}
 
-                <Button
-                  type="submit"
-                  className="w-full"
-                  variant="hero"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting
-                    ? "Carregando..."
-                    : isLogin
-                    ? "Entrar"
-                    : "Criar Conta"}
+                <Button type="submit" className="w-full" variant="hero" disabled={isSubmitting}>
+                  {isSubmitting ? "Carregando..." : isLogin ? "Entrar" : "Criar Conta"}
                 </Button>
               </form>
 
               <div className="mt-6 text-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsLogin(!isLogin);
-                    setErrors({});
-                  }}
-                  className="text-primary hover:underline text-sm"
-                >
-                  {isLogin
-                    ? "Não tem conta? Criar agora"
-                    : "Já tem conta? Entrar"}
+                <button type="button" onClick={() => { setIsLogin(!isLogin); setErrors({}); }} className="text-primary hover:underline text-sm">
+                  {isLogin ? "Não tem conta? Criar agora" : "Já tem conta? Entrar"}
                 </button>
               </div>
             </div>
           </div>
         </div>
       </section>
-
       <Footer />
     </div>
   );
