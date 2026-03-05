@@ -21,6 +21,10 @@ import AdminRelatorios from "./pages/admin/AdminRelatorios";
 import AdminUsuarios from "./pages/admin/AdminUsuarios";
 import AdminConfig from "./pages/admin/AdminConfig";
 import MapsoApp from "./modules/mapso/MapsoApp";
+import DashboardEmpresa from "./pages/dashboard/DashboardEmpresa";
+import DashboardProfissional from "./pages/dashboard/DashboardProfissional";
+import DashboardUsuario from "./pages/dashboard/DashboardUsuario";
+import ProtectedRoute from "./pages/dashboard/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +47,21 @@ const App = () => (
               <Route path="/sobre" element={<Sobre />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/mapso/*" element={<MapsoApp />} />
+              <Route path="/dashboard/empresa" element={
+                <ProtectedRoute allowedRoles={["company", "admin"]}>
+                  <DashboardEmpresa />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/profissional" element={
+                <ProtectedRoute allowedRoles={["professional", "admin"]}>
+                  <DashboardProfissional />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/usuario" element={
+                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                  <DashboardUsuario />
+                </ProtectedRoute>
+              } />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="testes" element={<AdminTestes />} />
