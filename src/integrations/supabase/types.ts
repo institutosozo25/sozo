@@ -52,6 +52,39 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       colaboradores: {
         Row: {
           created_at: string
@@ -128,7 +161,7 @@ export type Database = {
           {
             foreignKeyName: "empresas_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -162,6 +195,63 @@ export type Database = {
             columns: ["submission_id"]
             isOneToOne: false
             referencedRelation: "test_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          empresa_id: string | null
+          expires_at: string
+          id: string
+          invited_by: string | null
+          profissional_id: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          empresa_id?: string | null
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          profissional_id?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          empresa_id?: string | null
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          profissional_id?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invites_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
             referencedColumns: ["id"]
           },
         ]
@@ -275,7 +365,7 @@ export type Database = {
           {
             foreignKeyName: "profissionais_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -405,8 +495,11 @@ export type Database = {
       }
       test_submissions: {
         Row: {
+          applied_by: string | null
+          colaborador_id: string | null
           completed_at: string | null
           id: string
+          paciente_id: string | null
           report_generated_at: string | null
           respondent_email: string
           respondent_name: string
@@ -416,8 +509,11 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          applied_by?: string | null
+          colaborador_id?: string | null
           completed_at?: string | null
           id?: string
+          paciente_id?: string | null
           report_generated_at?: string | null
           respondent_email: string
           respondent_name: string
@@ -427,8 +523,11 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          applied_by?: string | null
+          colaborador_id?: string | null
           completed_at?: string | null
           id?: string
+          paciente_id?: string | null
           report_generated_at?: string | null
           respondent_email?: string
           respondent_name?: string
@@ -438,6 +537,20 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "test_submissions_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_submissions_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "test_submissions_test_id_fkey"
             columns: ["test_id"]
@@ -548,7 +661,7 @@ export type Database = {
           {
             foreignKeyName: "usuarios_testes_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -565,6 +678,15 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      log_audit_event: {
+        Args: {
+          _action: string
+          _entity_id?: string
+          _entity_type: string
+          _metadata?: Json
+        }
+        Returns: undefined
       }
     }
     Enums: {
