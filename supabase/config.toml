@@ -1,1 +1,10 @@
 project_id = "kavlzghtpdfvyjxwsiuj"
+
+[functions.create-payment]
+verify_jwt = false
+
+[functions.create-subscription]
+verify_jwt = false
+
+[functions.asaas-webhook]
+verify_jwt = false

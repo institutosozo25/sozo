@@ -3,6 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Check, ArrowRight, Sparkles } from "lucide-react";
+import { SubscriptionPlans } from "@/components/payment/SubscriptionPlans";
 
 const userPlans = [
   {
@@ -11,40 +12,25 @@ const userPlans = [
     period: "",
     description: "Para experimentar",
     features: [
-      "1 teste gratuito",
-      "Relatório básico",
-      "Válido por 7 dias",
+      "Responda qualquer teste gratuitamente",
+      "Veja seu perfil predominante",
+      "Resultado parcial incluso",
     ],
     cta: "Criar Conta",
     variant: "outline" as const,
   },
   {
     name: "Individual",
-    price: "R$ 29,90",
+    price: "Variável",
     period: "/teste",
-    description: "Pagamento único",
+    description: "Pague apenas pelo relatório",
     features: [
-      "1 teste à sua escolha",
+      "Responda o teste gratuitamente",
       "Relatório completo por IA",
       "PDF para download",
-      "Acesso permanente",
+      "Acesso permanente ao resultado",
     ],
-    cta: "Comprar Teste",
-    variant: "default" as const,
-  },
-  {
-    name: "Ilimitado",
-    price: "R$ 49,90",
-    period: "/mês",
-    description: "Acesso total",
-    features: [
-      "Todos os testes ilimitados",
-      "Relatórios completos por IA",
-      "Histórico de resultados",
-      "Comparativos de evolução",
-      "Suporte prioritário",
-    ],
-    cta: "Assinar Agora",
+    cta: "Ver Testes",
     variant: "accent" as const,
     popular: true,
   },
@@ -81,11 +67,11 @@ export default function Planos() {
               Planos Individuais
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Comece sua jornada de autoconhecimento com nossos testes validados
+              Responda os testes gratuitamente e pague apenas pelo relatório completo
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {userPlans.map((plan) => (
               <div
                 key={plan.name}
@@ -118,7 +104,7 @@ export default function Planos() {
                   </ul>
 
                   <Button variant={plan.variant} className="w-full" asChild>
-                    <Link to="/cadastro">
+                    <Link to={plan.popular ? "/testes" : "/auth"}>
                       {plan.cta}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>
@@ -130,36 +116,23 @@ export default function Planos() {
         </div>
       </section>
 
-      {/* Other Plans CTA */}
+      {/* Professional & Enterprise Plans */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <div className="p-8 rounded-2xl gradient-warm text-primary-foreground">
-              <h3 className="font-heading text-2xl font-bold mb-4">Para Profissionais</h3>
-              <p className="text-primary-foreground/80 mb-6">
-                Planos especiais para psicólogos, coaches e terapeutas com ferramentas avançadas.
-              </p>
-              <Button variant="default" className="bg-primary-foreground text-sozo-red hover:bg-primary-foreground/90" asChild>
-                <Link to="/profissionais">
-                  Ver Planos
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Link>
-              </Button>
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-semibold mb-4">
+              <Sparkles className="w-4 h-4" />
+              Para Profissionais e Empresas
             </div>
-            
-            <div className="p-8 rounded-2xl gradient-primary text-primary-foreground">
-              <h3 className="font-heading text-2xl font-bold mb-4">Para Empresas</h3>
-              <p className="text-primary-foreground/80 mb-6">
-                Soluções corporativas para RH e gestão de pessoas com dashboard completo.
-              </p>
-              <Button variant="accent" asChild>
-                <Link to="/empresas">
-                  Ver Planos
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Link>
-              </Button>
-            </div>
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Planos de Assinatura
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Acesso completo para aplicar testes, gerenciar pacientes e colaboradores
+            </p>
           </div>
+
+          <SubscriptionPlans />
         </div>
       </section>
 

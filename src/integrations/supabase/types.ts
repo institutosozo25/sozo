@@ -303,31 +303,90 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          asaas_payment_id: string | null
+          asaas_subscription_id: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          status: string
+          submission_id: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          asaas_payment_id?: string | null
+          asaas_subscription_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          status?: string
+          submission_id?: string | null
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          asaas_payment_id?: string | null
+          asaas_subscription_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          status?: string
+          submission_id?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "test_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
+          asaas_customer_id: string | null
           avatar_url: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          subscription_plan: string | null
+          subscription_status: string | null
           telefone: string | null
           updated_at: string
         }
         Insert: {
+          asaas_customer_id?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
+          subscription_plan?: string | null
+          subscription_status?: string | null
           telefone?: string | null
           updated_at?: string
         }
         Update: {
+          asaas_customer_id?: string | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          subscription_plan?: string | null
+          subscription_status?: string | null
           telefone?: string | null
           updated_at?: string
         }
@@ -493,6 +552,45 @@ export type Database = {
           },
         ]
       }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          features: Json | null
+          id: string
+          interval: string
+          is_active: boolean | null
+          name: string
+          price: number
+          slug: string
+          target_role: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          interval?: string
+          is_active?: boolean | null
+          name: string
+          price?: number
+          slug: string
+          target_role: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          interval?: string
+          is_active?: boolean | null
+          name?: string
+          price?: number
+          slug?: string
+          target_role?: string
+        }
+        Relationships: []
+      }
       test_submissions: {
         Row: {
           applied_by: string | null
@@ -500,12 +598,17 @@ export type Database = {
           completed_at: string | null
           id: string
           paciente_id: string | null
+          paid: boolean
+          paid_at: string | null
+          payment_id: string | null
+          payment_status: string | null
           report_generated_at: string | null
           respondent_email: string
           respondent_name: string
           started_at: string
           status: string | null
           test_id: string | null
+          test_result_unlocked: boolean
           user_id: string | null
         }
         Insert: {
@@ -514,12 +617,17 @@ export type Database = {
           completed_at?: string | null
           id?: string
           paciente_id?: string | null
+          paid?: boolean
+          paid_at?: string | null
+          payment_id?: string | null
+          payment_status?: string | null
           report_generated_at?: string | null
           respondent_email: string
           respondent_name: string
           started_at?: string
           status?: string | null
           test_id?: string | null
+          test_result_unlocked?: boolean
           user_id?: string | null
         }
         Update: {
@@ -528,12 +636,17 @@ export type Database = {
           completed_at?: string | null
           id?: string
           paciente_id?: string | null
+          paid?: boolean
+          paid_at?: string | null
+          payment_id?: string | null
+          payment_status?: string | null
           report_generated_at?: string | null
           respondent_email?: string
           respondent_name?: string
           started_at?: string
           status?: string | null
           test_id?: string | null
+          test_result_unlocked?: boolean
           user_id?: string | null
         }
         Relationships: [
