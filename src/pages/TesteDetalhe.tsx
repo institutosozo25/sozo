@@ -218,12 +218,29 @@ export default function TesteDetalhe() {
     setShowModal(true);
   };
 
-  const handleSubmitForm = (e: React.FormEvent) => {
+  const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
+  const [waitlistLoading, setWaitlistLoading] = useState(false);
+
+  const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here would integrate with backend to start the test
-    console.log("Starting test for:", formData);
-    setShowModal(false);
-    // Navigate to test page
+    if (!formData.email || !id) return;
+    setWaitlistLoading(true);
+    try {
+      const { error } = await supabase
+        .from("waitlist")
+        .insert({ email: sanitizeString(formData.email, 255), test_slug: sanitizeString(id, 50) });
+      if (error && error.code === "23505") {
+        // duplicate - already on waitlist
+        setWaitlistSubmitted(true);
+      } else if (error) {
+        console.error("Waitlist error:", error.message);
+      } else {
+        setWaitlistSubmitted(true);
+      }
+    } catch {
+      // silent
+    }
+    setWaitlistLoading(false);
   };
 
   return (
