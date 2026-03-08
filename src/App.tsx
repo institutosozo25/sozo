@@ -22,6 +22,7 @@ import AdminUsuarios from "./pages/admin/AdminUsuarios";
 import AdminConfig from "./pages/admin/AdminConfig";
 import MapsoApp from "./modules/mapso/MapsoApp";
 import DiscApp from "./modules/disc/DiscApp";
+import MbtiApp from "./modules/mbti/MbtiApp";
 import DashboardEmpresa from "./pages/dashboard/DashboardEmpresa";
 import DashboardProfissional from "./pages/dashboard/DashboardProfissional";
 import DashboardUsuario from "./pages/dashboard/DashboardUsuario";
