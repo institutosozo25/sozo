@@ -2,6 +2,7 @@ import { useTemperamento } from "../contexts/TemperamentoContext";
 import { TEMPERAMENTO_LABELS, TEMPERAMENTO_COLORS, type TemperamentoType } from "../data/temperamento-questionnaire";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Printer } from "lucide-react";
+import { escapeHtml } from "@/lib/validation";
 
 const TemperamentoFullReport = () => {
   const { result, fullReport, resetTest, respondentName } = useTemperamento();
@@ -26,7 +27,7 @@ const TemperamentoFullReport = () => {
               Temperamento {primaryLabel} e {secondaryLabel}
             </h1>
             <p className="text-primary-foreground/80">
-              {respondentName}
+              {escapeHtml(respondentName)}
             </p>
           </div>
 
@@ -61,7 +62,7 @@ const TemperamentoFullReport = () => {
               prose-strong:text-foreground
               prose-ul:space-y-1
             "
-            dangerouslySetInnerHTML={{ __html: formatReportToHtml(fullReport) }}
+            dangerouslySetInnerHTML={{ __html: sanitizeAndFormatReport(fullReport) }}
           />
         </div>
 
@@ -79,8 +80,18 @@ const TemperamentoFullReport = () => {
   );
 };
 
-function formatReportToHtml(markdown: string): string {
-  let html = markdown
+function sanitizeAndFormatReport(markdown: string): string {
+  let clean = markdown
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
+    .replace(/<object[\s\S]*?<\/object>/gi, "")
+    .replace(/<embed[\s\S]*?>/gi, "")
+    .replace(/<link[\s\S]*?>/gi, "")
+    .replace(/on\w+="[^"]*"/gi, "")
+    .replace(/on\w+='[^']*'/gi, "");
+
+  let html = clean
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
     .replace(/^# (.+)$/gm, '<h1>$1</h1>')

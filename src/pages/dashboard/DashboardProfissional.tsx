@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Stethoscope, Plus, Trash2, Users } from "lucide-react";
+import { sanitizeString } from "@/lib/validation";
 
 interface Profissional {
   id: string;
@@ -59,7 +60,7 @@ export default function DashboardProfissional() {
   const updateProfissional = async () => {
     if (!profissional) return;
     const { error } = await supabase.from("profissionais").update({
-      endereco: form.endereco, idade: form.idade, estado_civil: form.estado_civil, sexo: form.sexo,
+      endereco: sanitizeString(form.endereco, 200), idade: form.idade, estado_civil: sanitizeString(form.estado_civil, 50), sexo: sanitizeString(form.sexo, 20),
     }).eq("id", profissional.id);
     if (error) {
       toast({ title: "Erro ao salvar", variant: "destructive" });
@@ -74,9 +75,9 @@ export default function DashboardProfissional() {
     if (!profissional || !novoPaciente.nome) return;
     const { error } = await supabase.from("pacientes").insert({
       profissional_id: profissional.id,
-      nome: novoPaciente.nome,
-      email: novoPaciente.email || null,
-      telefone: novoPaciente.telefone || null,
+      nome: sanitizeString(novoPaciente.nome, 200),
+      email: novoPaciente.email ? sanitizeString(novoPaciente.email, 255) : null,
+      telefone: novoPaciente.telefone ? sanitizeString(novoPaciente.telefone, 20) : null,
     });
     if (error) {
       toast({ title: "Erro ao adicionar", variant: "destructive" });
@@ -111,10 +112,10 @@ export default function DashboardProfissional() {
             <CardContent>
               {editMode ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1"><Label>Endereço</Label><Input value={form.endereco || ""} onChange={(e) => setForm({ ...form, endereco: e.target.value })} /></div>
-                  <div className="space-y-1"><Label>Idade</Label><Input type="number" value={form.idade || ""} onChange={(e) => setForm({ ...form, idade: parseInt(e.target.value) || null })} /></div>
-                  <div className="space-y-1"><Label>Estado Civil</Label><Input value={form.estado_civil || ""} onChange={(e) => setForm({ ...form, estado_civil: e.target.value })} /></div>
-                  <div className="space-y-1"><Label>Sexo</Label><Input value={form.sexo || ""} onChange={(e) => setForm({ ...form, sexo: e.target.value })} /></div>
+                  <div className="space-y-1"><Label>Endereço</Label><Input value={form.endereco || ""} onChange={(e) => setForm({ ...form, endereco: e.target.value })} maxLength={200} /></div>
+                  <div className="space-y-1"><Label>Idade</Label><Input type="number" value={form.idade || ""} onChange={(e) => setForm({ ...form, idade: parseInt(e.target.value) || null })} maxLength={3} /></div>
+                  <div className="space-y-1"><Label>Estado Civil</Label><Input value={form.estado_civil || ""} onChange={(e) => setForm({ ...form, estado_civil: e.target.value })} maxLength={50} /></div>
+                  <div className="space-y-1"><Label>Sexo</Label><Input value={form.sexo || ""} onChange={(e) => setForm({ ...form, sexo: e.target.value })} maxLength={20} /></div>
                   <div className="col-span-full"><Button onClick={updateProfissional}>Salvar</Button></div>
                 </div>
               ) : (
@@ -134,9 +135,9 @@ export default function DashboardProfissional() {
             </CardHeader>
             <CardContent>
               <div className="flex gap-2 mb-4">
-                <Input placeholder="Nome" value={novoPaciente.nome} onChange={(e) => setNovoPaciente({ ...novoPaciente, nome: e.target.value })} />
-                <Input placeholder="E-mail" value={novoPaciente.email} onChange={(e) => setNovoPaciente({ ...novoPaciente, email: e.target.value })} />
-                <Input placeholder="Telefone" value={novoPaciente.telefone} onChange={(e) => setNovoPaciente({ ...novoPaciente, telefone: e.target.value })} />
+                <Input placeholder="Nome" value={novoPaciente.nome} onChange={(e) => setNovoPaciente({ ...novoPaciente, nome: e.target.value })} maxLength={200} />
+                <Input placeholder="E-mail" value={novoPaciente.email} onChange={(e) => setNovoPaciente({ ...novoPaciente, email: e.target.value })} maxLength={255} />
+                <Input placeholder="Telefone" value={novoPaciente.telefone} onChange={(e) => setNovoPaciente({ ...novoPaciente, telefone: e.target.value.replace(/[^\d\s()+-]/g, "") })} maxLength={20} />
                 <Button onClick={addPaciente} size="icon"><Plus className="w-4 h-4" /></Button>
               </div>
               {pacientes.length === 0 ? (

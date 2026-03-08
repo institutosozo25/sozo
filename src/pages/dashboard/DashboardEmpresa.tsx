@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Building2, Plus, Trash2, Users } from "lucide-react";
+import { sanitizeString } from "@/lib/validation";
 
 interface Empresa {
   id: string;
@@ -60,14 +61,14 @@ export default function DashboardEmpresa() {
   const updateEmpresa = async () => {
     if (!empresa) return;
     const { error } = await supabase.from("empresas").update({
-      razao_social: form.razao_social,
-      cnpj: form.cnpj,
-      email: form.email,
-      cep: form.cep,
-      rua: form.rua,
-      numero: form.numero,
-      telefone: form.telefone,
-      celular: form.celular,
+      razao_social: sanitizeString(form.razao_social, 200),
+      cnpj: sanitizeString(form.cnpj, 20),
+      email: sanitizeString(form.email, 255),
+      cep: sanitizeString(form.cep, 10),
+      rua: sanitizeString(form.rua, 200),
+      numero: sanitizeString(form.numero, 20),
+      telefone: sanitizeString(form.telefone, 20),
+      celular: sanitizeString(form.celular, 20),
     }).eq("id", empresa.id);
     if (error) {
       toast({ title: "Erro ao salvar", variant: "destructive" });
@@ -82,7 +83,7 @@ export default function DashboardEmpresa() {
     if (!empresa || !novoColab.nome) return;
     const { error } = await supabase.from("colaboradores").insert({
       empresa_id: empresa.id,
-      nome: novoColab.nome,
+      nome: sanitizeString(novoColab.nome, 200),
       data_nascimento: novoColab.data_nascimento || null,
     });
     if (error) {
@@ -131,7 +132,7 @@ export default function DashboardEmpresa() {
                   ].map(({ key, label }) => (
                     <div key={key} className="space-y-1">
                       <Label>{label}</Label>
-                      <Input value={(form as any)[key] || ""} onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
+                      <Input value={(form as any)[key] || ""} onChange={(e) => setForm({ ...form, [key]: e.target.value })} maxLength={key === "email" ? 255 : key === "cnpj" || key === "cep" || key === "numero" || key === "telefone" || key === "celular" ? 20 : 200} />
                     </div>
                   ))}
                   <div className="col-span-full">
@@ -162,7 +163,7 @@ export default function DashboardEmpresa() {
             </CardHeader>
             <CardContent>
               <div className="flex gap-2 mb-4">
-                <Input placeholder="Nome do colaborador" value={novoColab.nome} onChange={(e) => setNovoColab({ ...novoColab, nome: e.target.value })} />
+                <Input placeholder="Nome do colaborador" value={novoColab.nome} onChange={(e) => setNovoColab({ ...novoColab, nome: e.target.value })} maxLength={200} />
                 <Input type="date" value={novoColab.data_nascimento} onChange={(e) => setNovoColab({ ...novoColab, data_nascimento: e.target.value })} className="w-48" />
                 <Button onClick={addColaborador} size="icon"><Plus className="w-4 h-4" /></Button>
               </div>

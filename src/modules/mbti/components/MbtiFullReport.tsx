@@ -2,6 +2,7 @@ import { useMbti } from "../contexts/MbtiContext";
 import { DIMENSION_LABELS } from "../data/mbti-questionnaire";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Printer } from "lucide-react";
+import { escapeHtml } from "@/lib/validation";
 
 const MbtiFullReport = () => {
   const { result, fullReport, resetTest, respondentName } = useMbti();
@@ -31,7 +32,7 @@ const MbtiFullReport = () => {
             <h1 className="font-heading text-4xl font-bold text-primary-foreground mb-1">
               {type} — {typeName}
             </h1>
-            <p className="text-primary-foreground/80">{respondentName}</p>
+            <p className="text-primary-foreground/80">{escapeHtml(respondentName)}</p>
           </div>
 
           {/* Dimension Summary */}
@@ -70,7 +71,7 @@ const MbtiFullReport = () => {
               prose-strong:text-foreground
               prose-ul:space-y-1
             "
-            dangerouslySetInnerHTML={{ __html: formatReportToHtml(fullReport) }}
+            dangerouslySetInnerHTML={{ __html: sanitizeAndFormatReport(fullReport) }}
           />
         </div>
 
@@ -88,8 +89,18 @@ const MbtiFullReport = () => {
   );
 };
 
-function formatReportToHtml(markdown: string): string {
-  let html = markdown
+function sanitizeAndFormatReport(markdown: string): string {
+  let clean = markdown
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
+    .replace(/<object[\s\S]*?<\/object>/gi, "")
+    .replace(/<embed[\s\S]*?>/gi, "")
+    .replace(/<link[\s\S]*?>/gi, "")
+    .replace(/on\w+="[^"]*"/gi, "")
+    .replace(/on\w+='[^']*'/gi, "");
+
+  let html = clean
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
     .replace(/^# (.+)$/gm, '<h1>$1</h1>')

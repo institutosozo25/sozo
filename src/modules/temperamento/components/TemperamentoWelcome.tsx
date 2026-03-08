@@ -85,6 +85,7 @@ const TemperamentoWelcome = () => {
                 value={respondentName}
                 onChange={(e) => setRespondentName(e.target.value)}
                 required
+                maxLength={100}
               />
             </div>
             <div className="space-y-2">
@@ -96,6 +97,7 @@ const TemperamentoWelcome = () => {
                 value={respondentEmail}
                 onChange={(e) => setRespondentEmail(e.target.value)}
                 required
+                maxLength={255}
               />
             </div>
             <p className="text-xs text-muted-foreground">

@@ -2,6 +2,7 @@ import { useEneagrama } from "../contexts/EneagramaContext";
 import { ENEAGRAMA_TYPE_NAMES, ENEAGRAMA_COLORS, type EneagramaType } from "../data/eneagrama-questionnaire";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Printer } from "lucide-react";
+import { escapeHtml } from "@/lib/validation";
 
 const EneagramaFullReport = () => {
   const { result, fullReport, resetTest, respondentName } = useEneagrama();
@@ -25,7 +26,7 @@ const EneagramaFullReport = () => {
               Asa: Tipo {wing} — {wingName}
             </p>
             <p className="text-primary-foreground/80">
-              {respondentName}
+              {escapeHtml(respondentName)}
             </p>
           </div>
 
@@ -60,7 +61,7 @@ const EneagramaFullReport = () => {
               prose-strong:text-foreground
               prose-ul:space-y-1
             "
-            dangerouslySetInnerHTML={{ __html: formatReportToHtml(fullReport) }}
+            dangerouslySetInnerHTML={{ __html: sanitizeAndFormatReport(fullReport) }}
           />
         </div>
 
@@ -78,8 +79,18 @@ const EneagramaFullReport = () => {
   );
 };
 
-function formatReportToHtml(markdown: string): string {
-  let html = markdown
+function sanitizeAndFormatReport(markdown: string): string {
+  let clean = markdown
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
+    .replace(/<object[\s\S]*?<\/object>/gi, "")
+    .replace(/<embed[\s\S]*?>/gi, "")
+    .replace(/<link[\s\S]*?>/gi, "")
+    .replace(/on\w+="[^"]*"/gi, "")
+    .replace(/on\w+='[^']*'/gi, "");
+
+  let html = clean
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
     .replace(/^# (.+)$/gm, '<h1>$1</h1>')
