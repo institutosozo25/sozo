@@ -24,6 +24,7 @@ import MapsoApp from "./modules/mapso/MapsoApp";
 import DiscApp from "./modules/disc/DiscApp";
 import MbtiApp from "./modules/mbti/MbtiApp";
 import TemperamentoApp from "./modules/temperamento/TemperamentoApp";
+import EneagramaApp from "./modules/eneagrama/EneagramaApp";
 import DashboardEmpresa from "./pages/dashboard/DashboardEmpresa";
 import DashboardProfissional from "./pages/dashboard/DashboardProfissional";
 import DashboardUsuario from "./pages/dashboard/DashboardUsuario";
