@@ -54,14 +54,14 @@ const DiscPartialResult = () => {
         testSlug: "disc",
         respondentName,
         respondentEmail,
-        scores: scores as Record<string, unknown>,
+        scores: { ...scores },
       });
 
       if (submissionId) {
         await saveGeneratedReport({
           submissionId,
           reportContent: report,
-          scores: scores as Record<string, unknown>,
+          scores: { ...scores },
         });
       }
 
