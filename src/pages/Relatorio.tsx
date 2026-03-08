@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Printer, ShieldAlert, LogIn } from "lucide-react";
+import { ArrowLeft, Printer, ShieldAlert, LogIn, CloudUpload, Loader2, Check } from "lucide-react";
 import DOMPurify from "dompurify";
 
 interface ReportData {
