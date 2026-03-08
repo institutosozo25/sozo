@@ -118,7 +118,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { scores, percentages, dominant, dominantName, wing, wingName, top3, respondentName } = await req.json();
+    const body = await req.json();
+    const respondentName = String(body.respondentName || "Participante").slice(0, 200).replace(/[<>"'&]/g, "");
+    const scores = body.scores;
+    const percentages = body.percentages;
+    const dominant = String(body.dominant || "").slice(0, 10);
+    const dominantName = String(body.dominantName || "").slice(0, 100);
+    const wing = String(body.wing || "").slice(0, 10);
+    const wingName = String(body.wingName || "").slice(0, 100);
+    const top3 = Array.isArray(body.top3) ? body.top3.slice(0, 3) : [];
+
+    if (!scores || typeof scores !== "object" || !dominant) {
+      return new Response(JSON.stringify({ error: "Dados inválidos." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -128,7 +142,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const name = respondentName || "Participante";
+    const name = respondentName;
     const scoresText = Object.entries(scores as Record<string, number>)
       .map(([type, score]) => `- Tipo ${type}: ${score} pontos (${(percentages as Record<string, number>)[type]}%)`)
       .join("\n");

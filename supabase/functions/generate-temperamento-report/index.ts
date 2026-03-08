@@ -124,7 +124,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { scores, percentages, primary, secondary, primaryLabel, secondaryLabel, respondentName } = await req.json();
+    const body = await req.json();
+    const respondentName = String(body.respondentName || "Participante").slice(0, 200).replace(/[<>"'&]/g, "");
+    const scores = body.scores;
+    const percentages = body.percentages;
+    const primary = String(body.primary || "").slice(0, 50);
+    const secondary = String(body.secondary || "").slice(0, 50);
+    const primaryLabel = String(body.primaryLabel || "").slice(0, 100);
+    const secondaryLabel = String(body.secondaryLabel || "").slice(0, 100);
+
+    if (!scores || typeof scores !== "object") {
+      return new Response(JSON.stringify({ error: "Dados inválidos." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -134,10 +147,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const name = respondentName || "Participante";
     const userPrompt = `Gere um relatório de perfil temperamental completo para:
 
-Nome: ${name}
+Nome: ${respondentName}
 
 Pontuações:
 - Sanguíneo: ${scores.sanguineo} respostas (${percentages.sanguineo}%)

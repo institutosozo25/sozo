@@ -7,25 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { z } from "zod";
 import { Building2, Stethoscope, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { loginSchema, signupSchema } from "@/lib/validation";
 
 type AccountType = "empresa" | "profissional" | "usuario";
-
-const loginSchema = z.object({
-  email: z.string().email("E-mail inválido"),
-  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
-});
-
-const signupSchema = loginSchema.extend({
-  fullName: z.string().min(2, "Nome deve ter no mínimo 2 caracteres"),
-  confirmPassword: z.string(),
-  telefone: z.string().optional(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "As senhas não coincidem",
-  path: ["confirmPassword"],
-});
 
 const accountTypes: { value: AccountType; label: string; description: string; icon: typeof Building2 }[] = [
   { value: "empresa", label: "Empresa", description: "Gerencie colaboradores e clima organizacional", icon: Building2 },
@@ -174,7 +160,7 @@ export default function Auth() {
 
                     <div className="space-y-2">
                       <Label htmlFor="fullName">Nome completo</Label>
-                      <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome" className={errors.fullName ? "border-destructive" : ""} />
+                      <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome" maxLength={100} className={errors.fullName ? "border-destructive" : ""} />
                       {errors.fullName && <p className="text-destructive text-sm">{errors.fullName}</p>}
                     </div>
                   </>
@@ -182,14 +168,14 @@ export default function Auth() {
 
                 <div className="space-y-2">
                   <Label htmlFor="email">E-mail</Label>
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" className={errors.email ? "border-destructive" : ""} />
+                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" maxLength={255} className={errors.email ? "border-destructive" : ""} />
                   {errors.email && <p className="text-destructive text-sm">{errors.email}</p>}
                 </div>
 
                 {!isLogin && (
                   <div className="space-y-2">
                     <Label htmlFor="telefone">Telefone</Label>
-                    <Input id="telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(11) 99999-0000" />
+                    <Input id="telefone" value={telefone} onChange={(e) => setTelefone(e.target.value.replace(/[^\d\s()+-]/g, ""))} placeholder="(11) 99999-0000" maxLength={20} />
                   </div>
                 )}
 
