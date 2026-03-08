@@ -151,9 +151,12 @@ export default function Relatorio() {
                 <Button variant="ghost" onClick={() => navigate(-1)}>
                   <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
                 </Button>
-                <Button variant="outline" onClick={() => window.print()}>
-                  <Printer className="w-4 h-4 mr-2" /> Salvar como PDF
-                </Button>
+                <div className="flex gap-2">
+                  <SaveToDriveButton reportId={report.id} />
+                  <Button variant="outline" onClick={() => window.print()}>
+                    <Printer className="w-4 h-4 mr-2" /> Salvar como PDF
+                  </Button>
+                </div>
               </div>
 
               <div className="mb-8 p-6 rounded-2xl bg-card border border-border print:border-0 print:p-0">
