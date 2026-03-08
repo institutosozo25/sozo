@@ -21,6 +21,7 @@ import AdminRelatorios from "./pages/admin/AdminRelatorios";
 import AdminUsuarios from "./pages/admin/AdminUsuarios";
 import AdminConfig from "./pages/admin/AdminConfig";
 import MapsoApp from "./modules/mapso/MapsoApp";
+import DiscApp from "./modules/disc/DiscApp";
 import DashboardEmpresa from "./pages/dashboard/DashboardEmpresa";
 import DashboardProfissional from "./pages/dashboard/DashboardProfissional";
 import DashboardUsuario from "./pages/dashboard/DashboardUsuario";
@@ -47,6 +48,7 @@ const App = () => (
               <Route path="/sobre" element={<Sobre />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/mapso/*" element={<MapsoApp />} />
+              <Route path="/testes/disc/aplicar" element={<DiscApp />} />
               <Route path="/dashboard/empresa" element={
                 <ProtectedRoute allowedRoles={["company", "admin"]}>
                   <DashboardEmpresa />
