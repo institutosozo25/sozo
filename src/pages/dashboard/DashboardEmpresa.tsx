@@ -83,7 +83,7 @@ export default function DashboardEmpresa() {
     if (!empresa || !novoColab.nome) return;
     const { error } = await supabase.from("colaboradores").insert({
       empresa_id: empresa.id,
-      nome: novoColab.nome,
+      nome: sanitizeString(novoColab.nome, 200),
       data_nascimento: novoColab.data_nascimento || null,
     });
     if (error) {
