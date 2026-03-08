@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Outlet, useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { ShieldAlert } from "lucide-react";
 import { 
   LayoutDashboard, 
   FileText, 
@@ -9,7 +10,8 @@ import {
   Settings, 
   LogOut,
   ClipboardList,
-  FileBarChart
+  FileBarChart,
+  ScrollText
 } from "lucide-react";
 
 const navItems = [
@@ -18,6 +20,7 @@ const navItems = [
   { icon: FileText, label: "Perguntas", path: "/admin/perguntas" },
   { icon: FileBarChart, label: "Relatórios", path: "/admin/relatorios" },
   { icon: Users, label: "Usuários", path: "/admin/usuarios" },
+  { icon: ScrollText, label: "Auditoria", path: "/admin/auditoria" },
   { icon: Settings, label: "Configurações", path: "/admin/config" },
 ];
 
