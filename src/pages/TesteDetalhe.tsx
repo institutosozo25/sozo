@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Clock, Users, BarChart3, ArrowRight, Check, Brain, FileText, Sparkles } from "lucide-react";
+import { Clock, Users, BarChart3, ArrowRight, Check, Brain, FileText, Sparkles, Bell } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { sanitizeString } from "@/lib/validation";
 
 const testsData: Record<string, {
   title: string;
