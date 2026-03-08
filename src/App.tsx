@@ -13,6 +13,9 @@ import Profissionais from "./pages/Profissionais";
 import Planos from "./pages/Planos";
 import Sobre from "./pages/Sobre";
 import Auth from "./pages/Auth";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import Relatorio from "./pages/Relatorio";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminTestes from "./pages/admin/AdminTestes";
@@ -50,6 +53,9 @@ const App = () => (
               <Route path="/planos" element={<Planos />} />
               <Route path="/sobre" element={<Sobre />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/relatorio/:id" element={<Relatorio />} />
               <Route path="/mapso/*" element={<MapsoApp />} />
               <Route path="/testes/disc/aplicar" element={<DiscApp />} />
               <Route path="/testes/mbti/aplicar" element={<MbtiApp />} />

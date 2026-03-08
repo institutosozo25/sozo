@@ -780,6 +780,27 @@ export type Database = {
           },
         ]
       }
+      waitlist: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          test_slug: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          test_slug: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          test_slug?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

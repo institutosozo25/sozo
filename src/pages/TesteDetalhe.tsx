@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Clock, Users, BarChart3, ArrowRight, Check, Brain, FileText, Sparkles } from "lucide-react";
+import { Clock, Users, BarChart3, ArrowRight, Check, Brain, FileText, Sparkles, Bell } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { sanitizeString } from "@/lib/validation";
 
 const testsData: Record<string, {
   title: string;
@@ -218,12 +220,29 @@ export default function TesteDetalhe() {
     setShowModal(true);
   };
 
-  const handleSubmitForm = (e: React.FormEvent) => {
+  const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
+  const [waitlistLoading, setWaitlistLoading] = useState(false);
+
+  const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here would integrate with backend to start the test
-    console.log("Starting test for:", formData);
-    setShowModal(false);
-    // Navigate to test page
+    if (!formData.email || !id) return;
+    setWaitlistLoading(true);
+    try {
+      const { error } = await supabase
+        .from("waitlist")
+        .insert({ email: sanitizeString(formData.email, 255), test_slug: sanitizeString(id, 50) });
+      if (error && error.code === "23505") {
+        // duplicate - already on waitlist
+        setWaitlistSubmitted(true);
+      } else if (error) {
+        console.error("Waitlist error:", error.message);
+      } else {
+        setWaitlistSubmitted(true);
+      }
+    } catch {
+      // silent
+    }
+    setWaitlistLoading(false);
   };
 
   return (
@@ -366,41 +385,47 @@ export default function TesteDetalhe() {
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-heading">Antes de começar</DialogTitle>
+            <DialogTitle className="font-heading">Em Breve</DialogTitle>
             <DialogDescription>
-              Preencha seus dados para iniciar o teste e receber o relatório por e-mail.
+              Este teste ainda está em desenvolvimento. Deixe seu e-mail para ser avisado quando estiver disponível.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmitForm} className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="nome">Nome completo *</Label>
-              <Input
-                id="nome"
-                placeholder="Seu nome"
-                value={formData.nome}
-                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                required
-              />
+          {waitlistSubmitted ? (
+            <div className="text-center space-y-4 pt-4">
+              <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto">
+                <Bell className="w-8 h-8 text-accent" />
+              </div>
+              <h3 className="font-heading text-lg font-bold text-foreground">Você está na lista!</h3>
+              <p className="text-muted-foreground text-sm">
+                Avisaremos você assim que este teste for liberado!
+              </p>
+              <Button variant="outline" onClick={() => { setShowModal(false); setWaitlistSubmitted(false); }}>
+                Fechar
+              </Button>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail *</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Ao continuar, você concorda com nossos Termos de Uso e Política de Privacidade.
-            </p>
-            <Button type="submit" className="w-full" variant="accent">
-              Começar Teste
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </form>
+          ) : (
+            <form onSubmit={handleSubmitForm} className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                  maxLength={255}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Este teste ainda está em desenvolvimento. Cadastre-se para ser avisado quando estiver disponível.
+              </p>
+              <Button type="submit" className="w-full" variant="accent" disabled={waitlistLoading}>
+                {waitlistLoading ? "Enviando..." : "Quero ser avisado"}
+                <Bell className="w-4 h-4 ml-2" />
+              </Button>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
     </div>
