@@ -211,6 +211,10 @@ export default function TesteDetalhe() {
       navigate("/testes/temperamento/aplicar");
       return;
     }
+    if (id === "eneagrama") {
+      navigate("/testes/eneagrama/aplicar");
+      return;
+    }
     setShowModal(true);
   };
 
