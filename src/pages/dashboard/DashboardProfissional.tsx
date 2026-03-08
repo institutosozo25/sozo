@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Stethoscope, Plus, Trash2, Users } from "lucide-react";
+import { sanitizeString } from "@/lib/validation";
 
 interface Profissional {
   id: string;
