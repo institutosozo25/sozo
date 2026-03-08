@@ -1,0 +1,9 @@
+{
+  "appId": "app.lovable.b9bd0d971bb04a10a384515f12049013",
+  "appName": "sozo",
+  "webDir": "dist",
+  "server": {
+    "url": "https://b9bd0d97-1bb0-4a10-a384-515f12049013.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  }
+}
