@@ -27,7 +27,7 @@ const TemperamentoFullReport = () => {
               Temperamento {primaryLabel} e {secondaryLabel}
             </h1>
             <p className="text-primary-foreground/80">
-              {respondentName}
+              {escapeHtml(respondentName)}
             </p>
           </div>
 
