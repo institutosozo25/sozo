@@ -122,7 +122,7 @@ const testsData: Record<string, {
     ],
   },
   temperamento: {
-    title: "Teste de Temperamento",
+    title: "Análise de Temperamento Profunda",
     subtitle: "Sanguíneo, Colérico, Melancólico e Fleumático",
     description: "Identifique seu temperamento predominante e entenda seus padrões naturais de comportamento.",
     longDescription: "O teste de temperamentos é baseado na teoria clássica dos quatro temperamentos: Sanguíneo, Colérico, Melancólico e Fleumático. Cada temperamento representa um conjunto natural de padrões emocionais, estilo de pensamento, forma de agir e tendências comportamentais. A personalidade humana é uma combinação única desses temperamentos.",
