@@ -199,6 +199,7 @@ export default function TesteDetalhe() {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ nome: "", email: "" });
+  const { toast } = useToast();
 
   const test = testsData[id || ""] || testsData.disc;
 
