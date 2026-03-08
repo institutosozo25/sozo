@@ -61,14 +61,14 @@ export default function DashboardEmpresa() {
   const updateEmpresa = async () => {
     if (!empresa) return;
     const { error } = await supabase.from("empresas").update({
-      razao_social: form.razao_social,
-      cnpj: form.cnpj,
-      email: form.email,
-      cep: form.cep,
-      rua: form.rua,
-      numero: form.numero,
-      telefone: form.telefone,
-      celular: form.celular,
+      razao_social: sanitizeString(form.razao_social, 200),
+      cnpj: sanitizeString(form.cnpj, 20),
+      email: sanitizeString(form.email, 255),
+      cep: sanitizeString(form.cep, 10),
+      rua: sanitizeString(form.rua, 200),
+      numero: sanitizeString(form.numero, 20),
+      telefone: sanitizeString(form.telefone, 20),
+      celular: sanitizeString(form.celular, 20),
     }).eq("id", empresa.id);
     if (error) {
       toast({ title: "Erro ao salvar", variant: "destructive" });
