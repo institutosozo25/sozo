@@ -147,7 +147,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    const name = respondentName || "Participante";
     const userPrompt = `Gere um relatório de perfil temperamental completo para:
 
 Nome: ${name}
