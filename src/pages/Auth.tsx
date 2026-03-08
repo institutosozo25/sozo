@@ -166,7 +166,7 @@ export default function Auth() {
 
                 <div className="space-y-2">
                   <Label htmlFor="email">E-mail</Label>
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" className={errors.email ? "border-destructive" : ""} />
+                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" maxLength={255} className={errors.email ? "border-destructive" : ""} />
                   {errors.email && <p className="text-destructive text-sm">{errors.email}</p>}
                 </div>
 
