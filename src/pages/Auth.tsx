@@ -198,10 +198,15 @@ export default function Auth() {
                 </Button>
               </form>
 
-              <div className="mt-6 text-center">
-                <button type="button" onClick={() => { setIsLogin(!isLogin); setErrors({}); }} className="text-primary hover:underline text-sm">
+              <div className="mt-6 text-center space-y-2">
+                <button type="button" onClick={() => { setIsLogin(!isLogin); setErrors({}); }} className="text-primary hover:underline text-sm block mx-auto">
                   {isLogin ? "Não tem conta? Criar agora" : "Já tem conta? Entrar"}
                 </button>
+                {isLogin && (
+                  <Link to="/forgot-password" className="text-muted-foreground hover:text-primary hover:underline text-sm block">
+                    Esqueci minha senha
+                  </Link>
+                )}
               </div>
             </div>
           </div>
