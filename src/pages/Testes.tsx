@@ -176,6 +176,11 @@ export default function Testes() {
                 className="group relative bg-card rounded-2xl overflow-hidden border border-border hover:border-secondary/50 transition-all duration-300 hover:shadow-sozo-lg animate-fade-up"
                 style={{ animationDelay: `${index * 0.08}s` }}
               >
+                {test.popular && (
+                  <div className="absolute top-3 right-3 z-10 px-3 py-1 rounded-full bg-accent text-accent-foreground text-xs font-semibold shadow-sm">
+                    ⭐ Mais utilizado
+                  </div>
+                )}
                 {/* Gradient Header */}
                 <div className={cn("h-28 bg-gradient-to-br p-5 flex items-end", test.color)}>
                   <div className="w-12 h-12 rounded-xl bg-background/20 backdrop-blur-sm flex items-center justify-center">
