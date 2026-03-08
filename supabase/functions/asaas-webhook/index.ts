@@ -1,18 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const ALLOWED_ORIGINS = [
-  "https://sozo.lovable.app",
-  "https://id-preview--b9bd0d97-1bb0-4a10-a384-515f12049013.lovable.app",
-];
-
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get("Origin") || "";
-  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
-  return {
-    "Access-Control-Allow-Origin": allowedOrigin,
-    "Access-Control-Allow-Headers": "content-type",
-  };
-}
+import { getCorsHeaders, errorResponse, jsonResponse } from "../_shared/security.ts";
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -22,20 +9,26 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Mandatory webhook token validation
+    // ─── Webhook Token Validation (MANDATORY) ───
     const webhookToken = Deno.env.get("ASAAS_WEBHOOK_TOKEN");
     const receivedToken = req.headers.get("asaas-access-token");
 
-    if (!webhookToken || receivedToken !== webhookToken) {
-      console.error("Invalid or missing webhook token");
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (!webhookToken) {
+      console.error("ASAAS_WEBHOOK_TOKEN not configured");
+      return errorResponse(corsHeaders, 503, "Serviço indisponível.");
+    }
+
+    if (!receivedToken || receivedToken !== webhookToken) {
+      console.error("Invalid webhook token");
+      return errorResponse(corsHeaders, 403, "Acesso negado.");
     }
 
     const body = await req.json();
     const { event, payment: paymentData } = body;
+
+    if (!event || typeof event !== "string") {
+      return errorResponse(corsHeaders, 400, "Payload inválido.");
+    }
 
     console.log(`Asaas webhook: ${event}`);
 
@@ -46,10 +39,20 @@ Deno.serve(async (req) => {
 
     if (event === "PAYMENT_CONFIRMED" || event === "PAYMENT_RECEIVED") {
       const asaasPaymentId = paymentData?.id;
-      if (!asaasPaymentId) {
-        return new Response(JSON.stringify({ error: "No payment id" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      if (!asaasPaymentId || typeof asaasPaymentId !== "string") {
+        return errorResponse(corsHeaders, 400, "ID de pagamento ausente.");
+      }
+
+      // Verify payment exists in our DB before updating
+      const { data: existingPayment } = await adminClient
+        .from("payments")
+        .select("id, status")
+        .eq("asaas_payment_id", asaasPaymentId)
+        .single();
+
+      if (!existingPayment) {
+        console.error("Payment not found in DB:", asaasPaymentId);
+        return errorResponse(corsHeaders, 404, "Pagamento não encontrado.");
       }
 
       const { data: paymentRecord } = await adminClient
@@ -105,7 +108,7 @@ Deno.serve(async (req) => {
 
     if (event === "PAYMENT_OVERDUE" || event === "PAYMENT_DELETED") {
       const asaasPaymentId = paymentData?.id;
-      if (asaasPaymentId) {
+      if (asaasPaymentId && typeof asaasPaymentId === "string") {
         const { data: paymentRecord } = await adminClient
           .from("payments")
           .update({ status: "failed", updated_at: new Date().toISOString() })
@@ -124,7 +127,7 @@ Deno.serve(async (req) => {
 
     if (event === "PAYMENT_REFUNDED") {
       const asaasPaymentId = paymentData?.id;
-      if (asaasPaymentId) {
+      if (asaasPaymentId && typeof asaasPaymentId === "string") {
         const { data: paymentRecord } = await adminClient
           .from("payments")
           .update({ status: "refunded", updated_at: new Date().toISOString() })
@@ -141,14 +144,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ received: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse(corsHeaders, { received: true });
   } catch (error) {
     console.error("Webhook error:", error);
-    return new Response(JSON.stringify({ error: "Internal error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return errorResponse(corsHeaders, 500, "Erro interno.");
   }
 });
