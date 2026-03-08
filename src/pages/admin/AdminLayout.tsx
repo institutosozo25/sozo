@@ -45,7 +45,18 @@ export default function AdminLayout() {
   }
 
   if (!isAdmin) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <ShieldAlert className="w-16 h-16 text-destructive mx-auto" />
+          <h1 className="font-heading text-3xl font-bold text-foreground">403 — Acesso Negado</h1>
+          <p className="text-muted-foreground max-w-md">
+            Você não tem permissão para acessar o painel administrativo.
+          </p>
+          <Button variant="outline" onClick={() => navigate("/")}>Voltar ao início</Button>
+        </div>
+      </div>
+    );
   }
 
   return (
