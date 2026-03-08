@@ -7,25 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { z } from "zod";
 import { Building2, Stethoscope, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-type AccountType = "empresa" | "profissional" | "usuario";
-
-const loginSchema = z.object({
-  email: z.string().email("E-mail inválido"),
-  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
-});
-
-const signupSchema = loginSchema.extend({
-  fullName: z.string().min(2, "Nome deve ter no mínimo 2 caracteres"),
-  confirmPassword: z.string(),
-  telefone: z.string().optional(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "As senhas não coincidem",
-  path: ["confirmPassword"],
-});
+import { loginSchema, signupSchema } from "@/lib/validation";
 
 const accountTypes: { value: AccountType; label: string; description: string; icon: typeof Building2 }[] = [
   { value: "empresa", label: "Empresa", description: "Gerencie colaboradores e clima organizacional", icon: Building2 },
