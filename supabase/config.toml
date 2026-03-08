@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.generate-disc-report]
 verify_jwt = false
+
+[functions.generate-mbti-report]
+verify_jwt = false
