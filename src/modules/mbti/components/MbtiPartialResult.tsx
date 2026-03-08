@@ -1,13 +1,17 @@
 import { useMbti } from "../contexts/MbtiContext";
 import { DIMENSION_LABELS, MBTI_TYPE_DESCRIPTIONS } from "../data/mbti-questionnaire";
 import { Button } from "@/components/ui/button";
-import { Lock, ArrowRight, Check, BarChart3, Sparkles } from "lucide-react";
+import { Lock, ArrowRight, Check, BarChart3, Sparkles, LogIn } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { saveTestSubmission, saveGeneratedReport } from "@/lib/test-persistence";
+import { Link } from "react-router-dom";
 
 const MbtiPartialResult = () => {
-  const { result, setStep, setFullReport, respondentName } = useMbti();
+  const { result, setStep, setFullReport, respondentName, respondentEmail } = useMbti();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
   if (!result) return null;
@@ -23,6 +27,11 @@ const MbtiPartialResult = () => {
   ];
 
   const handleUnlock = async () => {
+    if (!user) {
+      toast.error("Faça login para gerar seu relatório completo.");
+      return;
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-mbti-report", {
@@ -38,9 +47,27 @@ const MbtiPartialResult = () => {
 
       if (error) throw error;
 
-      setFullReport(data.report);
+      const report = data.report;
+      setFullReport(report);
+
+      // Persist submission and report
+      const submissionId = await saveTestSubmission({
+        testSlug: "mbti",
+        respondentName,
+        respondentEmail,
+        scores: { ...result.scores },
+      });
+
+      if (submissionId) {
+        await saveGeneratedReport({
+          submissionId,
+          reportContent: report,
+          scores: { ...result.scores },
+        });
+      }
+
       setStep("full-report");
-      toast.success("Relatório gerado com sucesso!");
+      toast.success("Relatório gerado e salvo com sucesso!");
     } catch (err) {
       console.error("Error generating report:", err);
       toast.error("Erro ao gerar relatório. Tente novamente.");
@@ -127,6 +154,20 @@ const MbtiPartialResult = () => {
           </div>
         </div>
 
+        {/* Auth check */}
+        {!user && (
+          <div className="bg-card border border-accent/30 rounded-2xl p-6 mb-6 text-center">
+            <LogIn className="h-6 w-6 text-accent mx-auto mb-2" />
+            <p className="text-foreground font-semibold mb-2">Faça login para gerar seu relatório</p>
+            <p className="text-muted-foreground text-sm mb-4">
+              Você precisa estar autenticado para gerar e salvar seu relatório completo.
+            </p>
+            <Button asChild variant="accent">
+              <Link to="/auth">Entrar ou Criar Conta</Link>
+            </Button>
+          </div>
+        )}
+
         {/* Paywall */}
         <div className="bg-card border-2 border-accent/30 rounded-2xl p-8 mb-8">
           <div className="text-center mb-6">
@@ -179,7 +220,7 @@ const MbtiPartialResult = () => {
             size="xl"
             className="w-full"
             onClick={handleUnlock}
-            disabled={loading}
+            disabled={loading || !user}
           >
             {loading ? (
               <>

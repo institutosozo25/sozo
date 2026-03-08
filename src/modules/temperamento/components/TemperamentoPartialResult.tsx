@@ -1,10 +1,13 @@
 import { useTemperamento } from "../contexts/TemperamentoContext";
 import { TEMPERAMENTO_LABELS, TEMPERAMENTO_COLORS, type TemperamentoType } from "../data/temperamento-questionnaire";
 import { Button } from "@/components/ui/button";
-import { Lock, ArrowRight, Check, BarChart3, Sparkles } from "lucide-react";
+import { Lock, ArrowRight, Check, BarChart3, Sparkles, LogIn } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { saveTestSubmission, saveGeneratedReport } from "@/lib/test-persistence";
+import { Link } from "react-router-dom";
 
 const TEMPERAMENTO_DESCRIPTIONS: Record<TemperamentoType, string> = {
   colerico: "O temperamento Colérico é caracterizado por assertividade, liderança natural, energia e determinação. Pessoas coléricas tendem a assumir papéis de liderança, gostam de estar no comando e tomam decisões rápidas. São altamente motivadas e orientadas para resultados.",
@@ -14,7 +17,8 @@ const TEMPERAMENTO_DESCRIPTIONS: Record<TemperamentoType, string> = {
 };
 
 const TemperamentoPartialResult = () => {
-  const { result, setStep, setFullReport, respondentName } = useTemperamento();
+  const { result, setStep, setFullReport, respondentName, respondentEmail } = useTemperamento();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
   if (!result) return null;
@@ -23,6 +27,11 @@ const TemperamentoPartialResult = () => {
   const temperamentos: TemperamentoType[] = ["sanguineo", "colerico", "melancolico", "fleumatico"];
 
   const handleUnlock = async () => {
+    if (!user) {
+      toast.error("Faça login para gerar seu relatório completo.");
+      return;
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-temperamento-report", {
@@ -39,9 +48,27 @@ const TemperamentoPartialResult = () => {
 
       if (error) throw error;
 
-      setFullReport(data.report);
+      const report = data.report;
+      setFullReport(report);
+
+      // Persist submission and report
+      const submissionId = await saveTestSubmission({
+        testSlug: "temperamento",
+        respondentName,
+        respondentEmail,
+        scores: { ...scores },
+      });
+
+      if (submissionId) {
+        await saveGeneratedReport({
+          submissionId,
+          reportContent: report,
+          scores: { ...scores },
+        });
+      }
+
       setStep("full-report");
-      toast.success("Relatório gerado com sucesso!");
+      toast.success("Relatório gerado e salvo com sucesso!");
     } catch (err) {
       console.error("Error generating report:", err);
       toast.error("Erro ao gerar relatório. Tente novamente.");
@@ -78,7 +105,6 @@ const TemperamentoPartialResult = () => {
           </div>
 
           <div className="p-6">
-            {/* Score bars */}
             <div className="space-y-3 mb-6">
               {temperamentos.map((t) => (
                 <div key={t} className="flex items-center gap-3">
@@ -101,7 +127,6 @@ const TemperamentoPartialResult = () => {
               ))}
             </div>
 
-            {/* Brief description */}
             <div className="p-4 rounded-xl bg-muted/50">
               <h3 className="font-heading font-semibold text-foreground mb-2">
                 Seu Temperamento Predominante: {primaryLabel}
@@ -112,6 +137,20 @@ const TemperamentoPartialResult = () => {
             </div>
           </div>
         </div>
+
+        {/* Auth check */}
+        {!user && (
+          <div className="bg-card border border-accent/30 rounded-2xl p-6 mb-6 text-center">
+            <LogIn className="h-6 w-6 text-accent mx-auto mb-2" />
+            <p className="text-foreground font-semibold mb-2">Faça login para gerar seu relatório</p>
+            <p className="text-muted-foreground text-sm mb-4">
+              Você precisa estar autenticado para gerar e salvar seu relatório completo.
+            </p>
+            <Button asChild variant="accent">
+              <Link to="/auth">Entrar ou Criar Conta</Link>
+            </Button>
+          </div>
+        )}
 
         {/* Paywall */}
         <div className="bg-card border-2 border-accent/30 rounded-2xl p-8 mb-8">
@@ -143,7 +182,6 @@ const TemperamentoPartialResult = () => {
             ))}
           </div>
 
-          {/* Blurred preview */}
           <div className="relative mb-6 rounded-xl overflow-hidden">
             <div className="p-4 bg-muted/30 blur-sm select-none pointer-events-none">
               <h4 className="font-bold text-foreground mb-2">Interpretação do Perfil {primaryLabel}</h4>
@@ -162,7 +200,7 @@ const TemperamentoPartialResult = () => {
             size="xl"
             className="w-full"
             onClick={handleUnlock}
-            disabled={loading}
+            disabled={loading || !user}
           >
             {loading ? (
               <>
