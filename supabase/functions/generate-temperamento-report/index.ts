@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
 
     const userPrompt = `Gere um relatório de perfil temperamental completo para:
 
-Nome: ${name}
+Nome: ${respondentName}
 
 Pontuações:
 - Sanguíneo: ${scores.sanguineo} respostas (${percentages.sanguineo}%)
