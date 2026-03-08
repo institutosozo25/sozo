@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -9,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Clock, Users, BarChart3, ArrowRight, Check, Brain, FileText, Sparkles, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { sanitizeString } from "@/lib/validation";
+import { isRateLimited } from "@/lib/rate-limit";
 
 const testsData: Record<string, {
   title: string;
@@ -197,6 +199,7 @@ export default function TesteDetalhe() {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ nome: "", email: "" });
+  const { toast } = useToast();
 
   const test = testsData[id || ""] || testsData.disc;
 
@@ -226,6 +229,10 @@ export default function TesteDetalhe() {
   const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.email || !id) return;
+    if (isRateLimited(`waitlist:${id}`, 3, 120_000)) {
+      toast({ title: "Muitas tentativas", description: "Aguarde 2 minutos antes de tentar novamente.", variant: "destructive" });
+      return;
+    }
     setWaitlistLoading(true);
     try {
       const { error } = await supabase

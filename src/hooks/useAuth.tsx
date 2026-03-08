@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 type AppRole = "admin" | "professional" | "company" | "reseller" | "user";
 type AccountType = "empresa" | "profissional" | "usuario";
@@ -31,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [roles, setRoles] = useState<AppRole[]>([]);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -91,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setRoles([]);
+    queryClient.clear(); // Limpa todo o cache do TanStack Query para evitar vazamento de dados entre sessões
   };
 
   const isAdmin = roles.includes("admin");

@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { ArrowLeft, Mail } from "lucide-react";
+import { isRateLimited } from "@/lib/rate-limit";
 
 const emailSchema = z.string().trim().email("E-mail inválido").max(255);
 
@@ -26,6 +27,11 @@ export default function ForgotPassword() {
     const result = emailSchema.safeParse(email);
     if (!result.success) {
       setError(result.error.errors[0].message);
+      return;
+    }
+
+    if (isRateLimited("forgot-password", 3, 60_000)) {
+      setError("Muitas tentativas. Aguarde 1 minuto.");
       return;
     }
 
