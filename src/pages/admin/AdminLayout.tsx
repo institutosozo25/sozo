@@ -11,7 +11,8 @@ import {
   LogOut,
   ClipboardList,
   FileBarChart,
-  ScrollText
+  ScrollText,
+  Megaphone
 } from "lucide-react";
 
 const navItems = [
