@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, Settings } from "lucide-react";
+import { Menu, X, LogIn, LogOut, Settings, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -15,10 +15,19 @@ const navigation = [
   { name: "Sobre", href: "/sobre" },
 ];
 
+function getDashboardPath(accountType: string | null, isAdmin: boolean): string {
+  if (isAdmin) return "/admin";
+  if (accountType === "empresa") return "/dashboard/empresa";
+  if (accountType === "profissional") return "/dashboard/profissional";
+  return "/dashboard/usuario";
+}
+
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, accountType, signOut } = useAuth();
+
+  const dashboardPath = getDashboardPath(accountType, isAdmin);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
@@ -59,14 +68,15 @@ export function Header() {
           <div className="hidden lg:flex items-center gap-3">
             {user ? (
               <>
-                {isAdmin && (
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link to="/admin">
-                      <Settings className="w-4 h-4 mr-2" />
-                      Admin
-                    </Link>
-                  </Button>
-                )}
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to={dashboardPath}>
+                    {isAdmin ? (
+                      <><Settings className="w-4 h-4 mr-2" />Admin</>
+                    ) : (
+                      <><LayoutDashboard className="w-4 h-4 mr-2" />Dashboard</>
+                    )}
+                  </Link>
+                </Button>
                 <Button variant="ghost" size="sm" onClick={() => signOut()}>
                   <LogOut className="w-4 h-4 mr-2" />
                   Sair
@@ -118,14 +128,15 @@ export function Header() {
               <div className="flex flex-col gap-2 pt-4 mt-2 border-t border-border">
                 {user ? (
                   <>
-                    {isAdmin && (
-                      <Button variant="outline" asChild>
-                        <Link to="/admin" onClick={() => setIsOpen(false)}>
-                          <Settings className="w-4 h-4 mr-2" />
-                          Admin
-                        </Link>
-                      </Button>
-                    )}
+                    <Button variant="outline" asChild>
+                      <Link to={dashboardPath} onClick={() => setIsOpen(false)}>
+                        {isAdmin ? (
+                          <><Settings className="w-4 h-4 mr-2" />Admin</>
+                        ) : (
+                          <><LayoutDashboard className="w-4 h-4 mr-2" />Dashboard</>
+                        )}
+                      </Link>
+                    </Button>
                     <Button variant="outline" onClick={() => { signOut(); setIsOpen(false); }}>
                       <LogOut className="w-4 h-4 mr-2" />
                       Sair

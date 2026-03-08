@@ -1,12 +1,22 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+const ALLOWED_ORIGINS = [
+  "https://sozo.lovable.app",
+  "https://id-preview--b9bd0d97-1bb0-4a10-a384-515f12049013.lovable.app",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("Origin") || "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  };
+}
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -14,9 +24,8 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ error: "Acesso não autorizado." }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -26,22 +35,19 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Acesso não autorizado." }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = claimsData.claims.sub;
+    const userId = user.id;
     const { planSlug } = await req.json();
 
     if (!planSlug) {
-      return new Response(JSON.stringify({ error: "planSlug is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ error: "Plano é obrigatório." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -50,7 +56,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Get plan details
     const { data: plan, error: planError } = await adminClient
       .from("subscription_plans")
       .select("*")
@@ -59,13 +64,11 @@ Deno.serve(async (req) => {
       .single();
 
     if (planError || !plan) {
-      return new Response(JSON.stringify({ error: "Plan not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ error: "Plano não encontrado." }), {
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Check if already subscribed
     const { data: profile } = await adminClient
       .from("profiles")
       .select("asaas_customer_id, full_name, email, subscription_status")
@@ -73,9 +76,8 @@ Deno.serve(async (req) => {
       .single();
 
     if (profile?.subscription_status === "active") {
-      return new Response(JSON.stringify({ error: "Already subscribed", alreadySubscribed: true }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ error: "Você já possui uma assinatura ativa.", alreadySubscribed: true }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -85,9 +87,8 @@ Deno.serve(async (req) => {
       : "https://sandbox.asaas.com/api/v3";
 
     if (!ASAAS_API_KEY) {
-      return new Response(JSON.stringify({ error: "Payment gateway not configured" }), {
-        status: 503,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ error: "Gateway de pagamento não configurado." }), {
+        status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -96,10 +97,7 @@ Deno.serve(async (req) => {
     if (!asaasCustomerId) {
       const customerRes = await fetch(`${ASAAS_BASE_URL}/customers`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          access_token: ASAAS_API_KEY,
-        },
+        headers: { "Content-Type": "application/json", access_token: ASAAS_API_KEY },
         body: JSON.stringify({
           name: profile?.full_name || "Usuário",
           email: profile?.email || "",
@@ -109,9 +107,9 @@ Deno.serve(async (req) => {
 
       const customer = await customerRes.json();
       if (!customerRes.ok) {
-        return new Response(JSON.stringify({ error: "Failed to create customer", details: customer }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        console.error("Asaas customer creation failed:", customer);
+        return new Response(JSON.stringify({ error: "Erro ao processar pagamento." }), {
+          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
@@ -119,14 +117,10 @@ Deno.serve(async (req) => {
       await adminClient.from("profiles").update({ asaas_customer_id: asaasCustomerId }).eq("id", userId);
     }
 
-    // Create subscription in Asaas
     const cycle = plan.interval === "yearly" ? "YEARLY" : "MONTHLY";
     const subscriptionRes = await fetch(`${ASAAS_BASE_URL}/subscriptions`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        access_token: ASAAS_API_KEY,
-      },
+      headers: { "Content-Type": "application/json", access_token: ASAAS_API_KEY },
       body: JSON.stringify({
         customer: asaasCustomerId,
         billingType: "UNDEFINED",
@@ -140,13 +134,12 @@ Deno.serve(async (req) => {
 
     const subscription = await subscriptionRes.json();
     if (!subscriptionRes.ok) {
-      return new Response(JSON.stringify({ error: "Failed to create subscription", details: subscription }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      console.error("Asaas subscription creation failed:", subscription);
+      return new Response(JSON.stringify({ error: "Erro ao criar assinatura." }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Save payment record
     await adminClient.from("payments").insert({
       user_id: userId,
       type: "subscription",
@@ -156,7 +149,6 @@ Deno.serve(async (req) => {
       metadata: { plan_slug: planSlug, plan_name: plan.name },
     });
 
-    // Update profile subscription status
     await adminClient
       .from("profiles")
       .update({ subscription_plan: planSlug, subscription_status: "pending" })
@@ -172,9 +164,9 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    console.error("create-subscription error:", error);
+    return new Response(JSON.stringify({ error: "Erro interno. Tente novamente." }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

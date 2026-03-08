@@ -81,11 +81,15 @@ export default function Auth() {
 
         const { error } = await signIn(email, password);
         if (error) {
+          let message = error.message;
+          if (error.message === "Invalid login credentials") {
+            message = "E-mail ou senha incorretos";
+          } else if (error.message === "Email not confirmed") {
+            message = "Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada.";
+          }
           toast({
             title: "Erro ao entrar",
-            description: error.message === "Invalid login credentials"
-              ? "E-mail ou senha incorretos"
-              : error.message,
+            description: message,
             variant: "destructive",
           });
         } else {
@@ -111,7 +115,11 @@ export default function Auth() {
           }
           toast({ title: "Erro ao criar conta", description: message, variant: "destructive" });
         } else {
-          toast({ title: "Conta criada com sucesso!" });
+          toast({
+            title: "Conta criada com sucesso!",
+            description: "Verifique seu e-mail para confirmar o cadastro antes de fazer login.",
+          });
+          setIsLogin(true);
         }
       }
     } catch {
