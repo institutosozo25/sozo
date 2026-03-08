@@ -3,7 +3,7 @@ import { sanitizeString } from "@/lib/validation";
 
 /**
  * Persist test submission to the database.
- * Validates and sanitizes all inputs before saving.
+ * REQUIRES authenticated user — will fail silently if not logged in.
  */
 export async function saveTestSubmission({
   testSlug,
@@ -27,13 +27,17 @@ export async function saveTestSubmission({
     }
 
     const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error("Cannot save submission: user not authenticated");
+      return null;
+    }
 
     const { data: submission, error } = await supabase
       .from("test_submissions")
       .insert({
         respondent_name: safeName,
         respondent_email: safeEmail,
-        user_id: user?.id || null,
+        user_id: user.id,
         status: "completed",
         completed_at: new Date().toISOString(),
       })
@@ -54,6 +58,7 @@ export async function saveTestSubmission({
 
 /**
  * Save the generated report to the database.
+ * Requires authenticated user with matching submission ownership.
  */
 export async function saveGeneratedReport({
   submissionId,
@@ -65,17 +70,25 @@ export async function saveGeneratedReport({
   scores: Record<string, unknown>;
 }): Promise<boolean> {
   try {
-    // Validate submissionId is UUID-like
     if (!/^[0-9a-f-]{36}$/.test(submissionId)) {
       console.error("Invalid submission ID format");
       return false;
     }
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error("Cannot save report: user not authenticated");
+      return false;
+    }
+
+    // Truncate report content to prevent abuse (max 100KB)
+    const safeContent = typeof reportContent === "string" ? reportContent.slice(0, 100_000) : "";
+
     const { error } = await supabase
       .from("generated_reports")
       .insert({
         submission_id: submissionId,
-        report_content: reportContent,
+        report_content: safeContent,
         scores: scores as any,
       });
 
