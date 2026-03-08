@@ -32,7 +32,7 @@ const MbtiFullReport = () => {
             <h1 className="font-heading text-4xl font-bold text-primary-foreground mb-1">
               {type} — {typeName}
             </h1>
-            <p className="text-primary-foreground/80">{respondentName}</p>
+            <p className="text-primary-foreground/80">{escapeHtml(respondentName)}</p>
           </div>
 
           {/* Dimension Summary */}
