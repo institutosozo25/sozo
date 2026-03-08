@@ -142,7 +142,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const name = respondentName || "Participante";
+    const name = respondentName;
     const scoresText = Object.entries(scores as Record<string, number>)
       .map(([type, score]) => `- Tipo ${type}: ${score} pontos (${(percentages as Record<string, number>)[type]}%)`)
       .join("\n");
