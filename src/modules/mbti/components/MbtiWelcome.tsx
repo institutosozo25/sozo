@@ -88,6 +88,7 @@ const MbtiWelcome = () => {
                 value={respondentName}
                 onChange={(e) => setRespondentName(e.target.value)}
                 required
+                maxLength={100}
               />
             </div>
             <div className="space-y-2">
