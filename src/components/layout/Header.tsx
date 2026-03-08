@@ -66,9 +66,10 @@ export function Header() {
           </div>
 
           {/* Desktop Actions */}
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-2">
             {user ? (
               <>
+                <NotificationBell />
                 <Button variant="ghost" size="sm" asChild>
                   <Link to={dashboardPath}>
                     {isAdmin ? (
