@@ -1,0 +1,83 @@
+import React, { createContext, useContext, useState, type ReactNode } from "react";
+import { type EneagramaAnswers, type EneagramaResult, calculateEneagramaScores, isTestComplete } from "../lib/eneagrama-engine";
+import { ENEAGRAMA_QUESTIONS } from "../data/eneagrama-questionnaire";
+
+type Step = "welcome" | "questionnaire" | "partial-result" | "full-report";
+
+interface EneagramaContextType {
+  step: Step;
+  setStep: (s: Step) => void;
+  answers: EneagramaAnswers;
+  setAnswer: (questionId: string, value: number) => void;
+  result: EneagramaResult | null;
+  fullReport: string | null;
+  setFullReport: (r: string) => void;
+  submitTest: () => EneagramaResult | null;
+  resetTest: () => void;
+  respondentName: string;
+  setRespondentName: (n: string) => void;
+  respondentEmail: string;
+  setRespondentEmail: (e: string) => void;
+  currentQuestionIndex: number;
+  setCurrentQuestionIndex: (i: number) => void;
+  totalQuestions: number;
+  answeredCount: number;
+  canSubmit: boolean;
+}
+
+const EneagramaContext = createContext<EneagramaContextType | null>(null);
+
+export const useEneagrama = () => {
+  const ctx = useContext(EneagramaContext);
+  if (!ctx) throw new Error("useEneagrama must be used within EneagramaProvider");
+  return ctx;
+};
+
+export const EneagramaProvider = ({ children }: { children: ReactNode }) => {
+  const [step, setStep] = useState<Step>("welcome");
+  const [answers, setAnswers] = useState<EneagramaAnswers>({});
+  const [result, setResult] = useState<EneagramaResult | null>(null);
+  const [fullReport, setFullReport] = useState<string | null>(null);
+  const [respondentName, setRespondentName] = useState("");
+  const [respondentEmail, setRespondentEmail] = useState("");
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+  const totalQuestions = ENEAGRAMA_QUESTIONS.length;
+  const answeredCount = Object.keys(answers).length;
+  const canSubmit = isTestComplete(answers);
+
+  const setAnswer = (questionId: string, value: number) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: value }));
+  };
+
+  const submitTest = () => {
+    if (!canSubmit) return null;
+    const r = calculateEneagramaScores(answers);
+    setResult(r);
+    setStep("partial-result");
+    return r;
+  };
+
+  const resetTest = () => {
+    setStep("welcome");
+    setAnswers({});
+    setResult(null);
+    setFullReport(null);
+    setRespondentName("");
+    setRespondentEmail("");
+    setCurrentQuestionIndex(0);
+  };
+
+  return (
+    <EneagramaContext.Provider
+      value={{
+        step, setStep, answers, setAnswer, result, fullReport, setFullReport,
+        submitTest, resetTest, respondentName, setRespondentName,
+        respondentEmail, setRespondentEmail, currentQuestionIndex,
+        setCurrentQuestionIndex, totalQuestions, answeredCount, canSubmit,
+      }}
+    >
+      {children}
+    </EneagramaContext.Provider>
+  );
+};

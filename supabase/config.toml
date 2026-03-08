@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.generate-temperamento-report]
 verify_jwt = false
+
+[functions.generate-eneagrama-report]
+verify_jwt = false

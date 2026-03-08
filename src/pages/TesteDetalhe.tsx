@@ -154,6 +154,40 @@ const testsData: Record<string, {
       "Plano de evolução pessoal",
     ],
   },
+  eneagrama: {
+    title: "Teste do Eneagrama",
+    subtitle: "9 Tipos de Personalidade",
+    description: "Descubra seu tipo de personalidade, motivações profundas e padrões emocionais através do Eneagrama.",
+    longDescription: "O Eneagrama é um sistema milenar de compreensão da personalidade que identifica nove tipos fundamentais, cada um com motivações, medos, desejos e padrões comportamentais distintos. Baseado no trabalho de Riso & Hudson, este teste avalia suas tendências naturais em 135 perguntas para revelar seu tipo dominante e asa, oferecendo insights profundos para desenvolvimento pessoal e autoconhecimento.",
+    duration: "25 min",
+    questions: 135,
+    category: "Personalidade",
+    gradient: "from-sozo-orange to-sozo-red",
+    icon: Brain,
+    benefits: [
+      "Compreensão das motivações profundas",
+      "Identificação de padrões emocionais",
+      "Desenvolvimento da autoconsciência",
+      "Melhoria nos relacionamentos",
+      "Crescimento pessoal e espiritual",
+    ],
+    whoFor: [
+      "Qualquer pessoa buscando autoconhecimento",
+      "Profissionais de coaching e terapia",
+      "Líderes e gestores",
+      "Casais e famílias",
+      "Profissionais em desenvolvimento",
+    ],
+    reportPreview: [
+      "Seu tipo dominante e asa",
+      "Motivações e medos profundos",
+      "Pontos fortes naturais",
+      "Desafios emocionais",
+      "Padrões de comportamento",
+      "Perfil em relacionamentos",
+      "Caminho de desenvolvimento pessoal",
+    ],
+  },
 };
 
 export default function TesteDetalhe() {
@@ -175,6 +209,10 @@ export default function TesteDetalhe() {
     }
     if (id === "temperamento") {
       navigate("/testes/temperamento/aplicar");
+      return;
+    }
+    if (id === "eneagrama") {
+      navigate("/testes/eneagrama/aplicar");
       return;
     }
     setShowModal(true);
