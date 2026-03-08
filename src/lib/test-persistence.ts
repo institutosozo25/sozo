@@ -32,12 +32,26 @@ export async function saveTestSubmission({
       return null;
     }
 
+    // Resolve test_id from slug
+    let testId: string | null = null;
+    const { data: testData } = await supabase
+      .from("tests")
+      .select("id")
+      .eq("slug", testSlug)
+      .eq("is_active", true)
+      .single();
+    
+    if (testData) {
+      testId = testData.id;
+    }
+
     const { data: submission, error } = await supabase
       .from("test_submissions")
       .insert({
         respondent_name: safeName,
         respondent_email: safeEmail,
         user_id: user.id,
+        test_id: testId,
         status: "completed",
         completed_at: new Date().toISOString(),
       })
