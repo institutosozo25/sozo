@@ -4,12 +4,13 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { User, FileText, ExternalLink, Clock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { User, FileText, ExternalLink, Clock, Download, AlertTriangle, Trash2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { sanitizeString } from "@/lib/validation";
 
 interface UsuarioTeste {
@@ -29,13 +30,18 @@ interface TestSubmission {
 }
 
 export default function DashboardUsuario() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [dados, setDados] = useState<UsuarioTeste | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState({ nome: "", email: "", telefone: "" });
   const [submissions, setSubmissions] = useState<TestSubmission[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(true);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -60,7 +66,6 @@ export default function DashboardUsuario() {
       .eq("user_id", user!.id)
       .order("completed_at", { ascending: false })
       .limit(20);
-
     if (data) {
       setSubmissions(data as unknown as TestSubmission[]);
     }
@@ -72,7 +77,6 @@ export default function DashboardUsuario() {
     const safeName = sanitizeString(form.nome, 100);
     const safeEmail = sanitizeString(form.email, 255);
     const safeTelefone = sanitizeString(form.telefone, 20);
-
     const { error } = await supabase.from("usuarios_testes").update({
       nome: safeName, email: safeEmail, telefone: safeTelefone,
     }).eq("id", dados.id);
@@ -85,6 +89,55 @@ export default function DashboardUsuario() {
     }
   };
 
+  const handleExportData = async () => {
+    setIsExporting(true);
+    try {
+      const [profileRes, submissionsRes, reportsRes] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", user!.id).single(),
+        supabase.from("test_submissions").select("*").eq("user_id", user!.id),
+        supabase.from("generated_reports")
+          .select("id, scores, created_at, submission_id")
+          .in("submission_id",
+            (await supabase.from("test_submissions").select("id").eq("user_id", user!.id)).data?.map(s => s.id) || []
+          ),
+      ]);
+
+      const exportData = {
+        exported_at: new Date().toISOString(),
+        profile: profileRes.data,
+        test_submissions: submissionsRes.data,
+        reports: reportsRes.data,
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `meus-dados-sozo-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: "Dados exportados com sucesso!" });
+    } catch {
+      toast({ title: "Erro ao exportar dados", variant: "destructive" });
+    }
+    setIsExporting(false);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm !== "EXCLUIR") return;
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase.rpc("delete_own_account");
+      if (error) throw error;
+      await signOut();
+      navigate("/");
+      toast({ title: "Conta excluída permanentemente" });
+    } catch (err: any) {
+      toast({ title: "Erro ao excluir conta", description: err?.message || "Tente novamente.", variant: "destructive" });
+    }
+    setIsDeleting(false);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -95,6 +148,7 @@ export default function DashboardUsuario() {
             <h1 className="font-heading text-3xl font-bold text-foreground">Minha Conta</h1>
           </div>
 
+          {/* Meus Dados */}
           <Card className="mb-8">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Meus Dados</CardTitle>
@@ -170,7 +224,8 @@ export default function DashboardUsuario() {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Testes Disponíveis */}
+          <Card className="mb-8">
             <CardHeader><CardTitle>Testes Disponíveis</CardTitle></CardHeader>
             <CardContent>
               <p className="text-muted-foreground text-sm mb-4">Explore os testes disponíveis na plataforma.</p>
@@ -180,9 +235,87 @@ export default function DashboardUsuario() {
               </div>
             </CardContent>
           </Card>
+
+          {/* LGPD - Privacidade */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Download className="w-5 h-5" /> Privacidade e Dados (LGPD)</CardTitle>
+              <CardDescription>Gerencie seus dados pessoais conforme a Lei Geral de Proteção de Dados.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-4 rounded-lg border border-border bg-muted/30">
+                <h4 className="font-medium text-foreground text-sm mb-1">Exportar meus dados</h4>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Faça o download de todos os seus dados pessoais, incluindo perfil e resultados de testes, em formato JSON.
+                </p>
+                <Button variant="outline" size="sm" onClick={handleExportData} disabled={isExporting}>
+                  <Download className="w-4 h-4 mr-2" />
+                  {isExporting ? "Exportando..." : "Exportar meus dados"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Zona de Perigo */}
+          <Card className="border-destructive/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="w-5 h-5" /> Zona de Perigo
+              </CardTitle>
+              <CardDescription>Ações irreversíveis na sua conta.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="p-4 rounded-lg border border-destructive/20 bg-destructive/5">
+                <h4 className="font-medium text-foreground text-sm mb-1">Excluir minha conta permanentemente</h4>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Todos os seus dados serão apagados permanentemente, incluindo perfil, testes realizados e relatórios. Esta ação não pode ser desfeita.
+                </p>
+                <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)}>
+                  <Trash2 className="w-4 h-4 mr-2" /> Excluir minha conta
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
       <Footer />
+
+      {/* Delete Account Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" /> Excluir conta permanentemente
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação é irreversível. Todos os seus dados, testes e relatórios serão apagados permanentemente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label>Digite <strong>EXCLUIR</strong> para confirmar:</Label>
+              <Input
+                value={deleteConfirm}
+                onChange={(e) => setDeleteConfirm(e.target.value)}
+                placeholder="EXCLUIR"
+                maxLength={10}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setShowDeleteDialog(false); setDeleteConfirm(""); }}>
+                Cancelar
+              </Button>
+              <Button
+                variant="destructive"
+                disabled={deleteConfirm !== "EXCLUIR" || isDeleting}
+                onClick={handleDeleteAccount}
+              >
+                {isDeleting ? "Excluindo..." : "Excluir permanentemente"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

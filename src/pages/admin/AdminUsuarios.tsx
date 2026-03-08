@@ -2,17 +2,20 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, User } from "lucide-react";
+import { Shield, User, Eye, Ban, Trash2, Search } from "lucide-react";
 
 interface Profile {
   id: string;
   full_name: string | null;
   email: string | null;
   created_at: string;
+  suspended_at: string | null;
+  telefone: string | null;
 }
 
 interface UserRole {
@@ -41,9 +44,13 @@ export default function AdminUsuarios() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [userRoles, setUserRoles] = useState<Record<string, string[]>>({});
   const [isLoading, setIsLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [selectedRole, setSelectedRole] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [detailProfile, setDetailProfile] = useState<Profile | null>(null);
+  const [detailSubmissions, setDetailSubmissions] = useState<number>(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -56,7 +63,7 @@ export default function AdminUsuarios() {
       supabase.from("user_roles").select("*"),
     ]);
 
-    setProfiles(profilesRes.data || []);
+    setProfiles((profilesRes.data as Profile[]) || []);
 
     const grouped: Record<string, string[]> = {};
     rolesRes.data?.forEach((role: UserRole) => {
@@ -70,7 +77,17 @@ export default function AdminUsuarios() {
   function openAddRoleDialog(userId: string) {
     setSelectedUserId(userId);
     setSelectedRole("");
-    setIsDialogOpen(true);
+    setIsRoleDialogOpen(true);
+  }
+
+  async function openDetailDialog(profile: Profile) {
+    setDetailProfile(profile);
+    const { count } = await supabase
+      .from("test_submissions")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", profile.id);
+    setDetailSubmissions(count || 0);
+    setIsDetailDialogOpen(true);
   }
 
   async function handleAddRole() {
@@ -78,22 +95,19 @@ export default function AdminUsuarios() {
       toast({ title: "Selecione um papel", variant: "destructive" });
       return;
     }
-
     const currentRoles = userRoles[selectedUserId] || [];
     if (currentRoles.includes(selectedRole)) {
       toast({ title: "Usuário já possui este papel", variant: "destructive" });
       return;
     }
-
     const { error } = await supabase
       .from("user_roles")
       .insert({ user_id: selectedUserId, role: selectedRole as "admin" | "professional" | "company" | "reseller" | "user" });
-
     if (error) {
       toast({ title: "Erro ao adicionar papel", variant: "destructive" });
     } else {
       toast({ title: "Papel adicionado!" });
-      setIsDialogOpen(false);
+      setIsRoleDialogOpen(false);
       fetchData();
     }
   }
@@ -103,15 +117,12 @@ export default function AdminUsuarios() {
       toast({ title: "Não é possível remover o papel de usuário básico", variant: "destructive" });
       return;
     }
-
     if (!confirm(`Remover papel "${roleLabels[role]}" deste usuário?`)) return;
-
     const { error } = await supabase
       .from("user_roles")
       .delete()
       .eq("user_id", userId)
       .eq("role", role as "admin" | "professional" | "company" | "reseller" | "user");
-
     if (error) {
       toast({ title: "Erro ao remover papel", variant: "destructive" });
     } else {
@@ -120,26 +131,77 @@ export default function AdminUsuarios() {
     }
   }
 
+  async function handleSuspend(userId: string, isSuspended: boolean) {
+    const action = isSuspended ? "reativar" : "suspender";
+    if (!confirm(`Deseja ${action} esta conta?`)) return;
+
+    const { error } = await supabase.rpc("admin_suspend_user", {
+      _target_user_id: userId,
+      _suspend: !isSuspended,
+    });
+    if (error) {
+      toast({ title: `Erro ao ${action}`, description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: isSuspended ? "Conta reativada" : "Conta suspensa" });
+      fetchData();
+    }
+  }
+
+  async function handleDeleteUser(userId: string, name: string) {
+    if (!confirm(`ATENÇÃO: Esta ação é irreversível!\n\nExcluir permanentemente o usuário "${name}"?\nTodos os dados serão apagados.`)) return;
+    if (!confirm("Tem certeza absoluta? Essa ação não pode ser desfeita.")) return;
+
+    const { error } = await supabase.rpc("admin_delete_user", {
+      _target_user_id: userId,
+    });
+    if (error) {
+      toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Usuário excluído permanentemente" });
+      setIsDetailDialogOpen(false);
+      fetchData();
+    }
+  }
+
+  const filteredProfiles = profiles.filter((p) => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      (p.full_name || "").toLowerCase().includes(term) ||
+      (p.email || "").toLowerCase().includes(term)
+    );
+  });
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <h1 className="font-heading text-3xl font-bold text-foreground">Gerenciar Usuários</h1>
+        <div className="relative w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome ou e-mail..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
       </div>
 
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground">Carregando...</div>
-      ) : profiles.length === 0 ? (
+      ) : filteredProfiles.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
-            Nenhum usuário cadastrado ainda.
+            {searchTerm ? "Nenhum usuário encontrado para essa busca." : "Nenhum usuário cadastrado ainda."}
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
-          {profiles.map((profile) => {
+          {filteredProfiles.map((profile) => {
             const roles = userRoles[profile.id] || ["user"];
+            const isSuspended = !!profile.suspended_at;
             return (
-              <Card key={profile.id}>
+              <Card key={profile.id} className={isSuspended ? "opacity-60 border-destructive/30" : ""}>
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -147,16 +209,32 @@ export default function AdminUsuarios() {
                         <User className="w-5 h-5 text-muted-foreground" />
                       </div>
                       <div>
-                        <CardTitle className="text-lg">
+                        <CardTitle className="text-lg flex items-center gap-2">
                           {profile.full_name || "Sem nome"}
+                          {isSuspended && <Badge variant="destructive" className="text-xs">Suspensa</Badge>}
                         </CardTitle>
                         <p className="text-sm text-muted-foreground">{profile.email}</p>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => openAddRoleDialog(profile.id)}>
-                      <Shield className="w-4 h-4 mr-2" />
-                      Adicionar Papel
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" title="Ver detalhes" onClick={() => openDetailDialog(profile)}>
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title={isSuspended ? "Reativar conta" : "Suspender conta"}
+                        onClick={() => handleSuspend(profile.id, isSuspended)}
+                      >
+                        <Ban className={`w-4 h-4 ${isSuspended ? "text-sozo-green" : "text-sozo-orange"}`} />
+                      </Button>
+                      <Button variant="ghost" size="icon" title="Excluir usuário" onClick={() => handleDeleteUser(profile.id, profile.full_name || "Sem nome")}>
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => openAddRoleDialog(profile.id)}>
+                        <Shield className="w-4 h-4 mr-1" /> Papel
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -182,7 +260,8 @@ export default function AdminUsuarios() {
         </div>
       )}
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      {/* Add Role Dialog */}
+      <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Adicionar Papel ao Usuário</DialogTitle>
@@ -200,12 +279,55 @@ export default function AdminUsuarios() {
               </SelectContent>
             </Select>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancelar
-              </Button>
+              <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>Cancelar</Button>
               <Button onClick={handleAddRole}>Adicionar</Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* User Detail Dialog */}
+      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Detalhes do Usuário</DialogTitle>
+            <DialogDescription>Informações completas da conta</DialogDescription>
+          </DialogHeader>
+          {detailProfile && (
+            <div className="space-y-4 pt-2">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div><strong className="text-muted-foreground">Nome:</strong><p>{detailProfile.full_name || "—"}</p></div>
+                <div><strong className="text-muted-foreground">E-mail:</strong><p>{detailProfile.email || "—"}</p></div>
+                <div><strong className="text-muted-foreground">Telefone:</strong><p>{detailProfile.telefone || "—"}</p></div>
+                <div><strong className="text-muted-foreground">Cadastro:</strong><p>{new Date(detailProfile.created_at).toLocaleDateString("pt-BR")}</p></div>
+                <div><strong className="text-muted-foreground">Status:</strong><p>{detailProfile.suspended_at ? "Suspensa" : "Ativa"}</p></div>
+                <div><strong className="text-muted-foreground">Testes realizados:</strong><p>{detailSubmissions}</p></div>
+              </div>
+              <div>
+                <strong className="text-muted-foreground text-sm">Papéis:</strong>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {(userRoles[detailProfile.id] || ["user"]).map((r) => (
+                    <Badge key={r} className={roleColors[r]}>{roleLabels[r]}</Badge>
+                  ))}
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-4 border-t border-border">
+                <Button
+                  variant="outline"
+                  onClick={() => handleSuspend(detailProfile.id, !!detailProfile.suspended_at)}
+                >
+                  <Ban className="w-4 h-4 mr-2" />
+                  {detailProfile.suspended_at ? "Reativar" : "Suspender"}
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleDeleteUser(detailProfile.id, detailProfile.full_name || "")}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" /> Excluir Permanentemente
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
