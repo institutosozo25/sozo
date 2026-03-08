@@ -121,6 +121,39 @@ const testsData: Record<string, {
       "Plano de desenvolvimento pessoal",
     ],
   },
+  temperamento: {
+    title: "Teste de Temperamento",
+    subtitle: "Sanguíneo, Colérico, Melancólico e Fleumático",
+    description: "Identifique seu temperamento predominante e entenda seus padrões naturais de comportamento.",
+    longDescription: "O teste de temperamentos é baseado na teoria clássica dos quatro temperamentos: Sanguíneo, Colérico, Melancólico e Fleumático. Cada temperamento representa um conjunto natural de padrões emocionais, estilo de pensamento, forma de agir e tendências comportamentais. A personalidade humana é uma combinação única desses temperamentos.",
+    duration: "15 min",
+    questions: 25,
+    category: "Comportamental",
+    gradient: "from-primary to-sozo-blue",
+    icon: Brain,
+    benefits: [
+      "Autoconhecimento profundo",
+      "Clareza sobre padrões emocionais",
+      "Melhoria nos relacionamentos",
+      "Desenvolvimento de liderança",
+      "Gestão emocional",
+    ],
+    whoFor: [
+      "Qualquer pessoa buscando autoconhecimento",
+      "Líderes e gestores",
+      "Profissionais em desenvolvimento",
+      "Casais e famílias",
+      "Estudantes e educadores",
+    ],
+    reportPreview: [
+      "Seu temperamento predominante e secundário",
+      "Traços psicológicos principais",
+      "Padrões emocionais detalhados",
+      "Pontos fortes naturais",
+      "Perfil em relacionamentos",
+      "Plano de evolução pessoal",
+    ],
+  },
 };
 
 export default function TesteDetalhe() {
