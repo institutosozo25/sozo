@@ -24,6 +24,7 @@ import AdminRelatorios from "./pages/admin/AdminRelatorios";
 import AdminUsuarios from "./pages/admin/AdminUsuarios";
 import AdminConfig from "./pages/admin/AdminConfig";
 import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
+import AdminNotificacoes from "./pages/admin/AdminNotificacoes";
 import MapsoApp from "./modules/mapso/MapsoApp";
 import DiscApp from "./modules/disc/DiscApp";
 import MbtiApp from "./modules/mbti/MbtiApp";
@@ -84,6 +85,7 @@ const App = () => (
                 <Route path="relatorios" element={<AdminRelatorios />} />
                 <Route path="usuarios" element={<AdminUsuarios />} />
                 <Route path="auditoria" element={<AdminAuditLogs />} />
+                <Route path="notificacoes" element={<AdminNotificacoes />} />
                 <Route path="config" element={<AdminConfig />} />
               </Route>
               <Route path="*" element={<NotFound />} />
