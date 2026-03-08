@@ -132,9 +132,12 @@ export default function TesteDetalhe() {
   const test = testsData[id || ""] || testsData.disc;
 
   const handleStartTest = () => {
-    // If DISC test, navigate directly to the dedicated DISC app
     if (id === "disc") {
       navigate("/testes/disc/aplicar");
+      return;
+    }
+    if (id === "mbti") {
+      navigate("/testes/mbti/aplicar");
       return;
     }
     setShowModal(true);
