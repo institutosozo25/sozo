@@ -158,7 +158,7 @@ export default function Auth() {
 
                     <div className="space-y-2">
                       <Label htmlFor="fullName">Nome completo</Label>
-                      <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome" className={errors.fullName ? "border-destructive" : ""} />
+                      <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome" maxLength={100} className={errors.fullName ? "border-destructive" : ""} />
                       {errors.fullName && <p className="text-destructive text-sm">{errors.fullName}</p>}
                     </div>
                   </>
