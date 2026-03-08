@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, LogIn, LogOut, Settings, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const navigation = [
   { name: "Início", href: "/" },
