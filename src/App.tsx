@@ -23,6 +23,7 @@ import AdminConfig from "./pages/admin/AdminConfig";
 import MapsoApp from "./modules/mapso/MapsoApp";
 import DiscApp from "./modules/disc/DiscApp";
 import MbtiApp from "./modules/mbti/MbtiApp";
+import TemperamentoApp from "./modules/temperamento/TemperamentoApp";
 import DashboardEmpresa from "./pages/dashboard/DashboardEmpresa";
 import DashboardProfissional from "./pages/dashboard/DashboardProfissional";
 import DashboardUsuario from "./pages/dashboard/DashboardUsuario";
@@ -51,6 +52,7 @@ const App = () => (
               <Route path="/mapso/*" element={<MapsoApp />} />
               <Route path="/testes/disc/aplicar" element={<DiscApp />} />
               <Route path="/testes/mbti/aplicar" element={<MbtiApp />} />
+              <Route path="/testes/temperamento/aplicar" element={<TemperamentoApp />} />
               <Route path="/dashboard/empresa" element={
                 <ProtectedRoute allowedRoles={["company", "admin"]}>
                   <DashboardEmpresa />
