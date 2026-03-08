@@ -155,7 +155,7 @@ const testsData: Record<string, {
     ],
   },
   eneagrama: {
-    title: "Teste do Eneagrama",
+    title: "Teste Eneagrama",
     subtitle: "9 Tipos de Personalidade",
     description: "Descubra seu tipo de personalidade, motivações profundas e padrões emocionais através do Eneagrama.",
     longDescription: "O Eneagrama é um sistema milenar de compreensão da personalidade que identifica nove tipos fundamentais, cada um com motivações, medos, desejos e padrões comportamentais distintos. Baseado no trabalho de Riso & Hudson, este teste avalia suas tendências naturais em 135 perguntas para revelar seu tipo dominante e asa, oferecendo insights profundos para desenvolvimento pessoal e autoconhecimento.",

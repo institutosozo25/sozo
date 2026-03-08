@@ -1,77 +1,59 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight, Clock, Star, Brain, Heart, Users, Target, Lightbulb, Shield } from "lucide-react";
+import { ArrowRight, Clock, Brain, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const categories = [
-  { id: "all", name: "Todos", icon: Star },
-  { id: "comportamental", name: "Comportamental", icon: Brain },
-  { id: "emocional", name: "Emocional", icon: Heart },
-  { id: "profissional", name: "Profissional", icon: Target },
-  { id: "espiritual", name: "Espiritual", icon: Lightbulb },
-];
 
 const featuredTests = [
   {
     id: "disc",
-    title: "Teste DISC",
-    category: "comportamental",
-    description: "Descubra seu perfil comportamental e como você se relaciona com outros.",
+    title: "Análise Comportamental DISC Profissional",
+    description: "Descubra seu perfil comportamental predominante: Dominância, Influência, Estabilidade ou Conformidade.",
     duration: "15 min",
-    questions: 28,
+    questions: 25,
     color: "from-sozo-blue to-secondary",
     icon: Brain,
+    route: "/testes/disc",
     popular: true,
   },
   {
-    id: "inteligencia-emocional",
-    title: "Inteligência Emocional",
-    category: "emocional",
-    description: "Avalie sua capacidade de reconhecer e gerenciar emoções.",
-    duration: "12 min",
-    questions: 24,
-    color: "from-sozo-red to-sozo-orange",
-    icon: Heart,
-  },
-  {
-    id: "linguagens-amor",
-    title: "Linguagens do Amor",
-    category: "emocional",
-    description: "Entenda como você expressa e recebe amor em seus relacionamentos.",
-    duration: "10 min",
-    questions: 20,
-    color: "from-sozo-orange to-sozo-beige",
-    icon: Heart,
+    id: "mbti",
+    title: "Teste de Personalidade MBTI",
+    description: "Identifique seu tipo psicológico entre os 16 perfis de personalidade.",
+    duration: "20 min",
+    questions: 70,
+    color: "from-secondary to-sozo-blue",
+    icon: Brain,
+    route: "/testes/mbti",
   },
   {
     id: "temperamento",
-    title: "Temperamento",
-    category: "comportamental",
-    description: "Identifique seu temperamento predominante e características.",
+    title: "Análise de Temperamento Profunda",
+    description: "Identifique seu temperamento predominante: Sanguíneo, Colérico, Melancólico ou Fleumático.",
     duration: "15 min",
-    questions: 30,
+    questions: 25,
     color: "from-primary to-sozo-blue",
-    icon: Users,
+    icon: Brain,
+    route: "/testes/temperamento",
   },
   {
-    id: "proposito",
-    title: "Propósito de Vida",
-    category: "espiritual",
-    description: "Encontre clareza sobre sua missão e propósito de vida.",
-    duration: "20 min",
-    questions: 35,
-    color: "from-sozo-brown to-sozo-beige",
-    icon: Lightbulb,
-  },
-  {
-    id: "via-character",
-    title: "Via Character",
-    category: "profissional",
-    description: "Descubra suas forças de caráter e como potencializá-las.",
+    id: "eneagrama",
+    title: "Teste Eneagrama",
+    description: "Descubra seu tipo entre os 9 perfis de personalidade e motivações profundas.",
     duration: "25 min",
-    questions: 40,
-    color: "from-secondary to-accent",
-    icon: Shield,
+    questions: 135,
+    color: "from-sozo-orange to-sozo-red",
+    icon: Brain,
+    route: "/testes/eneagrama",
+  },
+  {
+    id: "mapso",
+    title: "MAPSO",
+    description: "Ferramenta de diagnóstico social e saúde emocional para empresas e organizações.",
+    duration: "30 min",
+    questions: 50,
+    color: "from-sozo-brown to-primary",
+    icon: BarChart3,
+    route: "/mapso",
   },
 ];
 
@@ -82,33 +64,15 @@ export function TestsPreview() {
         {/* Header */}
         <div className="text-center mb-16">
           <span className="inline-block px-4 py-2 rounded-full bg-secondary/10 text-secondary text-sm font-semibold mb-4">
-            Catálogo de Testes
+            Ferramentas de Avaliação
           </span>
           <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            Explore nossos testes
+            Nossos testes principais
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Mais de 50 testes cientificamente validados para desenvolvimento pessoal, 
-            emocional, comportamental e profissional.
+            Ferramentas cientificamente fundamentadas para desenvolvimento pessoal,
+            comportamental e profissional.
           </p>
-        </div>
-
-        {/* Categories */}
-        <div className="flex flex-wrap justify-center gap-3 mb-12">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              className={cn(
-                "inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all",
-                category.id === "all"
-                  ? "bg-primary text-primary-foreground shadow-sozo-sm"
-                  : "bg-card text-muted-foreground hover:bg-muted hover:text-foreground border border-border"
-              )}
-            >
-              <category.icon className="w-4 h-4" />
-              {category.name}
-            </button>
-          ))}
         </div>
 
         {/* Tests Grid */}
@@ -116,7 +80,7 @@ export function TestsPreview() {
           {featuredTests.map((test, index) => (
             <Link
               key={test.id}
-              to={`/testes/${test.id}`}
+              to={test.route}
               className="group relative bg-card rounded-2xl overflow-hidden border border-border hover:border-secondary/50 transition-all duration-300 hover:shadow-sozo-lg animate-fade-up"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
@@ -125,7 +89,7 @@ export function TestsPreview() {
                   Popular
                 </div>
               )}
-              
+
               {/* Gradient Header */}
               <div className={cn("h-32 bg-gradient-to-br p-6 flex items-end", test.color)}>
                 <div className="w-14 h-14 rounded-xl bg-background/20 backdrop-blur-sm flex items-center justify-center">
