@@ -173,7 +173,7 @@ export default function Auth() {
                 {!isLogin && (
                   <div className="space-y-2">
                     <Label htmlFor="telefone">Telefone</Label>
-                    <Input id="telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(11) 99999-0000" />
+                    <Input id="telefone" value={telefone} onChange={(e) => setTelefone(e.target.value.replace(/[^\d\s()+-]/g, ""))} placeholder="(11) 99999-0000" maxLength={20} />
                   </div>
                 )}
 
