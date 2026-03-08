@@ -32,9 +32,8 @@ export default function AdminLayout() {
   useEffect(() => {
     if (!isLoading && !user) {
       navigate("/auth");
-    } else if (!isLoading && user && !isAdmin) {
-      navigate("/");
     }
+    // Non-admins stay on page but see 403
   }, [user, isLoading, isAdmin, navigate]);
 
   if (isLoading) {
