@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.generate-eneagrama-report]
 verify_jwt = false
+
+[functions.upload-to-drive]
+verify_jwt = false

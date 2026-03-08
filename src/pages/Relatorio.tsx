@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Printer, ShieldAlert, LogIn } from "lucide-react";
+import { ArrowLeft, Printer, ShieldAlert, LogIn, CloudUpload, Loader2, Check } from "lucide-react";
 import DOMPurify from "dompurify";
 
 interface ReportData {
@@ -151,9 +151,12 @@ export default function Relatorio() {
                 <Button variant="ghost" onClick={() => navigate(-1)}>
                   <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
                 </Button>
-                <Button variant="outline" onClick={() => window.print()}>
-                  <Printer className="w-4 h-4 mr-2" /> Salvar como PDF
-                </Button>
+                <div className="flex gap-2">
+                  <SaveToDriveButton reportId={report.id} />
+                  <Button variant="outline" onClick={() => window.print()}>
+                    <Printer className="w-4 h-4 mr-2" /> Salvar como PDF
+                  </Button>
+                </div>
               </div>
 
               <div className="mb-8 p-6 rounded-2xl bg-card border border-border print:border-0 print:p-0">
@@ -179,5 +182,58 @@ export default function Relatorio() {
 
       <div className="print:hidden"><Footer /></div>
     </div>
+  );
+}
+
+// ─── Save to Drive Button ───
+function SaveToDriveButton({ reportId }: { reportId: string }) {
+  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const { toast } = useToast();
+
+  const handleSave = async () => {
+    setStatus("loading");
+    try {
+      const { data, error } = await supabase.functions.invoke("upload-to-drive", {
+        body: { reportId },
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        setStatus("done");
+        toast({ title: "Relatório salvo no Google Drive!", description: data.fileName });
+      } else {
+        throw new Error(data?.error || "Erro desconhecido");
+      }
+    } catch (err: unknown) {
+      setStatus("error");
+      const message = err instanceof Error ? err.message : "Erro ao salvar no Drive";
+      // If Drive is not configured, show a friendly message
+      if (message.includes("não configurada") || message.includes("503")) {
+        toast({
+          title: "Google Drive não configurado",
+          description: "A integração com o Google Drive ainda não foi ativada.",
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Erro", description: message, variant: "destructive" });
+      }
+    }
+  };
+
+  return (
+    <Button
+      variant="outline"
+      onClick={handleSave}
+      disabled={status === "loading" || status === "done"}
+    >
+      {status === "loading" ? (
+        <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Salvando...</>
+      ) : status === "done" ? (
+        <><Check className="w-4 h-4 mr-2 text-accent" /> Salvo no Drive</>
+      ) : (
+        <><CloudUpload className="w-4 h-4 mr-2" /> Salvar no Drive</>
+      )}
+    </Button>
   );
 }
