@@ -75,9 +75,9 @@ export default function DashboardProfissional() {
     if (!profissional || !novoPaciente.nome) return;
     const { error } = await supabase.from("pacientes").insert({
       profissional_id: profissional.id,
-      nome: novoPaciente.nome,
-      email: novoPaciente.email || null,
-      telefone: novoPaciente.telefone || null,
+      nome: sanitizeString(novoPaciente.nome, 200),
+      email: novoPaciente.email ? sanitizeString(novoPaciente.email, 255) : null,
+      telefone: novoPaciente.telefone ? sanitizeString(novoPaciente.telefone, 20) : null,
     });
     if (error) {
       toast({ title: "Erro ao adicionar", variant: "destructive" });
