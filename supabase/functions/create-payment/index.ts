@@ -1,78 +1,44 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const ALLOWED_ORIGINS = [
-  "https://sozo.lovable.app",
-  "https://id-preview--b9bd0d97-1bb0-4a10-a384-515f12049013.lovable.app",
-];
-
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get("Origin") || "";
-  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
-  return {
-    "Access-Control-Allow-Origin": allowedOrigin,
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-  };
-}
+import {
+  getCorsHeaders, authenticateRequest, checkUserRateLimit, checkIpRateLimit,
+  getAdminClient, logAuditEvent, sanitizeInput, errorResponse, jsonResponse,
+} from "../_shared/security.ts";
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
-
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Acesso não autorizado." }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (!checkIpRateLimit(req)) return errorResponse(corsHeaders, 429, "Muitas requisições.");
+
+    const { error: authError, userId } = await authenticateRequest(req);
+    if (authError || !userId) return errorResponse(corsHeaders, 401, "Acesso não autorizado.");
+
+    if (!checkUserRateLimit(userId)) return errorResponse(corsHeaders, 429, "Limite de requisições excedido.");
+
+    const body = await req.json();
+    const submissionId = sanitizeInput(body.submissionId, 36);
+
+    if (!submissionId || !/^[0-9a-f-]{36}$/.test(submissionId)) {
+      return errorResponse(corsHeaders, 400, "ID da submissão inválido.");
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    const adminClient = getAdminClient();
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Acesso não autorizado." }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const userId = user.id;
-    const { submissionId } = await req.json();
-
-    if (!submissionId) {
-      return new Response(JSON.stringify({ error: "ID da submissão é obrigatório." }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
+    // Verify ownership
     const { data: submission, error: subError } = await adminClient
       .from("test_submissions")
       .select("*, tests(title, price)")
       .eq("id", submissionId)
       .single();
 
-    if (subError || !submission) {
-      return new Response(JSON.stringify({ error: "Submissão não encontrada." }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (subError || !submission) return errorResponse(corsHeaders, 404, "Submissão não encontrada.");
+
+    // Verify the submission belongs to the user
+    if (submission.user_id && submission.user_id !== userId) {
+      return errorResponse(corsHeaders, 403, "Acesso negado.");
     }
 
-    if (submission.paid) {
-      return new Response(JSON.stringify({ error: "Pagamento já realizado.", alreadyPaid: true }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (submission.paid) return errorResponse(corsHeaders, 400, "Pagamento já realizado.");
 
     const testPrice = submission.tests?.price || 0;
     const testTitle = submission.tests?.title || "Teste Psicológico";
@@ -88,11 +54,7 @@ Deno.serve(async (req) => {
       ? "https://api.asaas.com/v3"
       : "https://sandbox.asaas.com/api/v3";
 
-    if (!ASAAS_API_KEY) {
-      return new Response(JSON.stringify({ error: "Gateway de pagamento não configurado." }), {
-        status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!ASAAS_API_KEY) return errorResponse(corsHeaders, 503, "Gateway de pagamento não configurado.");
 
     let asaasCustomerId = profile?.asaas_customer_id;
 
@@ -101,8 +63,8 @@ Deno.serve(async (req) => {
         method: "POST",
         headers: { "Content-Type": "application/json", access_token: ASAAS_API_KEY },
         body: JSON.stringify({
-          name: profile?.full_name || submission.respondent_name,
-          email: profile?.email || submission.respondent_email,
+          name: sanitizeInput(profile?.full_name || submission.respondent_name, 200) || "Usuário",
+          email: sanitizeInput(profile?.email || submission.respondent_email, 255),
           externalReference: userId,
         }),
       });
@@ -110,9 +72,7 @@ Deno.serve(async (req) => {
       const customer = await customerRes.json();
       if (!customerRes.ok) {
         console.error("Asaas customer creation failed:", customer);
-        return new Response(JSON.stringify({ error: "Erro ao processar pagamento." }), {
-          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return errorResponse(corsHeaders, 502, "Erro ao processar pagamento.");
       }
 
       asaasCustomerId = customer.id;
@@ -127,7 +87,7 @@ Deno.serve(async (req) => {
         billingType: "UNDEFINED",
         value: testPrice,
         dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-        description: `Relatório: ${testTitle}`,
+        description: `Relatório: ${sanitizeInput(testTitle, 100)}`,
         externalReference: JSON.stringify({ submissionId, userId }),
       }),
     });
@@ -135,9 +95,7 @@ Deno.serve(async (req) => {
     const payment = await paymentRes.json();
     if (!paymentRes.ok) {
       console.error("Asaas payment creation failed:", payment);
-      return new Response(JSON.stringify({ error: "Erro ao criar pagamento." }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse(corsHeaders, 502, "Erro ao criar pagamento.");
     }
 
     await adminClient.from("payments").insert({
@@ -155,20 +113,17 @@ Deno.serve(async (req) => {
       .update({ payment_id: payment.id, payment_status: "pending" })
       .eq("id", submissionId);
 
-    return new Response(
-      JSON.stringify({
-        paymentId: payment.id,
-        invoiceUrl: payment.invoiceUrl,
-        pixQrCode: payment.pixQrCodeBase64,
-        pixCopyPaste: payment.pixCopiaECola,
-        value: testPrice,
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    await logAuditEvent(userId, "payment_created", "payment", payment.id, { submission_id: submissionId, amount: testPrice });
+
+    return jsonResponse(corsHeaders, {
+      paymentId: payment.id,
+      invoiceUrl: payment.invoiceUrl,
+      pixQrCode: payment.pixQrCodeBase64,
+      pixCopyPaste: payment.pixCopiaECola,
+      value: testPrice,
+    });
   } catch (error) {
     console.error("create-payment error:", error);
-    return new Response(JSON.stringify({ error: "Erro interno. Tente novamente." }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return errorResponse(corsHeaders, 500, "Erro interno. Tente novamente.");
   }
 });
