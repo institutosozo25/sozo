@@ -71,7 +71,7 @@ const MbtiFullReport = () => {
               prose-strong:text-foreground
               prose-ul:space-y-1
             "
-            dangerouslySetInnerHTML={{ __html: formatReportToHtml(fullReport) }}
+            dangerouslySetInnerHTML={{ __html: sanitizeAndFormatReport(fullReport) }}
           />
         </div>
 
