@@ -2,6 +2,7 @@ import { useMbti } from "../contexts/MbtiContext";
 import { DIMENSION_LABELS } from "../data/mbti-questionnaire";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Printer } from "lucide-react";
+import { escapeHtml } from "@/lib/validation";
 
 const MbtiFullReport = () => {
   const { result, fullReport, resetTest, respondentName } = useMbti();
