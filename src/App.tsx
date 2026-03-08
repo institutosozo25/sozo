@@ -48,6 +48,7 @@ const App = () => (
               <Route path="/sobre" element={<Sobre />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/mapso/*" element={<MapsoApp />} />
+              <Route path="/testes/disc/aplicar" element={<DiscApp />} />
               <Route path="/dashboard/empresa" element={
                 <ProtectedRoute allowedRoles={["company", "admin"]}>
                   <DashboardEmpresa />
