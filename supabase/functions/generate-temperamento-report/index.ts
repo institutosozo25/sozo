@@ -77,25 +77,22 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const userPrompt = \`Gere um relatório de perfil temperamental completo para a seguinte pessoa:
-
-Nome: \${respondentName || "Participante"}
-
-Pontuações dos Temperamentos:
-- Sanguíneo: \${scores.sanguineo} respostas (\${percentages.sanguineo}%)
-- Fleumático: \${scores.fleumatico} respostas (\${percentages.fleumatico}%)
-- Melancólico: \${scores.melancolico} respostas (\${percentages.melancolico}%)
-- Colérico: \${scores.colerico} respostas (\${percentages.colerico}%)
-
-Temperamento Predominante: \${primaryLabel} (\${primary})
-Temperamento Secundário: \${secondaryLabel} (\${secondary})
-
-Gere o relatório completo seguindo a estrutura definida. Seja profundo, profissional e personalizado para esta combinação específica de temperamentos \${primaryLabel} e \${secondaryLabel}.\`;
+    const name = respondentName || "Participante";
+    const userPrompt = "Gere um relatório de perfil temperamental completo para a seguinte pessoa:\n\n" +
+      "Nome: " + name + "\n\n" +
+      "Pontuações dos Temperamentos:\n" +
+      "- Sanguíneo: " + scores.sanguineo + " respostas (" + percentages.sanguineo + "%)\n" +
+      "- Fleumático: " + scores.fleumatico + " respostas (" + percentages.fleumatico + "%)\n" +
+      "- Melancólico: " + scores.melancolico + " respostas (" + percentages.melancolico + "%)\n" +
+      "- Colérico: " + scores.colerico + " respostas (" + percentages.colerico + "%)\n\n" +
+      "Temperamento Predominante: " + primaryLabel + " (" + primary + ")\n" +
+      "Temperamento Secundário: " + secondaryLabel + " (" + secondary + ")\n\n" +
+      "Gere o relatório completo seguindo a estrutura definida. Seja profundo, profissional e personalizado para esta combinação específica de temperamentos " + primaryLabel + " e " + secondaryLabel + ".";
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: \`Bearer \${LOVABLE_API_KEY}\`,
+        Authorization: "Bearer " + LOVABLE_API_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
