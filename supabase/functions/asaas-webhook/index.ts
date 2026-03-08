@@ -1,22 +1,33 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "content-type",
-};
+const ALLOWED_ORIGINS = [
+  "https://sozo.lovable.app",
+  "https://id-preview--b9bd0d97-1bb0-4a10-a384-515f12049013.lovable.app",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("Origin") || "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "content-type",
+  };
+}
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Webhook token validation
+    // Mandatory webhook token validation
     const webhookToken = Deno.env.get("ASAAS_WEBHOOK_TOKEN");
     const receivedToken = req.headers.get("asaas-access-token");
 
-    if (webhookToken && receivedToken !== webhookToken) {
-      console.error("Invalid webhook token");
+    if (!webhookToken || receivedToken !== webhookToken) {
+      console.error("Invalid or missing webhook token");
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -26,24 +37,21 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { event, payment: paymentData } = body;
 
-    console.log(`Asaas webhook received: ${event}`, JSON.stringify(body).substring(0, 500));
+    console.log(`Asaas webhook: ${event}`);
 
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Handle payment events
     if (event === "PAYMENT_CONFIRMED" || event === "PAYMENT_RECEIVED") {
       const asaasPaymentId = paymentData?.id;
       if (!asaasPaymentId) {
         return new Response(JSON.stringify({ error: "No payment id" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      // Update payments table
       const { data: paymentRecord } = await adminClient
         .from("payments")
         .update({ status: "confirmed", updated_at: new Date().toISOString() })
@@ -52,7 +60,6 @@ Deno.serve(async (req) => {
         .single();
 
       if (paymentRecord) {
-        // One-time payment: unlock test result
         if (paymentRecord.type === "one_time" && paymentRecord.submission_id) {
           await adminClient
             .from("test_submissions")
@@ -64,7 +71,6 @@ Deno.serve(async (req) => {
             })
             .eq("id", paymentRecord.submission_id);
 
-          // Audit log
           await adminClient.rpc("log_audit_event", {
             _action: "payment_confirmed",
             _entity_type: "test_submission",
@@ -73,9 +79,7 @@ Deno.serve(async (req) => {
           });
         }
 
-        // Subscription payment
         if (paymentRecord.type === "subscription" && paymentRecord.user_id) {
-          // Get the plan from the subscription metadata
           const { data: fullPayment } = await adminClient
             .from("payments")
             .select("metadata")
@@ -86,10 +90,7 @@ Deno.serve(async (req) => {
 
           await adminClient
             .from("profiles")
-            .update({
-              subscription_status: "active",
-              subscription_plan: planSlug,
-            })
+            .update({ subscription_status: "active", subscription_plan: planSlug })
             .eq("id", paymentRecord.user_id);
 
           await adminClient.rpc("log_audit_event", {
@@ -102,7 +103,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Handle subscription events
     if (event === "PAYMENT_OVERDUE" || event === "PAYMENT_DELETED") {
       const asaasPaymentId = paymentData?.id;
       if (asaasPaymentId) {
@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error("Webhook error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: "Internal error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -1,9 +1,49 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = [
+  "https://sozo.lovable.app",
+  "https://id-preview--b9bd0d97-1bb0-4a10-a384-515f12049013.lovable.app",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("Origin") || "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  };
+}
+
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 5;
+const RATE_WINDOW = 60_000;
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(userId);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_WINDOW });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT) return false;
+  entry.count++;
+  return true;
+}
+
+async function authenticateRequest(req: Request) {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return { error: "Unauthorized", userId: null };
+  }
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: authHeader } } }
+  );
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) return { error: "Unauthorized", userId: null };
+  return { error: null, userId: user.id };
+}
 
 const SYSTEM_PROMPT = `Você é um analista especialista em temperamentos humanos, psicologia comportamental e desenvolvimento pessoal.
 
@@ -17,82 +57,103 @@ O relatório DEVE seguir EXATAMENTE esta estrutura:
 Apresente as porcentagens de cada temperamento e explique o que esse equilíbrio significa.
 
 ## Interpretação do Perfil Dominante
-Explique profundamente: forma de pensar, padrão emocional, estilo de comunicação, motivadores internos, forma de tomar decisões, comportamento social.
+Explique profundamente: forma de pensar, padrão emocional, estilo de comunicação, motivadores internos.
 
 ## Traços Psicológicos Principais
-Liste os principais traços comportamentais do perfil predominante com explicações detalhadas.
+Liste os principais traços comportamentais com explicações detalhadas.
 
 ## Padrões Emocionais
-Explique: como reage ao estresse, como lida com frustração, como expressa emoções, como processa conflitos.
+Como reage ao estresse, frustração, como expressa emoções.
 
 ## Pontos Fortes Naturais
-Liste talentos naturais com explicações detalhadas (mínimo 6).
+Talentos naturais com explicações detalhadas (mínimo 6).
 
 ## Possíveis Desafios Comportamentais
-Explique tendências que podem gerar dificuldades (mínimo 5).
+Tendências que podem gerar dificuldades (mínimo 5).
 
 ## Perfil em Relacionamentos
-Explique: como ama, como se comunica, como reage a conflitos, como constrói vínculos.
+Como ama, comunica, reage a conflitos, constrói vínculos.
 
 ## Perfil Profissional
-Explique: estilo de trabalho, ambientes ideais, funções compatíveis, estilo de liderança.
+Estilo de trabalho, ambientes ideais, funções compatíveis, estilo de liderança.
 
 ## Perfil de Tomada de Decisão
-Explique se tende a ser racional, emocional, estratégico, impulsivo ou cauteloso.
+Racional, emocional, estratégico, impulsivo ou cauteloso.
 
 ## Interpretação do Temperamento Secundário
-Explique como o segundo temperamento influencia o comportamento.
+Como o segundo temperamento influencia o comportamento.
 
 ## Dinâmica Entre os Temperamentos
-Explique como os dois principais temperamentos interagem entre si.
+Como os dois principais temperamentos interagem.
 
 ## Estratégias de Desenvolvimento Pessoal
-Forneça orientações práticas para crescimento: hábitos emocionais, habilidades a desenvolver, atitudes a equilibrar.
+Orientações práticas para crescimento.
 
 ## Plano de Evolução Pessoal
-Sugira pelo menos 5 práticas com título e descrição detalhada.
+Pelo menos 5 práticas com título e descrição.
 
 ## Conclusão
-Finalize com resumo inspirador sobre potencial natural, como usar talentos e importância do autoconhecimento.
+Resumo inspirador sobre potencial natural.
 
 REGRAS:
-- O relatório deve ser PROFUNDO, PROFISSIONAL, MOTIVADOR, CLARO e ESTRUTURADO
 - Mínimo 2000 palavras
-- Use linguagem profissional de análise comportamental
-- Personalize para o nome do respondente
 - Escreva em português brasileiro
 - Use markdown para formatação
 - Inclua a nota: "Os temperamentos indicam tendências naturais de comportamento e podem ser desenvolvidos ao longo da vida."
-- NÃO mencione inteligência artificial ou IA
-- NÃO use linguagem genérica — seja específico para a combinação de temperamentos`;
+- NÃO mencione inteligência artificial
+- Seja específico para a combinação de temperamentos`;
 
-serve(async (req) => {
+Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const { error: authError, userId } = await authenticateRequest(req);
+    if (authError || !userId) {
+      return new Response(JSON.stringify({ error: "Acesso não autorizado." }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!checkRateLimit(userId)) {
+      return new Response(JSON.stringify({ error: "Limite de requisições excedido." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { scores, percentages, primary, secondary, primaryLabel, secondaryLabel, respondentName } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    if (!LOVABLE_API_KEY) {
+      console.error("LOVABLE_API_KEY not configured");
+      return new Response(JSON.stringify({ error: "Serviço temporariamente indisponível." }), {
+        status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const name = respondentName || "Participante";
-    const userPrompt = "Gere um relatório de perfil temperamental completo para a seguinte pessoa:\n\n" +
-      "Nome: " + name + "\n\n" +
-      "Pontuações dos Temperamentos:\n" +
-      "- Sanguíneo: " + scores.sanguineo + " respostas (" + percentages.sanguineo + "%)\n" +
-      "- Fleumático: " + scores.fleumatico + " respostas (" + percentages.fleumatico + "%)\n" +
-      "- Melancólico: " + scores.melancolico + " respostas (" + percentages.melancolico + "%)\n" +
-      "- Colérico: " + scores.colerico + " respostas (" + percentages.colerico + "%)\n\n" +
-      "Temperamento Predominante: " + primaryLabel + " (" + primary + ")\n" +
-      "Temperamento Secundário: " + secondaryLabel + " (" + secondary + ")\n\n" +
-      "Gere o relatório completo seguindo a estrutura definida. Seja profundo, profissional e personalizado para esta combinação específica de temperamentos " + primaryLabel + " e " + secondaryLabel + ".";
+    const userPrompt = `Gere um relatório de perfil temperamental completo para:
+
+Nome: ${name}
+
+Pontuações:
+- Sanguíneo: ${scores.sanguineo} respostas (${percentages.sanguineo}%)
+- Fleumático: ${scores.fleumatico} respostas (${percentages.fleumatico}%)
+- Melancólico: ${scores.melancolico} respostas (${percentages.melancolico}%)
+- Colérico: ${scores.colerico} respostas (${percentages.colerico}%)
+
+Predominante: ${primaryLabel} (${primary})
+Secundário: ${secondaryLabel} (${secondary})
+
+Gere o relatório completo. Seja profundo e personalizado para ${primaryLabel} e ${secondaryLabel}.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: "Bearer " + LOVABLE_API_KEY,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -107,21 +168,16 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns instantes." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
-      throw new Error("AI gateway error");
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "Limite de requisições excedido." }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ error: "Erro ao gerar relatório. Tente novamente." }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const data = await response.json();
@@ -132,9 +188,8 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("generate-temperamento-report error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(JSON.stringify({ error: "Erro interno. Tente novamente." }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
