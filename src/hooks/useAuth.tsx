@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 type AppRole = "admin" | "professional" | "company" | "reseller" | "user";
 type AccountType = "empresa" | "profissional" | "usuario";
