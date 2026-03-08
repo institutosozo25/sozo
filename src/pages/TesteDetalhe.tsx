@@ -23,12 +23,12 @@ const testsData: Record<string, {
   reportPreview: string[];
 }> = {
   disc: {
-    title: "Teste DISC",
+    title: "Análise Comportamental DISC Profissional",
     subtitle: "Perfil Comportamental",
     description: "Descubra seu perfil comportamental predominante e como você se relaciona com o mundo.",
     longDescription: "O modelo DISC é uma metodologia cientificamente validada que identifica quatro perfis comportamentais: Dominância (D), Influência (I), Estabilidade (S) e Conformidade (C). Este teste ajuda você a entender suas tendências naturais de comportamento, comunicação e tomada de decisão.",
     duration: "15 min",
-    questions: 28,
+    questions: 25,
     category: "Comportamental",
     gradient: "from-sozo-blue to-secondary",
     icon: Brain,
@@ -122,7 +122,7 @@ const testsData: Record<string, {
     ],
   },
   temperamento: {
-    title: "Teste de Temperamento",
+    title: "Análise de Temperamento Profunda",
     subtitle: "Sanguíneo, Colérico, Melancólico e Fleumático",
     description: "Identifique seu temperamento predominante e entenda seus padrões naturais de comportamento.",
     longDescription: "O teste de temperamentos é baseado na teoria clássica dos quatro temperamentos: Sanguíneo, Colérico, Melancólico e Fleumático. Cada temperamento representa um conjunto natural de padrões emocionais, estilo de pensamento, forma de agir e tendências comportamentais. A personalidade humana é uma combinação única desses temperamentos.",
@@ -155,7 +155,7 @@ const testsData: Record<string, {
     ],
   },
   eneagrama: {
-    title: "Teste do Eneagrama",
+    title: "Teste Eneagrama",
     subtitle: "9 Tipos de Personalidade",
     description: "Descubra seu tipo de personalidade, motivações profundas e padrões emocionais através do Eneagrama.",
     longDescription: "O Eneagrama é um sistema milenar de compreensão da personalidade que identifica nove tipos fundamentais, cada um com motivações, medos, desejos e padrões comportamentais distintos. Baseado no trabalho de Riso & Hudson, este teste avalia suas tendências naturais em 135 perguntas para revelar seu tipo dominante e asa, oferecendo insights profundos para desenvolvimento pessoal e autoconhecimento.",
