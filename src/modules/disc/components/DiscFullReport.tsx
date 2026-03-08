@@ -1,7 +1,8 @@
 import { useDisc } from "../contexts/DiscContext";
 import { PROFILE_LABELS, PROFILE_COLORS } from "../data/disc-questionnaire";
 import { Button } from "@/components/ui/button";
-import { Download, RefreshCw, Printer } from "lucide-react";
+import { RefreshCw, Printer } from "lucide-react";
+import { escapeHtml } from "@/lib/validation";
 
 const DiscFullReport = () => {
   const { result, fullReport, resetTest, respondentName } = useDisc();
@@ -25,7 +26,7 @@ const DiscFullReport = () => {
               Perfil {primaryLabel} e {secondaryLabel}
             </h1>
             <p className="text-primary-foreground/80">
-              {respondentName}
+              {escapeHtml(respondentName)}
             </p>
           </div>
 
@@ -47,7 +48,7 @@ const DiscFullReport = () => {
           </div>
         </div>
 
-        {/* Report Content */}
+        {/* Report Content - sanitized HTML */}
         <div className="bg-card border border-border rounded-2xl p-8 mb-8 print:shadow-none">
           <div
             className="prose prose-sm sm:prose max-w-none
@@ -60,7 +61,7 @@ const DiscFullReport = () => {
               prose-strong:text-foreground
               prose-ul:space-y-1
             "
-            dangerouslySetInnerHTML={{ __html: formatReportToHtml(fullReport) }}
+            dangerouslySetInnerHTML={{ __html: sanitizeAndFormatReport(fullReport) }}
           />
         </div>
 
@@ -78,28 +79,35 @@ const DiscFullReport = () => {
   );
 };
 
-function formatReportToHtml(markdown: string): string {
-  // Simple markdown to HTML conversion
-  let html = markdown
-    // Headers
+/**
+ * Safely convert markdown to HTML, stripping any embedded HTML/script tags first.
+ */
+function sanitizeAndFormatReport(markdown: string): string {
+  // 1. Strip any existing HTML tags from the AI response (prevent XSS)
+  let clean = markdown
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
+    .replace(/<object[\s\S]*?<\/object>/gi, "")
+    .replace(/<embed[\s\S]*?>/gi, "")
+    .replace(/<link[\s\S]*?>/gi, "")
+    .replace(/on\w+="[^"]*"/gi, "") // remove event handlers
+    .replace(/on\w+='[^']*'/gi, "");
+
+  // 2. Convert markdown to safe HTML
+  let html = clean
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
     .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    // Bold
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    // Italic
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    // List items
     .replace(/^[•\-] (.+)$/gm, '<li>$1</li>')
-    // Paragraphs (double newlines)
     .replace(/\n\n/g, '</p><p>')
-    // Single newlines in lists
     .replace(/<\/li>\n<li>/g, '</li><li>');
 
   // Wrap consecutive li items in ul
   html = html.replace(/(<li>.*?<\/li>)+/gs, (match) => `<ul>${match}</ul>`);
 
-  // Wrap in paragraph tags
   if (!html.startsWith('<')) html = `<p>${html}`;
   if (!html.endsWith('>')) html = `${html}</p>`;
 

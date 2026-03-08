@@ -1,10 +1,13 @@
 import { useDisc } from "../contexts/DiscContext";
 import { PROFILE_LABELS, PROFILE_COLORS } from "../data/disc-questionnaire";
 import { Button } from "@/components/ui/button";
-import { Lock, ArrowRight, Check, BarChart3, Sparkles } from "lucide-react";
+import { Lock, ArrowRight, Check, BarChart3, Sparkles, LogIn } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { saveTestSubmission, saveGeneratedReport } from "@/lib/test-persistence";
+import { Link } from "react-router-dom";
 
 const PROFILE_DESCRIPTIONS: Record<string, string> = {
   D: "Pessoas com perfil Dominante são assertivas, diretas e orientadas para resultados. Gostam de assumir o controle, tomar decisões rápidas e superar desafios. São líderes naturais com forte determinação.",
@@ -15,6 +18,7 @@ const PROFILE_DESCRIPTIONS: Record<string, string> = {
 
 const DiscPartialResult = () => {
   const { result, setStep, setFullReport, respondentName, respondentEmail } = useDisc();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
   if (!result) return null;
@@ -22,6 +26,11 @@ const DiscPartialResult = () => {
   const { primary, secondary, primaryLabel, secondaryLabel, scores, percentages } = result;
 
   const handleUnlock = async () => {
+    if (!user) {
+      toast.error("Faça login para gerar seu relatório completo.");
+      return;
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-disc-report", {
@@ -36,10 +45,28 @@ const DiscPartialResult = () => {
       });
 
       if (error) throw error;
-      
-      setFullReport(data.report);
+
+      const report = data.report;
+      setFullReport(report);
+
+      // Persist submission and report to database
+      const submissionId = await saveTestSubmission({
+        testSlug: "disc",
+        respondentName,
+        respondentEmail,
+        scores: scores as Record<string, unknown>,
+      });
+
+      if (submissionId) {
+        await saveGeneratedReport({
+          submissionId,
+          reportContent: report,
+          scores: scores as Record<string, unknown>,
+        });
+      }
+
       setStep("full-report");
-      toast.success("Relatório gerado com sucesso!");
+      toast.success("Relatório gerado e salvo com sucesso!");
     } catch (err) {
       console.error("Error generating report:", err);
       toast.error("Erro ao gerar relatório. Tente novamente.");
@@ -99,7 +126,7 @@ const DiscPartialResult = () => {
               ))}
             </div>
 
-            {/* Brief description - this is the FREE part */}
+            {/* Brief description */}
             <div className="p-4 rounded-xl bg-muted/50">
               <h3 className="font-heading font-semibold text-foreground mb-2">
                 Seu Perfil Predominante: {primaryLabel}
@@ -110,6 +137,20 @@ const DiscPartialResult = () => {
             </div>
           </div>
         </div>
+
+        {/* Auth check */}
+        {!user && (
+          <div className="bg-card border border-accent/30 rounded-2xl p-6 mb-6 text-center">
+            <LogIn className="h-6 w-6 text-accent mx-auto mb-2" />
+            <p className="text-foreground font-semibold mb-2">Faça login para gerar seu relatório</p>
+            <p className="text-muted-foreground text-sm mb-4">
+              Você precisa estar autenticado para gerar e salvar seu relatório completo.
+            </p>
+            <Button asChild variant="accent">
+              <Link to="/auth">Entrar ou Criar Conta</Link>
+            </Button>
+          </div>
+        )}
 
         {/* Paywall */}
         <div className="bg-card border-2 border-accent/30 rounded-2xl p-8 mb-8">
@@ -141,14 +182,13 @@ const DiscPartialResult = () => {
             ))}
           </div>
 
-          {/* Blurred preview to create desire */}
+          {/* Blurred preview */}
           <div className="relative mb-6 rounded-xl overflow-hidden">
             <div className="p-4 bg-muted/30 blur-sm select-none pointer-events-none">
               <h4 className="font-bold text-foreground mb-2">Pontos Fortes do Perfil {primaryLabel}-{secondaryLabel}</h4>
               <p className="text-sm text-muted-foreground">
                 A combinação dos perfis {primaryLabel} e {secondaryLabel} cria um indivíduo com características únicas...
                 Este perfil se destaca por sua capacidade de análise detalhada combinada com visão estratégica...
-                No ambiente profissional, essas pessoas tendem a alcançar resultados excepcionais devido à sua...
               </p>
             </div>
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/60 to-background flex items-end justify-center pb-4">
@@ -161,7 +201,7 @@ const DiscPartialResult = () => {
             size="xl"
             className="w-full"
             onClick={handleUnlock}
-            disabled={loading}
+            disabled={loading || !user}
           >
             {loading ? (
               <>
