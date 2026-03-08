@@ -390,36 +390,42 @@ export default function TesteDetalhe() {
               Preencha seus dados para iniciar o teste e receber o relatório por e-mail.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmitForm} className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="nome">Nome completo *</Label>
-              <Input
-                id="nome"
-                placeholder="Seu nome"
-                value={formData.nome}
-                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                required
-              />
+          {waitlistSubmitted ? (
+            <div className="text-center space-y-4 pt-4">
+              <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto">
+                <Bell className="w-8 h-8 text-accent" />
+              </div>
+              <h3 className="font-heading text-lg font-bold text-foreground">Você está na lista!</h3>
+              <p className="text-muted-foreground text-sm">
+                Avisaremos você assim que este teste for liberado!
+              </p>
+              <Button variant="outline" onClick={() => { setShowModal(false); setWaitlistSubmitted(false); }}>
+                Fechar
+              </Button>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail *</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Ao continuar, você concorda com nossos Termos de Uso e Política de Privacidade.
-            </p>
-            <Button type="submit" className="w-full" variant="accent">
-              Começar Teste
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </form>
+          ) : (
+            <form onSubmit={handleSubmitForm} className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                  maxLength={255}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Este teste ainda está em desenvolvimento. Cadastre-se para ser avisado quando estiver disponível.
+              </p>
+              <Button type="submit" className="w-full" variant="accent" disabled={waitlistLoading}>
+                {waitlistLoading ? "Enviando..." : "Quero ser avisado"}
+                <Bell className="w-4 h-4 ml-2" />
+              </Button>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
     </div>

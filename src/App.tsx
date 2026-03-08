@@ -53,6 +53,9 @@ const App = () => (
               <Route path="/planos" element={<Planos />} />
               <Route path="/sobre" element={<Sobre />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/relatorio/:id" element={<Relatorio />} />
               <Route path="/mapso/*" element={<MapsoApp />} />
               <Route path="/testes/disc/aplicar" element={<DiscApp />} />
               <Route path="/testes/mbti/aplicar" element={<MbtiApp />} />

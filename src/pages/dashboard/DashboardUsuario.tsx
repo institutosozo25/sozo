@@ -151,7 +151,13 @@ export default function DashboardUsuario() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {sub.status === "completed" ? (
+                        {sub.generated_reports?.length > 0 ? (
+                          <Button asChild variant="outline" size="sm">
+                            <Link to={`/relatorio/${sub.generated_reports[0].id}`}>
+                              <ExternalLink className="w-3 h-3 mr-1" /> Ver Relatório
+                            </Link>
+                          </Button>
+                        ) : sub.status === "completed" ? (
                           <span className="text-xs px-2 py-1 rounded-full bg-accent/10 text-accent font-medium">Concluído</span>
                         ) : (
                           <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground font-medium">Pendente</span>
