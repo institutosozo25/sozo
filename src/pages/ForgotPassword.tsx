@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { ArrowLeft, Mail } from "lucide-react";
+import { isRateLimited } from "@/lib/rate-limit";
 
 const emailSchema = z.string().trim().email("E-mail inválido").max(255);
 
