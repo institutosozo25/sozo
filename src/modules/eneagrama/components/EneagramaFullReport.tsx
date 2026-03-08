@@ -2,6 +2,7 @@ import { useEneagrama } from "../contexts/EneagramaContext";
 import { ENEAGRAMA_TYPE_NAMES, ENEAGRAMA_COLORS, type EneagramaType } from "../data/eneagrama-questionnaire";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Printer } from "lucide-react";
+import { escapeHtml } from "@/lib/validation";
 
 const EneagramaFullReport = () => {
   const { result, fullReport, resetTest, respondentName } = useEneagrama();
