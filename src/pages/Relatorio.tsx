@@ -230,7 +230,7 @@ function SaveToDriveButton({ reportId }: { reportId: string }) {
       {status === "loading" ? (
         <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Salvando...</>
       ) : status === "done" ? (
-        <><Check className="w-4 h-4 mr-2 text-green-500" /> Salvo no Drive</>
+        <><Check className="w-4 h-4 mr-2 text-accent" /> Salvo no Drive</>
       ) : (
         <><CloudUpload className="w-4 h-4 mr-2" /> Salvar no Drive</>
       )}
