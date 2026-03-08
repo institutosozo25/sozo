@@ -363,6 +363,7 @@ export type Database = {
           id: string
           subscription_plan: string | null
           subscription_status: string | null
+          suspended_at: string | null
           telefone: string | null
           updated_at: string
         }
@@ -375,6 +376,7 @@ export type Database = {
           id: string
           subscription_plan?: string | null
           subscription_status?: string | null
+          suspended_at?: string | null
           telefone?: string | null
           updated_at?: string
         }
@@ -387,6 +389,7 @@ export type Database = {
           id?: string
           subscription_plan?: string | null
           subscription_status?: string | null
+          suspended_at?: string | null
           telefone?: string | null
           updated_at?: string
         }
@@ -806,6 +809,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_delete_user: {
+        Args: { _target_user_id: string }
+        Returns: undefined
+      }
+      admin_suspend_user: {
+        Args: { _suspend: boolean; _target_user_id: string }
+        Returns: undefined
+      }
+      delete_own_account: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
