@@ -87,7 +87,7 @@ export const DISC_QUESTION_GROUPS: DiscQuestionGroup[] = [
     options: [
       { id: "q7a", text: "Solucionador de problemas", profile: "D" },
       { id: "q7b", text: "Encorajador", profile: "I" },
-      { id: "q7c", text: "Supporter", profile: "S" },
+      { id: "q7c", text: "Apoiador", profile: "S" },
       { id: "q7d", text: "Organizador", profile: "C" },
     ],
   },

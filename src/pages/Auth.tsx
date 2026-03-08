@@ -111,7 +111,11 @@ export default function Auth() {
           }
           toast({ title: "Erro ao criar conta", description: message, variant: "destructive" });
         } else {
-          toast({ title: "Conta criada com sucesso!" });
+          toast({
+            title: "Conta criada com sucesso!",
+            description: "Verifique seu e-mail para confirmar o cadastro antes de fazer login.",
+          });
+          setIsLogin(true);
         }
       }
     } catch {
