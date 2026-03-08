@@ -21,6 +21,7 @@ import AdminRelatorios from "./pages/admin/AdminRelatorios";
 import AdminUsuarios from "./pages/admin/AdminUsuarios";
 import AdminConfig from "./pages/admin/AdminConfig";
 import MapsoApp from "./modules/mapso/MapsoApp";
+import DiscApp from "./modules/disc/DiscApp";
 import DashboardEmpresa from "./pages/dashboard/DashboardEmpresa";
 import DashboardProfissional from "./pages/dashboard/DashboardProfissional";
 import DashboardUsuario from "./pages/dashboard/DashboardUsuario";
