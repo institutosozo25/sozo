@@ -97,6 +97,7 @@ const TemperamentoWelcome = () => {
                 value={respondentEmail}
                 onChange={(e) => setRespondentEmail(e.target.value)}
                 required
+                maxLength={255}
               />
             </div>
             <p className="text-xs text-muted-foreground">
