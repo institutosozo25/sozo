@@ -127,7 +127,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { scores, type, typeName, percentages, respondentName } = await req.json();
+    const body = await req.json();
+    const respondentName = String(body.respondentName || "Participante").slice(0, 200).replace(/[<>"'&]/g, "");
+    const scores = body.scores;
+    const type = String(body.type || "").slice(0, 10);
+    const typeName = String(body.typeName || "").slice(0, 100);
+    const percentages = body.percentages;
+
+    if (!scores || typeof scores !== "object" || !type) {
+      return new Response(JSON.stringify({ error: "Dados inválidos." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
