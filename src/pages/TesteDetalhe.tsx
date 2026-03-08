@@ -140,6 +140,10 @@ export default function TesteDetalhe() {
       navigate("/testes/mbti/aplicar");
       return;
     }
+    if (id === "temperamento") {
+      navigate("/testes/temperamento/aplicar");
+      return;
+    }
     setShowModal(true);
   };
 
