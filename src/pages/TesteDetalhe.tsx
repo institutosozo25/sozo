@@ -385,9 +385,9 @@ export default function TesteDetalhe() {
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-heading">Antes de começar</DialogTitle>
+            <DialogTitle className="font-heading">Em Breve</DialogTitle>
             <DialogDescription>
-              Preencha seus dados para iniciar o teste e receber o relatório por e-mail.
+              Este teste ainda está em desenvolvimento. Deixe seu e-mail para ser avisado quando estiver disponível.
             </DialogDescription>
           </DialogHeader>
           {waitlistSubmitted ? (
