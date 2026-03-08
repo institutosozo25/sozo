@@ -23,12 +23,12 @@ const testsData: Record<string, {
   reportPreview: string[];
 }> = {
   disc: {
-    title: "Teste DISC",
+    title: "Análise Comportamental DISC Profissional",
     subtitle: "Perfil Comportamental",
     description: "Descubra seu perfil comportamental predominante e como você se relaciona com o mundo.",
     longDescription: "O modelo DISC é uma metodologia cientificamente validada que identifica quatro perfis comportamentais: Dominância (D), Influência (I), Estabilidade (S) e Conformidade (C). Este teste ajuda você a entender suas tendências naturais de comportamento, comunicação e tomada de decisão.",
     duration: "15 min",
-    questions: 28,
+    questions: 25,
     category: "Comportamental",
     gradient: "from-sozo-blue to-secondary",
     icon: Brain,
