@@ -2,6 +2,7 @@ import { useTemperamento } from "../contexts/TemperamentoContext";
 import { TEMPERAMENTO_LABELS, TEMPERAMENTO_COLORS, type TemperamentoType } from "../data/temperamento-questionnaire";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Printer } from "lucide-react";
+import { escapeHtml } from "@/lib/validation";
 
 const TemperamentoFullReport = () => {
   const { result, fullReport, resetTest, respondentName } = useTemperamento();
