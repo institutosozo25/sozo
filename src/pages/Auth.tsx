@@ -11,6 +11,8 @@ import { Building2, Stethoscope, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { loginSchema, signupSchema } from "@/lib/validation";
 
+type AccountType = "empresa" | "profissional" | "usuario";
+
 const accountTypes: { value: AccountType; label: string; description: string; icon: typeof Building2 }[] = [
   { value: "empresa", label: "Empresa", description: "Gerencie colaboradores e clima organizacional", icon: Building2 },
   { value: "profissional", label: "Profissional", description: "Gerencie pacientes e aplique testes", icon: Stethoscope },
