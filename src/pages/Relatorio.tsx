@@ -66,6 +66,18 @@ export default function Relatorio() {
       submission: sub as ReportData["submission"],
     });
     setPageState("success");
+
+    // Audit log: record third-party report viewing
+    try {
+      await supabase.rpc("log_audit_event", {
+        _action: "view_report",
+        _entity_type: "generated_report",
+        _entity_id: id!,
+        _metadata: {},
+      });
+    } catch {
+      // non-blocking
+    }
   };
 
   const sanitizedContent = report?.report_content

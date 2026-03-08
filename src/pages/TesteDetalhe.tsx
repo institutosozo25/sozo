@@ -227,6 +227,10 @@ export default function TesteDetalhe() {
   const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.email || !id) return;
+    if (isRateLimited(`waitlist:${id}`, 3, 120_000)) {
+      toast({ title: "Muitas tentativas", description: "Aguarde 2 minutos antes de tentar novamente.", variant: "destructive" });
+      return;
+    }
     setWaitlistLoading(true);
     try {
       const { error } = await supabase

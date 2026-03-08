@@ -30,6 +30,11 @@ export default function ForgotPassword() {
       return;
     }
 
+    if (isRateLimited("forgot-password", 3, 60_000)) {
+      setError("Muitas tentativas. Aguarde 1 minuto.");
+      return;
+    }
+
     setIsSubmitting(true);
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,

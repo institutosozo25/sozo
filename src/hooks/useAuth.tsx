@@ -93,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setRoles([]);
+    queryClient.clear(); // Limpa todo o cache do TanStack Query para evitar vazamento de dados entre sessões
   };
 
   const isAdmin = roles.includes("admin");
