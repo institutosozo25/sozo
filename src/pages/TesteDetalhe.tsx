@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Clock, Users, BarChart3, ArrowRight, Check, Brain, FileText, Sparkles, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { sanitizeString } from "@/lib/validation";
+import { isRateLimited } from "@/lib/rate-limit";
 
 const testsData: Record<string, {
   title: string;
