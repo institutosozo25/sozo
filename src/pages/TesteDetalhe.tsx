@@ -92,12 +92,18 @@ const testsData: Record<string, {
 
 export default function TesteDetalhe() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ nome: "", email: "" });
 
   const test = testsData[id || ""] || testsData.disc;
 
   const handleStartTest = () => {
+    // If DISC test, navigate directly to the dedicated DISC app
+    if (id === "disc") {
+      navigate("/testes/disc/aplicar");
+      return;
+    }
     setShowModal(true);
   };
 
