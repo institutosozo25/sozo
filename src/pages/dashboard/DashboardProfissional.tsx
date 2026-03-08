@@ -60,7 +60,7 @@ export default function DashboardProfissional() {
   const updateProfissional = async () => {
     if (!profissional) return;
     const { error } = await supabase.from("profissionais").update({
-      endereco: form.endereco, idade: form.idade, estado_civil: form.estado_civil, sexo: form.sexo,
+      endereco: sanitizeString(form.endereco, 200), idade: form.idade, estado_civil: sanitizeString(form.estado_civil, 50), sexo: sanitizeString(form.sexo, 20),
     }).eq("id", profissional.id);
     if (error) {
       toast({ title: "Erro ao salvar", variant: "destructive" });
