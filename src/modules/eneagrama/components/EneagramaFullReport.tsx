@@ -26,7 +26,7 @@ const EneagramaFullReport = () => {
               Asa: Tipo {wing} — {wingName}
             </p>
             <p className="text-primary-foreground/80">
-              {respondentName}
+              {escapeHtml(respondentName)}
             </p>
           </div>
 
