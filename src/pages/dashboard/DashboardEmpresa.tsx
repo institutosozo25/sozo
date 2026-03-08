@@ -132,7 +132,7 @@ export default function DashboardEmpresa() {
                   ].map(({ key, label }) => (
                     <div key={key} className="space-y-1">
                       <Label>{label}</Label>
-                      <Input value={(form as any)[key] || ""} onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
+                      <Input value={(form as any)[key] || ""} onChange={(e) => setForm({ ...form, [key]: e.target.value })} maxLength={key === "email" ? 255 : key === "cnpj" || key === "cep" || key === "numero" || key === "telefone" || key === "celular" ? 20 : 200} />
                     </div>
                   ))}
                   <div className="col-span-full">
