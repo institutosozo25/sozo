@@ -16,6 +16,7 @@ const featuredTests = [
     color: "from-sozo-blue to-secondary",
     icon: Brain,
     route: "/testes/disc",
+    popular: true,
   },
   {
     id: "mbti",
