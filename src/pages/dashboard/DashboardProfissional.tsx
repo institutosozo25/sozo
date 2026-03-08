@@ -112,10 +112,10 @@ export default function DashboardProfissional() {
             <CardContent>
               {editMode ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1"><Label>Endereço</Label><Input value={form.endereco || ""} onChange={(e) => setForm({ ...form, endereco: e.target.value })} /></div>
-                  <div className="space-y-1"><Label>Idade</Label><Input type="number" value={form.idade || ""} onChange={(e) => setForm({ ...form, idade: parseInt(e.target.value) || null })} /></div>
-                  <div className="space-y-1"><Label>Estado Civil</Label><Input value={form.estado_civil || ""} onChange={(e) => setForm({ ...form, estado_civil: e.target.value })} /></div>
-                  <div className="space-y-1"><Label>Sexo</Label><Input value={form.sexo || ""} onChange={(e) => setForm({ ...form, sexo: e.target.value })} /></div>
+                  <div className="space-y-1"><Label>Endereço</Label><Input value={form.endereco || ""} onChange={(e) => setForm({ ...form, endereco: e.target.value })} maxLength={200} /></div>
+                  <div className="space-y-1"><Label>Idade</Label><Input type="number" value={form.idade || ""} onChange={(e) => setForm({ ...form, idade: parseInt(e.target.value) || null })} maxLength={3} /></div>
+                  <div className="space-y-1"><Label>Estado Civil</Label><Input value={form.estado_civil || ""} onChange={(e) => setForm({ ...form, estado_civil: e.target.value })} maxLength={50} /></div>
+                  <div className="space-y-1"><Label>Sexo</Label><Input value={form.sexo || ""} onChange={(e) => setForm({ ...form, sexo: e.target.value })} maxLength={20} /></div>
                   <div className="col-span-full"><Button onClick={updateProfissional}>Salvar</Button></div>
                 </div>
               ) : (
