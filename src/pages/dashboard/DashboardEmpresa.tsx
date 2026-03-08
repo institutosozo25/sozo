@@ -163,7 +163,7 @@ export default function DashboardEmpresa() {
             </CardHeader>
             <CardContent>
               <div className="flex gap-2 mb-4">
-                <Input placeholder="Nome do colaborador" value={novoColab.nome} onChange={(e) => setNovoColab({ ...novoColab, nome: e.target.value })} />
+                <Input placeholder="Nome do colaborador" value={novoColab.nome} onChange={(e) => setNovoColab({ ...novoColab, nome: e.target.value })} maxLength={200} />
                 <Input type="date" value={novoColab.data_nascimento} onChange={(e) => setNovoColab({ ...novoColab, data_nascimento: e.target.value })} className="w-48" />
                 <Button onClick={addColaborador} size="icon"><Plus className="w-4 h-4" /></Button>
               </div>

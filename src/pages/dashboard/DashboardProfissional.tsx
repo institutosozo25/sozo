@@ -135,9 +135,9 @@ export default function DashboardProfissional() {
             </CardHeader>
             <CardContent>
               <div className="flex gap-2 mb-4">
-                <Input placeholder="Nome" value={novoPaciente.nome} onChange={(e) => setNovoPaciente({ ...novoPaciente, nome: e.target.value })} />
-                <Input placeholder="E-mail" value={novoPaciente.email} onChange={(e) => setNovoPaciente({ ...novoPaciente, email: e.target.value })} />
-                <Input placeholder="Telefone" value={novoPaciente.telefone} onChange={(e) => setNovoPaciente({ ...novoPaciente, telefone: e.target.value })} />
+                <Input placeholder="Nome" value={novoPaciente.nome} onChange={(e) => setNovoPaciente({ ...novoPaciente, nome: e.target.value })} maxLength={200} />
+                <Input placeholder="E-mail" value={novoPaciente.email} onChange={(e) => setNovoPaciente({ ...novoPaciente, email: e.target.value })} maxLength={255} />
+                <Input placeholder="Telefone" value={novoPaciente.telefone} onChange={(e) => setNovoPaciente({ ...novoPaciente, telefone: e.target.value.replace(/[^\d\s()+-]/g, "") })} maxLength={20} />
                 <Button onClick={addPaciente} size="icon"><Plus className="w-4 h-4" /></Button>
               </div>
               {pacientes.length === 0 ? (
