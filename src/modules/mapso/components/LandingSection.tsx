@@ -38,7 +38,7 @@ const LandingSection = () => {
             MAPSO
           </h1>
           <p className="mb-2 text-xl font-medium opacity-90 md:text-2xl">
-            Modelo de Avaliação e Gestão de Riscos Psicossociais Organizacionais
+            Conformidade NR1 - Modelo de Avaliação e Gestão de Riscos Psicossociais Organizacionais
           </p>
           <p className="mb-8 max-w-2xl text-base opacity-75 md:text-lg">
             Ferramenta oficial para conformidade com a NR1 - Riscos Psicossociais. Sistema científico de 
