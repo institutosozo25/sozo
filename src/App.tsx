@@ -13,6 +13,7 @@ import Profissionais from "./pages/Profissionais";
 import Planos from "./pages/Planos";
 import Sobre from "./pages/Sobre";
 import NR1 from "./pages/NR1";
+import Contato from "./pages/Contato";
 import Auth from "./pages/Auth";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
