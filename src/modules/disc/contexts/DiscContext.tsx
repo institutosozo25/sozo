@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useState, type ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { type DiscAnswers, type DiscResult, calculateDiscScores, isTestComplete } from "../lib/disc-engine";
 import { DISC_QUESTION_GROUPS } from "../data/disc-questionnaire";
+import { saveTestState, loadTestState, clearTestState } from "@/lib/test-state-storage";
 
+const TEST_SLUG = "disc";
 type Step = "welcome" | "questionnaire" | "partial-result" | "full-report";
 
 interface DiscContextType {
@@ -46,15 +48,36 @@ export const DiscProvider = ({ children }: { children: ReactNode }) => {
   const answeredCount = Object.keys(answers).length;
   const canSubmit = isTestComplete(answers);
 
-  const setAnswer = (groupId: string, most: string, least: string) => {
+  useEffect(() => {
+    const saved = loadTestState(TEST_SLUG);
+    if (saved && saved.step === "questionnaire") {
+      setStep("questionnaire");
+      setAnswers(saved.answers as DiscAnswers);
+      setCurrentGroupIndex(saved.currentIndex);
+      setRespondentName(saved.respondentName);
+      setRespondentEmail(saved.respondentEmail);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (step === "questionnaire" && answeredCount > 0) {
+      saveTestState(TEST_SLUG, {
+        step, answers, currentIndex: currentGroupIndex,
+        respondentName, respondentEmail, savedAt: Date.now(),
+      });
+    }
+  }, [answers, currentGroupIndex, step]);
+
+  const setAnswer = useCallback((groupId: string, most: string, least: string) => {
     setAnswers((prev) => ({ ...prev, [groupId]: { most, least } }));
-  };
+  }, []);
 
   const submitTest = () => {
     if (!canSubmit) return null;
     const r = calculateDiscScores(answers);
     setResult(r);
     setStep("partial-result");
+    clearTestState(TEST_SLUG);
     return r;
   };
 
@@ -66,6 +89,7 @@ export const DiscProvider = ({ children }: { children: ReactNode }) => {
     setRespondentName("");
     setRespondentEmail("");
     setCurrentGroupIndex(0);
+    clearTestState(TEST_SLUG);
   };
 
   return (

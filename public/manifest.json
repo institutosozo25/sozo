@@ -1,0 +1,33 @@
+{
+  "name": "Plenitude Sozo — Testes Psicológicos",
+  "short_name": "SOZO",
+  "description": "Plataforma de avaliação comportamental e testes psicológicos do Instituto Plenitude.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0f3460",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["health", "education", "productivity"],
+  "lang": "pt-BR",
+  "dir": "ltr"
+}
