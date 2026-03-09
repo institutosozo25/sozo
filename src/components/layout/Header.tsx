@@ -9,6 +9,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 const navigation = [
   { name: "Início", href: "/" },
   { name: "MAPSO", href: "/mapso", highlight: true },
+  { name: "NR1", href: "/nr1", important: true },
   { name: "Testes", href: "/testes" },
   { name: "Para Profissionais", href: "/profissionais" },
   { name: "Para Empresas", href: "/empresas" },
@@ -57,6 +58,8 @@ export function Header() {
                     ? "bg-primary/10 text-primary font-semibold"
                     : (item as any).highlight
                     ? "text-primary font-bold hover:bg-primary/5"
+                    : (item as any).important
+                    ? "text-red-600 font-semibold hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/20"
                     : "text-muted-foreground font-medium hover:text-foreground hover:bg-muted"
                 )}
               >

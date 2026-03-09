@@ -12,6 +12,7 @@ import Empresas from "./pages/Empresas";
 import Profissionais from "./pages/Profissionais";
 import Planos from "./pages/Planos";
 import Sobre from "./pages/Sobre";
+import NR1 from "./pages/NR1";
 import Auth from "./pages/Auth";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -54,6 +55,7 @@ const App = () => (
               <Route path="/profissionais" element={<Profissionais />} />
               <Route path="/planos" element={<Planos />} />
               <Route path="/sobre" element={<Sobre />} />
+              <Route path="/nr1" element={<NR1 />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
