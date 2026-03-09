@@ -27,10 +27,10 @@ export function MapsoHighlight() {
             {/* Content */}
             <div className="flex-1 min-w-0">
               <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
-                MAPSO
+                MAPSO - Conforme NR1
               </h2>
               <p className="text-lg text-muted-foreground mb-4 max-w-2xl">
-                Ferramenta de diagnóstico social e saúde emocional para empresas. Avaliação psicométrica completa com 64 itens em 8 dimensões baseadas em modelos científicos validados.
+                Ferramenta oficial para diagnóstico e gestão de riscos psicossociais conforme exigências da NR1. Avaliação psicométrica completa com 64 itens em 8 dimensões baseadas em modelos científicos validados.
               </p>
 
               {/* Features mini */}
