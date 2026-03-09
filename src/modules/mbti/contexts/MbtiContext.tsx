@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useState, type ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { type MbtiAnswers, type MbtiResult, calculateMbtiScores, isTestComplete } from "../lib/mbti-engine";
 import { TOTAL_QUESTIONS } from "../data/mbti-questionnaire";
+import { saveTestState, loadTestState, clearTestState } from "@/lib/test-state-storage";
 
+const TEST_SLUG = "mbti";
 type Step = "welcome" | "questionnaire" | "partial-result" | "full-report";
 
 interface MbtiContextType {
@@ -46,15 +48,38 @@ export const MbtiProvider = ({ children }: { children: ReactNode }) => {
   const answeredCount = Object.keys(answers).length;
   const canSubmit = isTestComplete(answers);
 
-  const setAnswer = (questionId: number, answer: "A" | "B") => {
+  // Restore state on mount
+  useEffect(() => {
+    const saved = loadTestState(TEST_SLUG);
+    if (saved && saved.step === "questionnaire") {
+      setStep("questionnaire");
+      setAnswers(saved.answers as MbtiAnswers);
+      setCurrentQuestionIndex(saved.currentIndex);
+      setRespondentName(saved.respondentName);
+      setRespondentEmail(saved.respondentEmail);
+    }
+  }, []);
+
+  // Persist on each answer change during questionnaire
+  useEffect(() => {
+    if (step === "questionnaire" && answeredCount > 0) {
+      saveTestState(TEST_SLUG, {
+        step, answers, currentIndex: currentQuestionIndex,
+        respondentName, respondentEmail, savedAt: Date.now(),
+      });
+    }
+  }, [answers, currentQuestionIndex, step]);
+
+  const setAnswer = useCallback((questionId: number, answer: "A" | "B") => {
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
-  };
+  }, []);
 
   const submitTest = () => {
     if (!canSubmit) return null;
     const r = calculateMbtiScores(answers);
     setResult(r);
     setStep("partial-result");
+    clearTestState(TEST_SLUG);
     return r;
   };
 
@@ -66,6 +91,7 @@ export const MbtiProvider = ({ children }: { children: ReactNode }) => {
     setRespondentName("");
     setRespondentEmail("");
     setCurrentQuestionIndex(0);
+    clearTestState(TEST_SLUG);
   };
 
   return (

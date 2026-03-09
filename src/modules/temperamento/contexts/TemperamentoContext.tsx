@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useState, type ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { type TemperamentoAnswers, type TemperamentoResult, calculateTemperamentoScores, isTestComplete } from "../lib/temperamento-engine";
 import { TOTAL_QUESTIONS } from "../data/temperamento-questionnaire";
+import { saveTestState, loadTestState, clearTestState } from "@/lib/test-state-storage";
 
+const TEST_SLUG = "temperamento";
 type Step = "welcome" | "questionnaire" | "partial-result" | "full-report";
 
 interface TemperamentoContextType {
@@ -46,15 +48,36 @@ export const TemperamentoProvider = ({ children }: { children: ReactNode }) => {
   const answeredCount = Object.keys(answers).length;
   const canSubmit = isTestComplete(answers);
 
-  const setAnswer = (questionId: string, optionId: string) => {
+  useEffect(() => {
+    const saved = loadTestState(TEST_SLUG);
+    if (saved && saved.step === "questionnaire") {
+      setStep("questionnaire");
+      setAnswers(saved.answers as TemperamentoAnswers);
+      setCurrentQuestionIndex(saved.currentIndex);
+      setRespondentName(saved.respondentName);
+      setRespondentEmail(saved.respondentEmail);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (step === "questionnaire" && answeredCount > 0) {
+      saveTestState(TEST_SLUG, {
+        step, answers, currentIndex: currentQuestionIndex,
+        respondentName, respondentEmail, savedAt: Date.now(),
+      });
+    }
+  }, [answers, currentQuestionIndex, step]);
+
+  const setAnswer = useCallback((questionId: string, optionId: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
-  };
+  }, []);
 
   const submitTest = () => {
     if (!canSubmit) return null;
     const r = calculateTemperamentoScores(answers);
     setResult(r);
     setStep("partial-result");
+    clearTestState(TEST_SLUG);
     return r;
   };
 
@@ -66,6 +89,7 @@ export const TemperamentoProvider = ({ children }: { children: ReactNode }) => {
     setRespondentName("");
     setRespondentEmail("");
     setCurrentQuestionIndex(0);
+    clearTestState(TEST_SLUG);
   };
 
   return (
