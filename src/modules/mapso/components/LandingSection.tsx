@@ -41,8 +41,8 @@ const LandingSection = () => {
             Modelo de Avaliação e Gestão de Riscos Psicossociais Organizacionais
           </p>
           <p className="mb-8 max-w-2xl text-base opacity-75 md:text-lg">
-            Sistema científico de diagnóstico, mensuração e gestão de riscos psicossociais no trabalho.
-            Baseado nos modelos de Karasek, Siegrist e Maslach.
+            Ferramenta oficial para conformidade com a NR1 - Riscos Psicossociais. Sistema científico de 
+            diagnóstico, mensuração e gestão de riscos psicossociais no trabalho. Baseado nos modelos de Karasek, Siegrist e Maslach.
           </p>
           <div className="flex flex-wrap gap-3">
             <Button
