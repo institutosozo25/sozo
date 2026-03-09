@@ -32,7 +32,7 @@ const LandingSection = () => {
           />
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-4 py-1.5 text-sm font-medium">
             <Shield className="h-4 w-4" />
-            ISO 45003 · OMS · OIT
+            Conforme NR1 · ISO 45003 · OMS · OIT
           </div>
           <h1 className="mb-4 text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl font-heading">
             MAPSO
