@@ -30,7 +30,8 @@ export function HeroSection() {
             <p className="text-lg md:text-xl text-primary-foreground/80 mb-8 max-w-xl animate-fade-up" style={{
             animationDelay: "0.2s"
           }}>
-              Descubra seu perfil comportamental, emocional, espiritual e profissional com testes científicos e relatórios detalhados. 
+              Descubra seu perfil comportamental, emocional e profissional com testes científicos e relatórios detalhados. 
+              Ferramentas para conformidade com a NR1 e gestão de riscos psicossociais.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 animate-fade-up" style={{
