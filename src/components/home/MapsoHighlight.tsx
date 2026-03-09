@@ -13,7 +13,7 @@ export function MapsoHighlight() {
         >
           {/* Badge */}
           <Badge className="absolute top-6 right-6 bg-accent text-accent-foreground text-xs font-bold px-3 py-1">
-            Destaque
+            Conforme NR1
           </Badge>
 
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start lg:items-center">
