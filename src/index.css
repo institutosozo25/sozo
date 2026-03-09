@@ -115,10 +115,54 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html {
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading font-bold tracking-tight;
+  }
+
+  /* Prevent text selection on UI elements for native app feel */
+  button, a, nav, header, footer, label,
+  [role="button"], [role="tab"], [role="menuitem"] {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Keep text selectable in content areas */
+  .prose, .prose *, article, [data-selectable] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* Minimum touch target for Play Store compliance (44x44px) */
+  button, a, [role="button"], input[type="checkbox"], input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Exception for inline text links */
+  .prose a, p a, span a {
+    min-height: unset;
+    min-width: unset;
+  }
+
+  /* Prevent horizontal overflow globally */
+  #root {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  /* Fix mobile keyboard pushing layout */
+  @supports (height: 100dvh) {
+    .min-h-screen {
+      min-height: 100dvh;
+    }
   }
 }
 
