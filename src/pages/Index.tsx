@@ -21,6 +21,7 @@ const Index = () => {
         <Header />
         <main>
           <HeroSection />
+          <NR1Section />
           <MapsoHighlight />
           <TestsPreview />
           <FeaturesSection />
