@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Printer, ShieldAlert, LogIn, CloudUpload, Loader2, Check } from "lucide-react";
+import { ArrowLeft, Printer, ShieldAlert, LogIn, CloudUpload, Loader2, Check, Download } from "lucide-react";
 import DOMPurify from "dompurify";
 
 interface ReportData {
@@ -31,6 +31,7 @@ export default function Relatorio() {
   const [pageState, setPageState] = useState<PageState>("loading");
   const { toast } = useToast();
   const navigate = useNavigate();
+  const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -67,7 +68,6 @@ export default function Relatorio() {
     });
     setPageState("success");
 
-    // Audit log: record third-party report viewing
     try {
       await supabase.rpc("log_audit_event", {
         _action: "view_report",
@@ -86,6 +86,26 @@ export default function Relatorio() {
         ALLOWED_ATTR: ["class","style"],
       })
     : "";
+
+  const handleDownloadPdf = async () => {
+    if (!reportRef.current) return;
+    try {
+      const html2pdf = (await import("html2pdf.js")).default;
+      const element = reportRef.current;
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `relatorio-${report?.submission?.respondent_name?.replace(/\s+/g, "-").toLowerCase() || "sozo"}.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
+      };
+      await html2pdf().set(opt).from(element).save();
+    } catch (err) {
+      console.error("PDF generation error:", err);
+      // Fallback to window.print
+      window.print();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -130,7 +150,7 @@ export default function Relatorio() {
             </div>
           )}
 
-          {/* Forbidden / Not found (IDOR blocked by RLS) */}
+          {/* Forbidden / Not found */}
           {pageState === "forbidden" && (
             <div className="text-center py-20 space-y-4">
               <ShieldAlert className="w-14 h-14 text-destructive mx-auto" />
@@ -147,34 +167,37 @@ export default function Relatorio() {
           {/* Report loaded */}
           {pageState === "success" && report && (
             <>
-              <div className="flex items-center justify-between mb-8 print:hidden">
+              <div className="flex items-center justify-between mb-8 print:hidden flex-wrap gap-2">
                 <Button variant="ghost" onClick={() => navigate(-1)}>
                   <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
                 </Button>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <SaveToDriveButton reportId={report.id} />
-                  <Button variant="outline" onClick={() => window.print()}>
-                    <Printer className="w-4 h-4 mr-2" /> Salvar como PDF
+                  <Button variant="outline" onClick={handleDownloadPdf}>
+                    <Download className="w-4 h-4 mr-2" /> Baixar PDF
                   </Button>
                 </div>
               </div>
 
-              <div className="mb-8 p-6 rounded-2xl bg-card border border-border print:border-0 print:p-0">
-                <h1 className="font-heading text-2xl font-bold text-foreground mb-1">
-                  Relatório — {report.submission?.respondent_name}
-                </h1>
-                <p className="text-muted-foreground text-sm">
-                  Gerado em {new Date(report.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
-                </p>
-              </div>
+              <div ref={reportRef}>
+                <div className="mb-8 p-6 rounded-2xl bg-card border border-border print:border-0 print:p-0">
+                  <h1 className="font-heading text-2xl font-bold text-foreground mb-1">
+                    Relatório — {report.submission?.respondent_name}
+                  </h1>
+                  <p className="text-muted-foreground text-sm">
+                    Gerado em {new Date(report.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+                  </p>
+                </div>
 
-              <div
-                className="prose prose-sm max-w-none bg-card rounded-2xl border border-border p-8 print:border-0 print:shadow-none print:p-0
-                  prose-headings:font-heading prose-headings:text-foreground
-                  prose-p:text-foreground prose-strong:text-foreground
-                  prose-li:text-foreground"
-                dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-              />
+                <div
+                  data-selectable
+                  className="prose prose-sm max-w-none bg-card rounded-2xl border border-border p-8 print:border-0 print:shadow-none print:p-0
+                    prose-headings:font-heading prose-headings:text-foreground
+                    prose-p:text-foreground prose-strong:text-foreground
+                    prose-li:text-foreground"
+                  dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+                />
+              </div>
             </>
           )}
         </div>
@@ -208,7 +231,6 @@ function SaveToDriveButton({ reportId }: { reportId: string }) {
     } catch (err: unknown) {
       setStatus("error");
       const message = err instanceof Error ? err.message : "Erro ao salvar no Drive";
-      // If Drive is not configured, show a friendly message
       if (message.includes("não configurada") || message.includes("503")) {
         toast({
           title: "Google Drive não configurado",
