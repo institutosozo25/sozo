@@ -665,7 +665,7 @@ export type Database = {
           status: string | null
           test_id: string | null
           test_result_unlocked: boolean
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           applied_by?: string | null
@@ -684,7 +684,7 @@ export type Database = {
           status?: string | null
           test_id?: string | null
           test_result_unlocked?: boolean
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           applied_by?: string | null
@@ -703,7 +703,7 @@ export type Database = {
           status?: string | null
           test_id?: string | null
           test_result_unlocked?: boolean
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
