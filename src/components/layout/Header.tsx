@@ -9,6 +9,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 const navigation = [
   { name: "Início", href: "/" },
   { name: "MAPSO", href: "/mapso", highlight: true },
+  { name: "NR1", href: "/nr1", important: true },
   { name: "Testes", href: "/testes" },
   { name: "Para Profissionais", href: "/profissionais" },
   { name: "Para Empresas", href: "/empresas" },
