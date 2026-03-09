@@ -14,6 +14,7 @@ const navigation = [
   { name: "Para Profissionais", href: "/profissionais" },
   { name: "Para Empresas", href: "/empresas" },
   { name: "Planos", href: "/planos" },
+  { name: "Contato", href: "/contato" },
   { name: "Sobre", href: "/sobre" },
 ];
 
