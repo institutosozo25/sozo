@@ -32,17 +32,17 @@ const LandingSection = () => {
           />
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-4 py-1.5 text-sm font-medium">
             <Shield className="h-4 w-4" />
-            ISO 45003 · OMS · OIT
+            Conforme NR1 · ISO 45003 · OMS · OIT
           </div>
           <h1 className="mb-4 text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl font-heading">
             MAPSO
           </h1>
           <p className="mb-2 text-xl font-medium opacity-90 md:text-2xl">
-            Modelo de Avaliação e Gestão de Riscos Psicossociais Organizacionais
+            Conformidade NR1 - Modelo de Avaliação e Gestão de Riscos Psicossociais Organizacionais
           </p>
           <p className="mb-8 max-w-2xl text-base opacity-75 md:text-lg">
-            Sistema científico de diagnóstico, mensuração e gestão de riscos psicossociais no trabalho.
-            Baseado nos modelos de Karasek, Siegrist e Maslach.
+            Ferramenta oficial para conformidade com a NR1 - Riscos Psicossociais. Sistema científico de 
+            diagnóstico, mensuração e gestão de riscos psicossociais no trabalho. Baseado nos modelos de Karasek, Siegrist e Maslach.
           </p>
           <div className="flex flex-wrap gap-3">
             <Button
