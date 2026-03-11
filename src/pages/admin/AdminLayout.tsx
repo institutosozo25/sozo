@@ -12,11 +12,13 @@ import {
   ClipboardList,
   FileBarChart,
   ScrollText,
-  Megaphone
+  Megaphone,
+  Brain,
 } from "lucide-react";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
+  { icon: Brain, label: "MAPSO / NR1", path: "/admin/mapso" },
   { icon: ClipboardList, label: "Testes", path: "/admin/testes" },
   { icon: FileText, label: "Perguntas", path: "/admin/perguntas" },
   { icon: FileBarChart, label: "Relatórios", path: "/admin/relatorios" },

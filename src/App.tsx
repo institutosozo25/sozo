@@ -85,6 +85,7 @@ const App = () => (
               } />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
+                <Route path="mapso" element={<AdminMapso />} />
                 <Route path="testes" element={<AdminTestes />} />
                 <Route path="perguntas" element={<AdminPerguntas />} />
                 <Route path="relatorios" element={<AdminRelatorios />} />
