@@ -256,6 +256,72 @@ export type Database = {
           },
         ]
       }
+      mapso_assessments: {
+        Row: {
+          action_plan: Json | null
+          completed_at: string | null
+          consent_accepted: boolean
+          created_at: string
+          diagnosis_html: string | null
+          dimension_scores: Json
+          drive_diagnosis_file_id: string | null
+          drive_report_file_id: string | null
+          employee_count: number | null
+          id: string
+          ipp: number
+          irp: number
+          irp_classification: string
+          ivo: number
+          organization_department: string | null
+          organization_name: string
+          organization_sector: string | null
+          report_html: string | null
+          user_id: string
+        }
+        Insert: {
+          action_plan?: Json | null
+          completed_at?: string | null
+          consent_accepted?: boolean
+          created_at?: string
+          diagnosis_html?: string | null
+          dimension_scores?: Json
+          drive_diagnosis_file_id?: string | null
+          drive_report_file_id?: string | null
+          employee_count?: number | null
+          id?: string
+          ipp: number
+          irp: number
+          irp_classification: string
+          ivo: number
+          organization_department?: string | null
+          organization_name: string
+          organization_sector?: string | null
+          report_html?: string | null
+          user_id: string
+        }
+        Update: {
+          action_plan?: Json | null
+          completed_at?: string | null
+          consent_accepted?: boolean
+          created_at?: string
+          diagnosis_html?: string | null
+          dimension_scores?: Json
+          drive_diagnosis_file_id?: string | null
+          drive_report_file_id?: string | null
+          employee_count?: number | null
+          id?: string
+          ipp?: number
+          irp?: number
+          irp_classification?: string
+          ivo?: number
+          organization_department?: string | null
+          organization_name?: string
+          organization_sector?: string | null
+          report_html?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_reads: {
         Row: {
           id: string
