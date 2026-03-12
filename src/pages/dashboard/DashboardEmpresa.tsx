@@ -111,6 +111,24 @@ export default function DashboardEmpresa() {
             <h1 className="font-heading text-3xl font-bold text-foreground">Dashboard Empresa</h1>
           </div>
 
+          {/* MAPSO NR1 Quick Access */}
+          <Card className="mb-8 border-primary/30 bg-primary/5">
+            <CardContent className="flex items-center justify-between py-6">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2.5 text-primary">
+                  <Shield className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">MAPSO — Conformidade NR1</h3>
+                  <p className="text-sm text-muted-foreground">Gerencie avaliações psicossociais dos funcionários</p>
+                </div>
+              </div>
+              <Button onClick={() => navigate("/dashboard/empresa/mapso")} className="gap-2">
+                Acessar MAPSO <ArrowRight className="h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Company Data */}
           <Card className="mb-8">
             <CardHeader className="flex flex-row items-center justify-between">
