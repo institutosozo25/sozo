@@ -76,6 +76,11 @@ const App = () => (
                   <DashboardEmpresa />
                 </ProtectedRoute>
               } />
+              <Route path="/dashboard/empresa/mapso" element={
+                <ProtectedRoute allowedRoles={["company", "admin"]}>
+                  <DashboardEmpresaMapso />
+                </ProtectedRoute>
+              } />
               <Route path="/dashboard/profissional" element={
                 <ProtectedRoute allowedRoles={["professional", "admin"]}>
                   <DashboardProfissional />
