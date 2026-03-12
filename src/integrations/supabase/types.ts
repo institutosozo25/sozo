@@ -256,6 +256,51 @@ export type Database = {
           },
         ]
       }
+      mapso_assessment_links: {
+        Row: {
+          created_at: string
+          employee_id: string
+          empresa_id: string
+          expires_at: string
+          id: string
+          status: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          empresa_id: string
+          expires_at?: string
+          id?: string
+          status?: string
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          empresa_id?: string
+          expires_at?: string
+          id?: string
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mapso_assessment_links_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "mapso_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mapso_assessment_links_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mapso_assessments: {
         Row: {
           action_plan: Json | null
@@ -267,11 +312,14 @@ export type Database = {
           drive_diagnosis_file_id: string | null
           drive_report_file_id: string | null
           employee_count: number | null
+          employee_id: string | null
+          empresa_id: string | null
           id: string
           ipp: number
           irp: number
           irp_classification: string
           ivo: number
+          link_id: string | null
           organization_department: string | null
           organization_name: string
           organization_sector: string | null
@@ -288,11 +336,14 @@ export type Database = {
           drive_diagnosis_file_id?: string | null
           drive_report_file_id?: string | null
           employee_count?: number | null
+          employee_id?: string | null
+          empresa_id?: string | null
           id?: string
           ipp: number
           irp: number
           irp_classification: string
           ivo: number
+          link_id?: string | null
           organization_department?: string | null
           organization_name: string
           organization_sector?: string | null
@@ -309,18 +360,84 @@ export type Database = {
           drive_diagnosis_file_id?: string | null
           drive_report_file_id?: string | null
           employee_count?: number | null
+          employee_id?: string | null
+          empresa_id?: string | null
           id?: string
           ipp?: number
           irp?: number
           irp_classification?: string
           ivo?: number
+          link_id?: string | null
           organization_department?: string | null
           organization_name?: string
           organization_sector?: string | null
           report_html?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "mapso_assessments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "mapso_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mapso_assessments_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mapso_assessments_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "mapso_assessment_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mapso_employees: {
+        Row: {
+          cpf: string | null
+          created_at: string
+          department: string | null
+          email: string | null
+          empresa_id: string
+          id: string
+          name: string
+          position: string | null
+        }
+        Insert: {
+          cpf?: string | null
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          empresa_id: string
+          id?: string
+          name: string
+          position?: string | null
+        }
+        Update: {
+          cpf?: string | null
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          empresa_id?: string
+          id?: string
+          name?: string
+          position?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mapso_employees_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_reads: {
         Row: {
