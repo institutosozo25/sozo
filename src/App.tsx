@@ -34,9 +34,11 @@ import MbtiApp from "./modules/mbti/MbtiApp";
 import TemperamentoApp from "./modules/temperamento/TemperamentoApp";
 import EneagramaApp from "./modules/eneagrama/EneagramaApp";
 import DashboardEmpresa from "./pages/dashboard/DashboardEmpresa";
+import DashboardEmpresaMapso from "./pages/dashboard/DashboardEmpresaMapso";
 import DashboardProfissional from "./pages/dashboard/DashboardProfissional";
 import DashboardUsuario from "./pages/dashboard/DashboardUsuario";
 import ProtectedRoute from "./pages/dashboard/ProtectedRoute";
+import EmployeeRespondFlow from "./modules/mapso/components/EmployeeRespondFlow";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -63,6 +65,7 @@ const App = () => (
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/relatorio/:id" element={<Relatorio />} />
+              <Route path="/mapso/respond/:token" element={<EmployeeRespondFlow />} />
               <Route path="/mapso/*" element={<MapsoApp />} />
               <Route path="/testes/disc/aplicar" element={<DiscApp />} />
               <Route path="/testes/mbti/aplicar" element={<MbtiApp />} />
@@ -71,6 +74,11 @@ const App = () => (
               <Route path="/dashboard/empresa" element={
                 <ProtectedRoute allowedRoles={["company", "admin"]}>
                   <DashboardEmpresa />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard/empresa/mapso" element={
+                <ProtectedRoute allowedRoles={["company", "admin"]}>
+                  <DashboardEmpresaMapso />
                 </ProtectedRoute>
               } />
               <Route path="/dashboard/profissional" element={

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Building2, Plus, Trash2, Users } from "lucide-react";
+import { Building2, Plus, Trash2, Users, Shield, ArrowRight } from "lucide-react";
 import { sanitizeString } from "@/lib/validation";
 
 interface Empresa {
@@ -31,6 +32,7 @@ interface Colaborador {
 
 export default function DashboardEmpresa() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [empresa, setEmpresa] = useState<Empresa | null>(null);
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
@@ -108,6 +110,24 @@ export default function DashboardEmpresa() {
             <Building2 className="w-8 h-8 text-primary" />
             <h1 className="font-heading text-3xl font-bold text-foreground">Dashboard Empresa</h1>
           </div>
+
+          {/* MAPSO NR1 Quick Access */}
+          <Card className="mb-8 border-primary/30 bg-primary/5">
+            <CardContent className="flex items-center justify-between py-6">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2.5 text-primary">
+                  <Shield className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">MAPSO — Conformidade NR1</h3>
+                  <p className="text-sm text-muted-foreground">Gerencie avaliações psicossociais dos funcionários</p>
+                </div>
+              </div>
+              <Button onClick={() => navigate("/dashboard/empresa/mapso")} className="gap-2">
+                Acessar MAPSO <ArrowRight className="h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
 
           {/* Company Data */}
           <Card className="mb-8">
