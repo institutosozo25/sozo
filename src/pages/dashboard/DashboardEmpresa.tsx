@@ -32,6 +32,7 @@ interface Colaborador {
 
 export default function DashboardEmpresa() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [empresa, setEmpresa] = useState<Empresa | null>(null);
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
