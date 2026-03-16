@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAssessment } from "../contexts/AssessmentContext";
 import { getInterventionRecommendations } from "../lib/miarpo-engine";
+import { downloadHtmlAsPdf } from "@/lib/pdf-generator";
 import { getRiskClassification, RISK_CLASSIFICATIONS } from "../data/miarpo-questionnaire";
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
