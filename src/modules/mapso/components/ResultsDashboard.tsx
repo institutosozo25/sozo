@@ -20,6 +20,7 @@ const ResultsDashboard = () => {
   const {
     result, organization, resetAssessment,
     diagnosisHtml, reportHtml, actionPlan, isSaving,
+    aiEnrichment, isEnriching, enrichReport,
   } = useAssessment();
   const [downloading, setDownloading] = useState<string | null>(null);
 
