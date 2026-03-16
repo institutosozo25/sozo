@@ -148,6 +148,21 @@ const ResultsDashboard = () => {
           </Button>
         </div>
 
+        {/* AI Enrichment */}
+        {!aiEnrichment && (
+          <div className="mb-8 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-6 text-center">
+            <Sparkles className="mx-auto mb-2 h-8 w-8 text-primary" />
+            <h3 className="mb-1 text-lg font-semibold text-foreground">Análise Aprofundada</h3>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Gere análise crítica, recomendações técnicas e parecer profissional personalizado para {organization?.name}.
+            </p>
+            <Button onClick={enrichReport} disabled={isEnriching} className="gap-2">
+              {isEnriching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {isEnriching ? "Gerando análise..." : "Gerar Análise Profunda"}
+            </Button>
+          </div>
+        )}
+
         {/* Tabs for different views */}
         <Tabs defaultValue="dashboard" className="mb-8">
           <TabsList className="mb-4">
@@ -155,6 +170,7 @@ const ResultsDashboard = () => {
             <TabsTrigger value="diagnosis">Diagnóstico</TabsTrigger>
             <TabsTrigger value="report">Relatório NR1</TabsTrigger>
             <TabsTrigger value="actionplan">Plano de Ação</TabsTrigger>
+            {aiEnrichment && <TabsTrigger value="ai-analysis">Análise Profunda</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="dashboard">
