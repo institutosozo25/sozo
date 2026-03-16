@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Eye, Building2, AlertTriangle, Shield, Loader2 } from "lucide-react";
+import { Download, Eye, Building2, AlertTriangle, Shield, Loader2, ExternalLink, Upload } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,8 @@ interface MapsoAssessment {
   diagnosis_html: string | null;
   report_html: string | null;
   action_plan: any;
+  drive_diagnosis_file_id: string | null;
+  drive_report_file_id: string | null;
   created_at: string;
 }
 
@@ -46,6 +48,7 @@ export default function AdminMapso() {
   const [isLoading, setIsLoading] = useState(true);
   const [viewHtml, setViewHtml] = useState<{ title: string; html: string } | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAssessments();
@@ -73,6 +76,33 @@ export default function AdminMapso() {
     } finally {
       setDownloading(null);
     }
+  };
+
+  const uploadToDrive = async (assessmentId: string, docType: "diagnosis" | "report" | "action_plan") => {
+    const key = `${assessmentId}-${docType}`;
+    setUploading(key);
+    try {
+      const { data, error } = await supabase.functions.invoke("upload-mapso-to-drive", {
+        body: { assessmentId, docType },
+      });
+
+      if (error) throw error;
+      if (data?.driveUrl) {
+        toast.success("Enviado ao Google Drive!", {
+          action: { label: "Abrir", onClick: () => window.open(data.driveUrl, "_blank") },
+        });
+        fetchAssessments(); // Refresh to get drive file IDs
+      }
+    } catch (e) {
+      console.error("Drive upload error:", e);
+      toast.error("Erro ao enviar para o Google Drive.");
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  const openDriveFile = (fileId: string) => {
+    window.open(`https://drive.google.com/file/d/${fileId}/view`, "_blank");
   };
 
   if (isLoading) {
@@ -107,76 +137,98 @@ export default function AdminMapso() {
         <div className="space-y-4">
           {assessments.map((a) => (
             <Card key={a.id}>
-              <CardContent className="flex flex-wrap items-center gap-4 p-6">
-                <div className="flex-1 min-w-[200px]">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Building2 className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-semibold text-foreground">{a.organization_name}</span>
+              <CardContent className="p-6">
+                <div className="flex flex-wrap items-center gap-4 mb-4">
+                  <div className="flex-1 min-w-[200px]">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Building2 className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-semibold text-foreground">{a.organization_name}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {a.organization_sector} · {new Date(a.created_at).toLocaleDateString("pt-BR")}
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {a.organization_sector} · {new Date(a.created_at).toLocaleDateString("pt-BR")}
-                  </p>
+
+                  <div className="flex items-center gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-foreground">{a.irp}</div>
+                      <div className="text-xs text-muted-foreground">IRP</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-foreground">{a.ivo}/8</div>
+                      <div className="text-xs text-muted-foreground">IVO</div>
+                    </div>
+                    <Badge className={getRiskBadgeClass(a.irp_classification)} variant="outline">
+                      {a.irp_classification === "Alto" || a.irp_classification === "Crítico" ? (
+                        <AlertTriangle className="mr-1 h-3 w-3" />
+                      ) : null}
+                      {a.irp_classification}
+                    </Badge>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-foreground">{a.irp}</div>
-                    <div className="text-xs text-muted-foreground">IRP</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-semibold text-foreground">{a.ivo}/8</div>
-                    <div className="text-xs text-muted-foreground">IVO</div>
-                  </div>
-                  <Badge className={getRiskBadgeClass(a.irp_classification)} variant="outline">
-                    {a.irp_classification === "Alto" || a.irp_classification === "Crítico" ? (
-                      <AlertTriangle className="mr-1 h-3 w-3" />
-                    ) : null}
-                    {a.irp_classification}
-                  </Badge>
-                </div>
-
-                <div className="flex gap-2">
+                {/* Actions */}
+                <div className="flex flex-wrap gap-2 border-t border-border pt-4">
+                  {/* Diagnóstico */}
                   {a.diagnosis_html && (
                     <>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1"
-                        onClick={() => setViewHtml({ title: `Diagnóstico — ${a.organization_name}`, html: a.diagnosis_html! })}
-                      >
+                      <Button size="sm" variant="outline" className="gap-1"
+                        onClick={() => setViewHtml({ title: `Diagnóstico — ${a.organization_name}`, html: a.diagnosis_html! })}>
                         <Eye className="h-3 w-3" /> Diagnóstico
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1"
+                      <Button size="sm" variant="outline" className="gap-1"
                         onClick={() => downloadPdf(a.diagnosis_html!, `Diagnostico_${a.organization_name.replace(/\s+/g, "_")}.pdf`)}
-                        disabled={downloading !== null}
-                      >
-                        <Download className="h-3 w-3" />
+                        disabled={downloading !== null}>
+                        <Download className="h-3 w-3" /> PDF
+                      </Button>
+                      <Button size="sm" variant="outline" className="gap-1"
+                        onClick={() => a.drive_diagnosis_file_id ? openDriveFile(a.drive_diagnosis_file_id) : uploadToDrive(a.id, "diagnosis")}
+                        disabled={uploading !== null}>
+                        {uploading === `${a.id}-diagnosis`
+                          ? <Loader2 className="h-3 w-3 animate-spin" />
+                          : a.drive_diagnosis_file_id
+                          ? <ExternalLink className="h-3 w-3" />
+                          : <Upload className="h-3 w-3" />}
+                        {a.drive_diagnosis_file_id ? "Drive" : "Enviar Drive"}
                       </Button>
                     </>
                   )}
+
+                  {/* Relatório NR1 */}
                   {a.report_html && (
                     <>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1"
-                        onClick={() => setViewHtml({ title: `Relatório NR1 — ${a.organization_name}`, html: a.report_html! })}
-                      >
+                      <Button size="sm" variant="outline" className="gap-1"
+                        onClick={() => setViewHtml({ title: `Relatório NR1 — ${a.organization_name}`, html: a.report_html! })}>
                         <Eye className="h-3 w-3" /> NR1
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1"
+                      <Button size="sm" variant="outline" className="gap-1"
                         onClick={() => downloadPdf(a.report_html!, `Relatorio_NR1_${a.organization_name.replace(/\s+/g, "_")}.pdf`)}
-                        disabled={downloading !== null}
-                      >
-                        <Download className="h-3 w-3" />
+                        disabled={downloading !== null}>
+                        <Download className="h-3 w-3" /> PDF
+                      </Button>
+                      <Button size="sm" variant="outline" className="gap-1"
+                        onClick={() => a.drive_report_file_id ? openDriveFile(a.drive_report_file_id) : uploadToDrive(a.id, "report")}
+                        disabled={uploading !== null}>
+                        {uploading === `${a.id}-report`
+                          ? <Loader2 className="h-3 w-3 animate-spin" />
+                          : a.drive_report_file_id
+                          ? <ExternalLink className="h-3 w-3" />
+                          : <Upload className="h-3 w-3" />}
+                        {a.drive_report_file_id ? "Drive" : "Enviar Drive"}
                       </Button>
                     </>
+                  )}
+
+                  {/* Plano de Ação */}
+                  {a.action_plan && Array.isArray(a.action_plan) && a.action_plan.length > 0 && (
+                    <Button size="sm" variant="outline" className="gap-1"
+                      onClick={() => uploadToDrive(a.id, "action_plan")}
+                      disabled={uploading !== null}>
+                      {uploading === `${a.id}-action_plan`
+                        ? <Loader2 className="h-3 w-3 animate-spin" />
+                        : <Upload className="h-3 w-3" />}
+                      Plano → Drive
+                    </Button>
                   )}
                 </div>
               </CardContent>
