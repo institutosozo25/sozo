@@ -366,6 +366,27 @@ const ResultsDashboard = () => {
               )}
             </div>
           </TabsContent>
+
+          {aiEnrichment && (
+            <TabsContent value="ai-analysis">
+              <div className="space-y-6">
+                <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                  <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-card-foreground">
+                    <Sparkles className="h-5 w-5 text-primary" /> Análise Crítica
+                  </h3>
+                  <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: aiEnrichment.analise_critica }} />
+                </div>
+                <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                  <h3 className="mb-4 text-lg font-semibold text-card-foreground">Recomendações Técnicas</h3>
+                  <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: aiEnrichment.recomendacoes_tecnicas }} />
+                </div>
+                <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                  <h3 className="mb-4 text-lg font-semibold text-card-foreground">Parecer Técnico</h3>
+                  <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: aiEnrichment.parecer_tecnico }} />
+                </div>
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
 
         {/* Footer */}
