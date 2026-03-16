@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { downloadHtmlAsPdf } from "@/lib/pdf-generator";
 
 interface MapsoAssessment {
   id: string;
