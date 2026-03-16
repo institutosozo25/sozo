@@ -433,12 +433,15 @@ const EmployeeRespondFlow = () => {
               </Button>
             ) : (
               <Button
-                onClick={handleSubmit}
-                disabled={!canSubmit || submitting}
+                onClick={() => {
+                  if (!canSubmit) return;
+                  setSignatureName(confirmedName);
+                  setStep("final-consent");
+                }}
+                disabled={!canSubmit}
                 className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90"
               >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                {submitting ? "Enviando..." : "Finalizar"}
+                Próximo <ChevronRight className="h-4 w-4" />
               </Button>
             )}
           </div>
