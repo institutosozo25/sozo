@@ -11,6 +11,12 @@ export interface OrganizationInfo {
   employeeCount: string;
 }
 
+interface AiEnrichment {
+  analise_critica: string;
+  recomendacoes_tecnicas: string;
+  parecer_tecnico: string;
+}
+
 interface AssessmentContextType {
   organization: OrganizationInfo | null;
   setOrganization: (info: OrganizationInfo) => void;
@@ -29,6 +35,9 @@ interface AssessmentContextType {
   actionPlan: ActionPlanItem[];
   assessmentId: string | null;
   isSaving: boolean;
+  aiEnrichment: AiEnrichment | null;
+  isEnriching: boolean;
+  enrichReport: () => Promise<void>;
 }
 
 const AssessmentContext = createContext<AssessmentContextType | null>(null);
