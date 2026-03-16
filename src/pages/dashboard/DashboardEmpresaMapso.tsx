@@ -17,6 +17,7 @@ import {
   FileText, Download, Loader2, CheckCircle2, Clock, AlertTriangle, Shield,
 } from "lucide-react";
 import { sanitizeString } from "@/lib/validation";
+import { downloadHtmlAsPdf } from "@/lib/pdf-generator";
 import { generateDiagnosisHtml, generateNR1ReportHtml } from "@/modules/mapso/lib/nr1-report-generator";
 import { generateActionPlan } from "@/modules/mapso/lib/action-plan-generator";
 import { getRiskClassification } from "@/modules/mapso/data/miarpo-questionnaire";
