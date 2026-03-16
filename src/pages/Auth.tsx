@@ -95,6 +95,12 @@ export default function Auth() {
           return;
         }
 
+        if (!lgpdConsent) {
+          setErrors({ lgpd: "Você deve aceitar a Política de Privacidade para continuar." });
+          setIsSubmitting(false);
+          return;
+        }
+
         const { error } = await signUp(email, password, fullName, accountType, telefone);
         if (error) {
           let message = error.message;
