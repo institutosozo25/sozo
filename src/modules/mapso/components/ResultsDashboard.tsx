@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAssessment } from "../contexts/AssessmentContext";
 import { getInterventionRecommendations } from "../lib/miarpo-engine";
+import { downloadHtmlAsPdf } from "@/lib/pdf-generator";
 import { getRiskClassification, RISK_CLASSIFICATIONS } from "../data/miarpo-questionnaire";
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
@@ -43,25 +44,7 @@ const ResultsDashboard = () => {
   const downloadPdf = async (html: string, filename: string) => {
     setDownloading(filename);
     try {
-      const { default: html2pdf } = await import("html2pdf.js");
-      const container = document.createElement("div");
-      container.innerHTML = html;
-      container.style.position = "absolute";
-      container.style.left = "-9999px";
-      document.body.appendChild(container);
-
-      await html2pdf()
-        .set({
-          margin: [10, 10, 10, 10],
-          filename,
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-          pagebreak: { mode: ["avoid-all", "css", "legacy"] },
-        })
-        .from(container)
-        .save();
-
-      document.body.removeChild(container);
+      await downloadHtmlAsPdf(html, filename);
       toast.success("PDF baixado com sucesso!");
     } catch (e) {
       console.error("PDF error:", e);

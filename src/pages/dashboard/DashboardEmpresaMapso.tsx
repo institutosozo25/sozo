@@ -17,6 +17,7 @@ import {
   FileText, Download, Loader2, CheckCircle2, Clock, AlertTriangle, Shield,
 } from "lucide-react";
 import { sanitizeString } from "@/lib/validation";
+import { downloadHtmlAsPdf } from "@/lib/pdf-generator";
 import { generateDiagnosisHtml, generateNR1ReportHtml } from "@/modules/mapso/lib/nr1-report-generator";
 import { generateActionPlan } from "@/modules/mapso/lib/action-plan-generator";
 import { getRiskClassification } from "@/modules/mapso/data/miarpo-questionnaire";
@@ -217,19 +218,13 @@ export default function DashboardEmpresaMapso() {
   const downloadPdf = async (html: string, filename: string) => {
     setDownloading(filename);
     try {
-      const { default: html2pdf } = await import("html2pdf.js");
-      const container = document.createElement("div");
-      container.innerHTML = html;
-      container.style.position = "absolute";
-      container.style.left = "-9999px";
-      document.body.appendChild(container);
-      await html2pdf()
-        .set({ margin: [10, 10, 10, 10], filename, html2canvas: { scale: 2 }, jsPDF: { unit: "mm", format: "a4", orientation: "portrait" } })
-        .from(container).save();
-      document.body.removeChild(container);
+      await downloadHtmlAsPdf(html, filename);
       sonnerToast.success("PDF baixado!");
-    } catch { sonnerToast.error("Erro ao gerar PDF"); }
-    finally { setDownloading(null); }
+    } catch {
+      sonnerToast.error("Erro ao gerar PDF");
+    } finally {
+      setDownloading(null);
+    }
   };
 
   const handleDownloadDiagnosis = () => {
