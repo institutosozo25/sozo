@@ -26,3 +26,9 @@ verify_jwt = false
 
 [functions.subscription-expiry-check]
 verify_jwt = false
+
+[functions.enrich-mapso-report]
+verify_jwt = false
+
+[functions.upload-mapso-to-drive]
+verify_jwt = false

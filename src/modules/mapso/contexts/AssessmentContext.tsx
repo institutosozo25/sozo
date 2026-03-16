@@ -11,6 +11,12 @@ export interface OrganizationInfo {
   employeeCount: string;
 }
 
+interface AiEnrichment {
+  analise_critica: string;
+  recomendacoes_tecnicas: string;
+  parecer_tecnico: string;
+}
+
 interface AssessmentContextType {
   organization: OrganizationInfo | null;
   setOrganization: (info: OrganizationInfo) => void;
@@ -29,6 +35,9 @@ interface AssessmentContextType {
   actionPlan: ActionPlanItem[];
   assessmentId: string | null;
   isSaving: boolean;
+  aiEnrichment: AiEnrichment | null;
+  isEnriching: boolean;
+  enrichReport: () => Promise<void>;
 }
 
 const AssessmentContext = createContext<AssessmentContextType | null>(null);
@@ -50,6 +59,8 @@ export const AssessmentProvider = ({ children }: { children: ReactNode }) => {
   const [actionPlan, setActionPlan] = useState<ActionPlanItem[]>([]);
   const [assessmentId, setAssessmentId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [aiEnrichment, setAiEnrichment] = useState<AiEnrichment | null>(null);
+  const [isEnriching, setIsEnriching] = useState(false);
 
   const setAnswer = (itemId: string, value: number) => {
     setAnswers((prev) => ({ ...prev, [itemId]: value }));
@@ -120,6 +131,55 @@ export const AssessmentProvider = ({ children }: { children: ReactNode }) => {
     setCurrentStep("results");
   };
 
+  const enrichReport = async () => {
+    if (!result || !organization || isEnriching) return;
+    setIsEnriching(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/enrich-mapso-report`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            organizationName: organization.name,
+            sector: organization.sector,
+            department: organization.department,
+            irp: result.irp,
+            irpClassification: result.irpClassification.label,
+            ipp: result.ipp,
+            ivo: result.ivo,
+            dimensions: result.dimensions.map((d) => ({
+              id: d.dimensionId,
+              name: d.name,
+              score: Math.round(d.riskScore),
+              classification: d.classification.label,
+            })),
+            actionPlan: actionPlan.map((a) => ({
+              riskFactor: a.riskFactor,
+              recommendedAction: a.recommendedAction,
+              priority: a.priority,
+            })),
+          }),
+        }
+      );
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setAiEnrichment(data);
+    } catch (e) {
+      console.error("AI enrichment error:", e);
+    } finally {
+      setIsEnriching(false);
+    }
+  };
+
   const resetAssessment = () => {
     setOrganization(null);
     setAnswers({});
@@ -130,6 +190,7 @@ export const AssessmentProvider = ({ children }: { children: ReactNode }) => {
     setReportHtml(null);
     setActionPlan([]);
     setAssessmentId(null);
+    setAiEnrichment(null);
   };
 
   return (
@@ -142,6 +203,7 @@ export const AssessmentProvider = ({ children }: { children: ReactNode }) => {
         consentAccepted, setConsentAccepted,
         diagnosisHtml, reportHtml, actionPlan,
         assessmentId, isSaving,
+        aiEnrichment, isEnriching, enrichReport,
       }}
     >
       {children}
