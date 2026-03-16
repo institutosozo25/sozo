@@ -41,6 +41,8 @@ const EmployeeRespondFlow = () => {
   const [linkData, setLinkData] = useState<LinkData | null>(null);
   const [error, setError] = useState("");
   const [consentAccepted, setConsentAccepted] = useState(false);
+  const [finalConsentAccepted, setFinalConsentAccepted] = useState(false);
+  const [signatureName, setSignatureName] = useState("");
   const [confirmedName, setConfirmedName] = useState("");
   const [confirmedDept, setConfirmedDept] = useState("");
   const [answers, setAnswers] = useState<Answers>({});
