@@ -59,6 +59,8 @@ export const AssessmentProvider = ({ children }: { children: ReactNode }) => {
   const [actionPlan, setActionPlan] = useState<ActionPlanItem[]>([]);
   const [assessmentId, setAssessmentId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [aiEnrichment, setAiEnrichment] = useState<AiEnrichment | null>(null);
+  const [isEnriching, setIsEnriching] = useState(false);
 
   const setAnswer = (itemId: string, value: number) => {
     setAnswers((prev) => ({ ...prev, [itemId]: value }));
