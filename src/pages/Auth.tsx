@@ -214,9 +214,23 @@ export default function Auth() {
                     <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" className={errors.confirmPassword ? "border-destructive" : ""} />
                     {errors.confirmPassword && <p className="text-destructive text-sm">{errors.confirmPassword}</p>}
                   </div>
-                )}
 
-                <Button type="submit" className="w-full" variant="hero" disabled={isSubmitting}>
+                  <div className="flex items-start gap-3 rounded-lg border border-border p-3">
+                    <Checkbox
+                      id="lgpd-consent"
+                      checked={lgpdConsent}
+                      onCheckedChange={(checked) => setLgpdConsent(checked === true)}
+                      className="mt-0.5"
+                    />
+                    <label htmlFor="lgpd-consent" className="cursor-pointer text-xs text-muted-foreground leading-snug">
+                      Declaro que li e concordo com a{" "}
+                      <Link to="/privacidade" className="text-primary hover:underline">Política de Privacidade</Link>{" "}
+                      e o tratamento de dados conforme a LGPD (Lei Geral de Proteção de Dados).
+                    </label>
+                  </div>
+                  {errors.lgpd && <p className="text-destructive text-sm">{errors.lgpd}</p>}
+                </>
+                )
                   {isSubmitting ? "Carregando..." : isLogin ? "Entrar" : "Criar Conta"}
                 </Button>
               </form>

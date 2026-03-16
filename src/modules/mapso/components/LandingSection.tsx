@@ -2,7 +2,6 @@ import { Shield, BarChart3, FileText, Activity, ChevronRight } from "lucide-reac
 import { Button } from "@/components/ui/button";
 import { useAssessment } from "../contexts/AssessmentContext";
 import { generateDemoResult } from "../lib/miarpo-engine";
-import logoSozo from "../assets/logo-sozo.png";
 
 const features = [
   { icon: Shield, title: "Avaliação Psicométrica", desc: "64 itens em 8 dimensões baseadas em modelos científicos validados" },
