@@ -9,7 +9,7 @@ import {
 } from "recharts";
 import {
   Shield, AlertTriangle, TrendingDown, TrendingUp, FileText,
-  RotateCcw, Building2, Download, FileCheck, ClipboardList, Loader2, ExternalLink,
+  RotateCcw, Building2, Download, FileCheck, ClipboardList, Loader2, ExternalLink, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
