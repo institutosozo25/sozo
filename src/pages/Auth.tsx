@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Building2, Stethoscope, User } from "lucide-react";
@@ -27,6 +28,7 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [telefone, setTelefone] = useState("");
   const [accountType, setAccountType] = useState<AccountType>("usuario");
+  const [lgpdConsent, setLgpdConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -89,6 +91,12 @@ export default function Auth() {
             if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
           });
           setErrors(fieldErrors);
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (!lgpdConsent) {
+          setErrors({ lgpd: "Você deve aceitar a Política de Privacidade para continuar." });
           setIsSubmitting(false);
           return;
         }
@@ -201,11 +209,28 @@ export default function Auth() {
                 </div>
 
                 {!isLogin && (
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirmar senha</Label>
-                    <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" className={errors.confirmPassword ? "border-destructive" : ""} />
-                    {errors.confirmPassword && <p className="text-destructive text-sm">{errors.confirmPassword}</p>}
-                  </div>
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirmar senha</Label>
+                      <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" className={errors.confirmPassword ? "border-destructive" : ""} />
+                      {errors.confirmPassword && <p className="text-destructive text-sm">{errors.confirmPassword}</p>}
+                    </div>
+
+                    <div className="flex items-start gap-3 rounded-lg border border-border p-3">
+                      <Checkbox
+                        id="lgpd-consent"
+                        checked={lgpdConsent}
+                        onCheckedChange={(checked) => setLgpdConsent(checked === true)}
+                        className="mt-0.5"
+                      />
+                      <label htmlFor="lgpd-consent" className="cursor-pointer text-xs text-muted-foreground leading-snug">
+                        Declaro que li e concordo com a{" "}
+                        <Link to="/privacidade" className="text-primary hover:underline">Política de Privacidade</Link>{" "}
+                        e o tratamento de dados conforme a LGPD (Lei Geral de Proteção de Dados).
+                      </label>
+                    </div>
+                    {errors.lgpd && <p className="text-destructive text-sm">{errors.lgpd}</p>}
+                  </>
                 )}
 
                 <Button type="submit" className="w-full" variant="hero" disabled={isSubmitting}>

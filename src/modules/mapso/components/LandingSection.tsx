@@ -2,7 +2,6 @@ import { Shield, BarChart3, FileText, Activity, ChevronRight } from "lucide-reac
 import { Button } from "@/components/ui/button";
 import { useAssessment } from "../contexts/AssessmentContext";
 import { generateDemoResult } from "../lib/miarpo-engine";
-import logoSozo from "../assets/logo-sozo.png";
 
 const features = [
   { icon: Shield, title: "Avaliação Psicométrica", desc: "64 itens em 8 dimensões baseadas em modelos científicos validados" },
@@ -25,11 +24,15 @@ const LandingSection = () => {
       {/* Hero */}
       <header className="bg-gradient-to-br from-primary to-primary/80 px-6 py-20 text-primary-foreground">
         <div className="mx-auto max-w-5xl animate-fade-up">
-          <img
-            src={logoSozo}
-            alt="Instituto Plenitude Sozo Business"
-            className="mb-8 h-16 md:h-20"
-          />
+          <div className="mb-8 inline-flex items-center gap-3">
+            <div className="w-14 h-14 rounded-full bg-primary-foreground/10 flex items-center justify-center border border-primary-foreground/20">
+              <span className="text-primary-foreground font-heading font-bold text-2xl">S</span>
+            </div>
+            <div className="text-left">
+              <p className="text-xs text-primary-foreground/70 uppercase tracking-widest">Instituto Plenitude</p>
+              <p className="font-heading font-bold text-2xl text-primary-foreground">SOZO Business</p>
+            </div>
+          </div>
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-4 py-1.5 text-sm font-medium">
             <Shield className="h-4 w-4" />
             Conforme NR1 · ISO 45003 · OMS · OIT

@@ -1,18 +1,50 @@
+import { useState } from "react";
 import { useDisc } from "../contexts/DiscContext";
 import { PROFILE_LABELS, PROFILE_COLORS } from "../data/disc-questionnaire";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Printer } from "lucide-react";
+import { RefreshCw, Download, Loader2 } from "lucide-react";
 import { escapeHtml } from "@/lib/validation";
+import { downloadHtmlAsPdf } from "@/lib/pdf-generator";
+import { toast } from "sonner";
 
 const DiscFullReport = () => {
   const { result, fullReport, resetTest, respondentName } = useDisc();
+  const [downloading, setDownloading] = useState(false);
 
   if (!result || !fullReport) return null;
 
   const { primaryLabel, secondaryLabel, percentages } = result;
 
-  const handlePrint = () => {
-    window.print();
+  const handleDownloadPdf = async () => {
+    setDownloading(true);
+    try {
+      const html = `
+<div style="max-width:800px;margin:0 auto;font-family:'Segoe UI',Arial,sans-serif;color:#1a1a2e;line-height:1.7;">
+  <div style="text-align:center;padding:30px;background:linear-gradient(135deg,#0f3460,#533483);color:white;border-radius:12px;margin-bottom:30px;">
+    <h1 style="margin:0 0 8px;font-size:24px;">RELATÓRIO COMPORTAMENTAL DISC</h1>
+    <p style="margin:0;font-size:18px;">Perfil ${primaryLabel} e ${secondaryLabel}</p>
+    <p style="margin:4px 0 0;opacity:0.8;font-size:14px;">${escapeHtml(respondentName)} · ${new Date().toLocaleDateString("pt-BR")}</p>
+  </div>
+  <div style="display:flex;gap:16px;justify-content:center;margin-bottom:24px;">
+    ${(["D", "I", "S", "C"] as const).map(p => `
+    <div style="text-align:center;">
+      <div style="width:60px;height:60px;border-radius:50%;background:${PROFILE_COLORS[p]};color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;margin:0 auto 8px;">${percentages[p]}%</div>
+      <div style="font-size:12px;color:#666;">${PROFILE_LABELS[p]}</div>
+    </div>`).join("")}
+  </div>
+  <div style="padding:0 20px;">${sanitizeAndFormatReport(fullReport)}</div>
+  <div style="text-align:center;margin-top:40px;padding-top:20px;border-top:2px solid #e0e0e0;color:#888;font-size:12px;">
+    <p>© Instituto Plenitude SOZO — Relatório gerado automaticamente</p>
+  </div>
+</div>`;
+      await downloadHtmlAsPdf(html, `Relatorio_DISC_${escapeHtml(respondentName).replace(/\s+/g, "_")}.pdf`);
+      toast.success("PDF baixado com sucesso!");
+    } catch (e) {
+      console.error("PDF error:", e);
+      toast.error("Erro ao gerar PDF.");
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -48,7 +80,7 @@ const DiscFullReport = () => {
           </div>
         </div>
 
-        {/* Report Content - sanitized HTML */}
+        {/* Report Content */}
         <div className="bg-card border border-border rounded-2xl p-8 mb-8 print:shadow-none">
           <div
             className="prose prose-sm sm:prose max-w-none
@@ -67,8 +99,9 @@ const DiscFullReport = () => {
 
         {/* Actions */}
         <div className="flex flex-wrap gap-3 justify-center print:hidden">
-          <Button variant="outline" onClick={handlePrint} className="gap-2">
-            <Printer className="h-4 w-4" /> Imprimir
+          <Button variant="outline" onClick={handleDownloadPdf} disabled={downloading} className="gap-2">
+            {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            Baixar PDF
           </Button>
           <Button variant="outline" onClick={resetTest} className="gap-2">
             <RefreshCw className="h-4 w-4" /> Fazer Novamente
@@ -79,11 +112,7 @@ const DiscFullReport = () => {
   );
 };
 
-/**
- * Safely convert markdown to HTML, stripping any embedded HTML/script tags first.
- */
 function sanitizeAndFormatReport(markdown: string): string {
-  // 1. Strip any existing HTML tags from the AI response (prevent XSS)
   let clean = markdown
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
@@ -91,10 +120,9 @@ function sanitizeAndFormatReport(markdown: string): string {
     .replace(/<object[\s\S]*?<\/object>/gi, "")
     .replace(/<embed[\s\S]*?>/gi, "")
     .replace(/<link[\s\S]*?>/gi, "")
-    .replace(/on\w+="[^"]*"/gi, "") // remove event handlers
+    .replace(/on\w+="[^"]*"/gi, "")
     .replace(/on\w+='[^']*'/gi, "");
 
-  // 2. Convert markdown to safe HTML
   let html = clean
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
@@ -105,7 +133,6 @@ function sanitizeAndFormatReport(markdown: string): string {
     .replace(/\n\n/g, '</p><p>')
     .replace(/<\/li>\n<li>/g, '</li><li>');
 
-  // Wrap consecutive li items in ul
   html = html.replace(/(<li>.*?<\/li>)+/gs, (match) => `<ul>${match}</ul>`);
 
   if (!html.startsWith('<')) html = `<p>${html}`;

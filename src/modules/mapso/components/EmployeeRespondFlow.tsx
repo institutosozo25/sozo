@@ -15,7 +15,7 @@ import {
   Shield, CheckCircle2, AlertTriangle, ChevronLeft, ChevronRight, Send, Loader2, Building2,
 } from "lucide-react";
 
-type Step = "loading" | "error" | "consent" | "identify" | "questionnaire" | "done";
+type Step = "loading" | "error" | "consent" | "identify" | "questionnaire" | "final-consent" | "done";
 
 interface LinkData {
   id: string;
@@ -41,6 +41,8 @@ const EmployeeRespondFlow = () => {
   const [linkData, setLinkData] = useState<LinkData | null>(null);
   const [error, setError] = useState("");
   const [consentAccepted, setConsentAccepted] = useState(false);
+  const [finalConsentAccepted, setFinalConsentAccepted] = useState(false);
+  const [signatureName, setSignatureName] = useState("");
   const [confirmedName, setConfirmedName] = useState("");
   const [confirmedDept, setConfirmedDept] = useState("");
   const [answers, setAnswers] = useState<Answers>({});
@@ -324,6 +326,76 @@ const EmployeeRespondFlow = () => {
     );
   }
 
+  if (step === "final-consent") {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center px-4 py-12">
+          <div className="w-full max-w-lg animate-fade-up">
+            <div className="mb-6 text-center">
+              <div className="mx-auto mb-4 inline-flex rounded-xl bg-primary/10 p-3 text-primary">
+                <Shield className="h-8 w-8" />
+              </div>
+              <h1 className="mb-2 text-2xl font-bold text-foreground font-heading">Termo de Consentimento</h1>
+              <p className="text-muted-foreground">Confirme sua participação voluntária antes de enviar suas respostas.</p>
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-6 shadow-sm space-y-6">
+              <div className="rounded-lg bg-muted/50 p-4">
+                <p className="text-sm text-foreground leading-relaxed">
+                  Declaro que respondi este questionário de forma <strong>voluntária e consciente</strong>,
+                  com base na minha experiência profissional nos últimos 3 meses. Estou ciente de que as
+                  informações serão utilizadas exclusivamente para fins de diagnóstico psicossocial
+                  organizacional, em conformidade com a NR-1.
+                </p>
+              </div>
+
+              <div className="flex items-start gap-3 rounded-lg border border-border p-4">
+                <Checkbox
+                  id="final-consent"
+                  checked={finalConsentAccepted}
+                  onCheckedChange={(checked) => setFinalConsentAccepted(checked === true)}
+                  className="mt-0.5"
+                />
+                <label htmlFor="final-consent" className="cursor-pointer text-sm font-medium text-foreground leading-snug">
+                  Declaro que respondi de forma voluntária e consciente.
+                </label>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Assinatura (nome completo) *</Label>
+                <Input
+                  value={signatureName}
+                  onChange={(e) => setSignatureName(e.target.value)}
+                  placeholder="Digite seu nome completo"
+                  maxLength={200}
+                />
+              </div>
+
+              <Button
+                onClick={handleSubmit}
+                disabled={!finalConsentAccepted || !signatureName.trim() || submitting}
+                className="w-full gap-2"
+                size="lg"
+              >
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {submitting ? "Enviando..." : "Enviar Respostas"}
+              </Button>
+            </div>
+
+            <button
+              onClick={() => setStep("questionnaire")}
+              className="mt-4 block w-full text-center text-sm text-muted-foreground hover:text-foreground"
+            >
+              ← Voltar ao questionário
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   // Questionnaire step
   return (
     <div className="min-h-screen bg-background">
@@ -431,12 +503,15 @@ const EmployeeRespondFlow = () => {
               </Button>
             ) : (
               <Button
-                onClick={handleSubmit}
-                disabled={!canSubmit || submitting}
+                onClick={() => {
+                  if (!canSubmit) return;
+                  setSignatureName(confirmedName);
+                  setStep("final-consent");
+                }}
+                disabled={!canSubmit}
                 className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90"
               >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                {submitting ? "Enviando..." : "Finalizar"}
+                Próximo <ChevronRight className="h-4 w-4" />
               </Button>
             )}
           </div>

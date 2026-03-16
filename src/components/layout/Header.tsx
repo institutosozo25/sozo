@@ -43,7 +43,7 @@ export function Header() {
             </div>
             <div className="hidden sm:block">
               <p className="text-xs text-muted-foreground uppercase tracking-widest">Instituto Plenitude</p>
-              <p className="font-heading font-bold text-xl text-primary">SOZO</p>
+              <p className="font-heading font-bold text-xl text-primary">SOZO Business</p>
             </div>
           </Link>
 
