@@ -66,24 +66,7 @@ export default function AdminMapso() {
   const downloadPdf = async (html: string, filename: string) => {
     setDownloading(filename);
     try {
-      const { default: html2pdf } = await import("html2pdf.js");
-      const container = document.createElement("div");
-      container.innerHTML = html;
-      container.style.position = "absolute";
-      container.style.left = "-9999px";
-      document.body.appendChild(container);
-
-      await html2pdf()
-        .set({
-          margin: [10, 10, 10, 10],
-          filename,
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        })
-        .from(container)
-        .save();
-
-      document.body.removeChild(container);
+      await downloadHtmlAsPdf(html, filename);
       toast.success("PDF baixado!");
     } catch {
       toast.error("Erro ao gerar PDF.");
