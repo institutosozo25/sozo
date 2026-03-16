@@ -15,7 +15,7 @@ import {
   Shield, CheckCircle2, AlertTriangle, ChevronLeft, ChevronRight, Send, Loader2, Building2,
 } from "lucide-react";
 
-type Step = "loading" | "error" | "consent" | "identify" | "questionnaire" | "done";
+type Step = "loading" | "error" | "consent" | "identify" | "questionnaire" | "final-consent" | "done";
 
 interface LinkData {
   id: string;
