@@ -24,6 +24,7 @@ const navItems = [
   { icon: FileText, label: "Perguntas", path: "/admin/perguntas" },
   { icon: FileBarChart, label: "Relatórios", path: "/admin/relatorios" },
   { icon: Users, label: "Usuários", path: "/admin/usuarios" },
+  { icon: CreditCard, label: "Planos", path: "/admin/planos" },
   { icon: ScrollText, label: "Auditoria", path: "/admin/auditoria" },
   { icon: Megaphone, label: "Notificações", path: "/admin/notificacoes" },
   { icon: Settings, label: "Configurações", path: "/admin/config" },
