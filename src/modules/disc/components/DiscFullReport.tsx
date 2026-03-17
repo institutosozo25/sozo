@@ -4,7 +4,7 @@ import { PROFILE_LABELS, PROFILE_COLORS } from "../data/disc-questionnaire";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Download, Loader2 } from "lucide-react";
 import { escapeHtml } from "@/lib/validation";
-import { downloadHtmlAsPdf } from "@/lib/pdf-generator";
+import { downloadHtmlAsPdf, sanitizeAndFormatReport } from "@/lib/pdf-generator";
 import { toast } from "sonner";
 
 const DiscFullReport = () => {
@@ -18,21 +18,24 @@ const DiscFullReport = () => {
   const handleDownloadPdf = async () => {
     setDownloading(true);
     try {
+      const reportHtml = sanitizeAndFormatReport(fullReport);
       const html = `
-<div style="max-width:800px;margin:0 auto;font-family:'Segoe UI',Arial,sans-serif;color:#1a1a2e;line-height:1.7;">
-  <div style="text-align:center;padding:30px;background:linear-gradient(135deg,#0f3460,#533483);color:white;border-radius:12px;margin-bottom:30px;">
+<div style="max-width:750px;margin:0 auto;font-family:'Segoe UI',Arial,sans-serif;color:#1a1a2e;line-height:1.7;">
+  <div style="text-align:center;padding:30px 20px;background:linear-gradient(135deg,#0f3460,#533483);color:white;border-radius:12px;margin-bottom:30px;">
     <h1 style="margin:0 0 8px;font-size:24px;">RELATÓRIO COMPORTAMENTAL DISC</h1>
-    <p style="margin:0;font-size:18px;">Perfil ${primaryLabel} e ${secondaryLabel}</p>
+    <p style="margin:0;font-size:18px;">Perfil ${escapeHtml(primaryLabel)} e ${escapeHtml(secondaryLabel)}</p>
     <p style="margin:4px 0 0;opacity:0.8;font-size:14px;">${escapeHtml(respondentName)} · ${new Date().toLocaleDateString("pt-BR")}</p>
   </div>
-  <div style="display:flex;gap:16px;justify-content:center;margin-bottom:24px;">
-    ${(["D", "I", "S", "C"] as const).map(p => `
-    <div style="text-align:center;">
-      <div style="width:60px;height:60px;border-radius:50%;background:${PROFILE_COLORS[p]};color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;margin:0 auto 8px;">${percentages[p]}%</div>
-      <div style="font-size:12px;color:#666;">${PROFILE_LABELS[p]}</div>
-    </div>`).join("")}
-  </div>
-  <div style="padding:0 20px;">${sanitizeAndFormatReport(fullReport)}</div>
+  <table style="width:100%;margin:0 auto 24px;border-collapse:collapse;">
+    <tr>
+      ${(["D", "I", "S", "C"] as const).map(p => `
+      <td style="text-align:center;padding:8px;">
+        <div style="width:60px;height:60px;border-radius:50%;background:${PROFILE_COLORS[p]};color:white;line-height:60px;font-weight:700;font-size:18px;margin:0 auto 8px;text-align:center;">${percentages[p]}%</div>
+        <div style="font-size:12px;color:#666;">${PROFILE_LABELS[p]}</div>
+      </td>`).join("")}
+    </tr>
+  </table>
+  <div style="padding:0 10px;">${reportHtml}</div>
   <div style="text-align:center;margin-top:40px;padding-top:20px;border-top:2px solid #e0e0e0;color:#888;font-size:12px;">
     <p>© Instituto Plenitude SOZO — Relatório gerado automaticamente</p>
   </div>
@@ -111,34 +114,5 @@ const DiscFullReport = () => {
     </div>
   );
 };
-
-function sanitizeAndFormatReport(markdown: string): string {
-  let clean = markdown
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
-    .replace(/<object[\s\S]*?<\/object>/gi, "")
-    .replace(/<embed[\s\S]*?>/gi, "")
-    .replace(/<link[\s\S]*?>/gi, "")
-    .replace(/on\w+="[^"]*"/gi, "")
-    .replace(/on\w+='[^']*'/gi, "");
-
-  let html = clean
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/^[•\-] (.+)$/gm, '<li>$1</li>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/<\/li>\n<li>/g, '</li><li>');
-
-  html = html.replace(/(<li>.*?<\/li>)+/gs, (match) => `<ul>${match}</ul>`);
-
-  if (!html.startsWith('<')) html = `<p>${html}`;
-  if (!html.endsWith('>')) html = `${html}</p>`;
-
-  return html;
-}
 
 export default DiscFullReport;
