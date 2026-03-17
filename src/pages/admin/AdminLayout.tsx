@@ -14,6 +14,7 @@ import {
   ScrollText,
   Megaphone,
   Brain,
+  CreditCard,
 } from "lucide-react";
 
 const navItems = [
