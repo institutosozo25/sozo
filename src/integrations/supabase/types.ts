@@ -1049,6 +1049,10 @@ export type Database = {
         Args: { _target_user_id: string }
         Returns: undefined
       }
+      admin_set_user_plan: {
+        Args: { _plan: string; _status?: string; _target_user_id: string }
+        Returns: undefined
+      }
       admin_suspend_user: {
         Args: { _suspend: boolean; _target_user_id: string }
         Returns: undefined
