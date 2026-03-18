@@ -10,7 +10,8 @@ import { Settings } from "lucide-react";
 import { sanitizeString } from "@/lib/validation";
 
 export default function GerenciaConfiguracoes() {
-  const { user, accountType } = useAuth();
+  const { user, plan } = useAuth();
+  const isEnterprise = plan === "enterprise";
   const { toast } = useToast();
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState<Record<string, any>>({});
