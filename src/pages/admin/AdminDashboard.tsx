@@ -43,10 +43,14 @@ export default function AdminDashboard() {
         .select("id", { count: "exact", head: true })
         .gte("started_at", weekAgo.toISOString());
 
-      const roles = rolesRes.data || [];
-      const companies = roles.filter((r) => r.role === "company").length;
-      const professionals = roles.filter((r) => r.role === "professional").length;
-      const regularUsers = roles.filter((r) => r.role === "user").length;
+      // Count users by plan instead of role
+      const profilesData = usersRes.data as any[] || [];
+      // We need a separate query to count by plan
+      const planRes = await supabase.from("profiles").select("subscription_plan");
+      const plans = planRes.data || [];
+      const companies = plans.filter((p: any) => p.subscription_plan === "enterprise").length;
+      const professionals = plans.filter((p: any) => p.subscription_plan === "professional").length;
+      const regularUsers = plans.filter((p: any) => !p.subscription_plan || p.subscription_plan === "free" || p.subscription_plan === "individual").length;
 
       setStats({
         totalTests: testsRes.count || 0,

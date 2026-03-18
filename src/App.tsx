@@ -100,21 +100,9 @@ const App = () => (
                 </ProtectedRoute>
               } />
               {/* Redirect old empresa/profissional routes */}
-              <Route path="/dashboard/empresa" element={
-                <ProtectedRoute allowedRoles={["company", "admin"]}>
-                  <GerenciaLayout />
-                </ProtectedRoute>
-              } />
-              <Route path="/dashboard/empresa/mapso" element={
-                <ProtectedRoute allowedRoles={["company", "admin"]}>
-                  <DashboardEmpresaMapso />
-                </ProtectedRoute>
-              } />
-              <Route path="/dashboard/profissional" element={
-                <ProtectedRoute allowedRoles={["professional", "admin"]}>
-                  <GerenciaLayout />
-                </ProtectedRoute>
-              } />
+              <Route path="/dashboard/empresa" element={<GerenciaLayout />} />
+              <Route path="/dashboard/empresa/mapso" element={<DashboardEmpresaMapso />} />
+              <Route path="/dashboard/profissional" element={<GerenciaLayout />} />
 
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />

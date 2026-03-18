@@ -156,7 +156,7 @@ export default function AdminUsuarios() {
       .from("user_roles")
       .delete()
       .eq("user_id", userId)
-      .eq("role", role as "admin" | "professional" | "company" | "reseller" | "user");
+      .eq("role", role as "admin" | "user");
     if (error) {
       toast({ title: "Erro ao remover papel", variant: "destructive" });
     } else {
