@@ -4,18 +4,23 @@ import { Helmet } from "react-helmet-async";
 import { Mail, Phone, MapPin, Instagram, Facebook, Linkedin, Youtube, Clock, MessageCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useSiteSettings } from "@/hooks/useSiteContent";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Contato = () => {
+  const { data: settings, isLoading } = useSiteSettings();
+
+  const s = (key: string, fallback: string = "") => settings?.[key] ?? fallback;
+
   return (
     <>
       <Helmet>
         <title>Contato | Instituto Plenitude Sozo</title>
-        <meta name="description" content="Entre em contato com o Instituto Plenitude Sozo. Atendimento para empresas, profissionais e pessoas físicas sobre testes comportamentais e adequação à NR1." />
+        <meta name="description" content="Entre em contato com o Instituto Plenitude Sozo." />
       </Helmet>
       <div className="min-h-screen">
         <Header />
         <main className="pt-20">
-          {/* Hero */}
           <section className="py-20 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
             <div className="container mx-auto px-4 lg:px-8 text-center">
               <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-6">
@@ -30,7 +35,6 @@ const Contato = () => {
             </div>
           </section>
 
-          {/* Contact Cards */}
           <section className="py-16">
             <div className="container mx-auto px-4 lg:px-8">
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
@@ -41,9 +45,11 @@ const Contato = () => {
                     </div>
                     <div>
                       <h3 className="font-heading font-bold text-lg text-foreground mb-1">E-mail</h3>
-                      <a href="mailto:contato@plenitudesozo.com.br" className="text-primary hover:underline">
-                        contato@plenitudesozo.com.br
-                      </a>
+                      {isLoading ? <Skeleton className="h-4 w-40 mx-auto" /> : (
+                        <a href={`mailto:${s("contact_email")}`} className="text-primary hover:underline">
+                          {s("contact_email")}
+                        </a>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -55,9 +61,11 @@ const Contato = () => {
                     </div>
                     <div>
                       <h3 className="font-heading font-bold text-lg text-foreground mb-1">Telefone / WhatsApp</h3>
-                      <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                        (00) 00000-0000
-                      </a>
+                      {isLoading ? <Skeleton className="h-4 w-32 mx-auto" /> : (
+                        <a href={`https://wa.me/${s("contact_whatsapp")}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                          {s("contact_phone")}
+                        </a>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -69,14 +77,14 @@ const Contato = () => {
                     </div>
                     <div>
                       <h3 className="font-heading font-bold text-lg text-foreground mb-1">Horário de Atendimento</h3>
-                      <p className="text-muted-foreground">Seg a Sex: 8h às 18h</p>
-                      <p className="text-muted-foreground">Sáb: 8h às 12h</p>
+                      {isLoading ? <Skeleton className="h-4 w-40 mx-auto" /> : (
+                        <p className="text-muted-foreground">{s("contact_hours")}</p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Address + Social */}
               <div className="grid md:grid-cols-2 gap-12 items-start">
                 <div>
                   <h2 className="font-heading text-2xl font-bold text-foreground mb-6">Nosso Endereço</h2>
@@ -86,30 +94,40 @@ const Contato = () => {
                     </div>
                     <div>
                       <p className="text-foreground font-medium">Instituto Plenitude Sozo</p>
-                      <p className="text-muted-foreground">Endereço a ser informado</p>
-                      <p className="text-muted-foreground">Cidade — Estado, CEP</p>
+                      {isLoading ? (
+                        <>
+                          <Skeleton className="h-4 w-48 mb-1" />
+                          <Skeleton className="h-4 w-36" />
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-muted-foreground">{s("contact_address")}</p>
+                          <p className="text-muted-foreground">{s("contact_city")}</p>
+                        </>
+                      )}
                     </div>
                   </div>
 
                   <h2 className="font-heading text-2xl font-bold text-foreground mb-6">Redes Sociais</h2>
                   <div className="flex gap-4">
-                    <a href="https://www.instagram.com/institutoplenitudesozo" target="_blank" rel="noopener noreferrer"
-                      className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
-                      <Instagram className="w-5 h-5 text-primary" />
-                    </a>
-                    <a href="#" className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
-                      <Facebook className="w-5 h-5 text-primary" />
-                    </a>
-                    <a href="#" className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
-                      <Linkedin className="w-5 h-5 text-primary" />
-                    </a>
-                    <a href="#" className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
-                      <Youtube className="w-5 h-5 text-primary" />
-                    </a>
+                    {[
+                      { key: "social_instagram", icon: Instagram },
+                      { key: "social_facebook", icon: Facebook },
+                      { key: "social_linkedin", icon: Linkedin },
+                      { key: "social_youtube", icon: Youtube },
+                    ].map(({ key, icon: Icon }) => {
+                      const url = s(key);
+                      if (!url) return null;
+                      return (
+                        <a key={key} href={url} target="_blank" rel="noopener noreferrer"
+                          className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                          <Icon className="w-5 h-5 text-primary" />
+                        </a>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* CTA */}
                 <Card className="bg-primary text-primary-foreground">
                   <CardContent className="p-8 flex flex-col gap-6">
                     <MessageCircle className="w-10 h-10" />
@@ -119,12 +137,12 @@ const Contato = () => {
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3">
                       <Button variant="secondary" size="lg" asChild>
-                        <a href="https://wa.me/5500000000000" target="_blank" rel="noopener noreferrer">
+                        <a href={`https://wa.me/${s("contact_whatsapp")}`} target="_blank" rel="noopener noreferrer">
                           Falar pelo WhatsApp
                         </a>
                       </Button>
                       <Button variant="outline" size="lg" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10" asChild>
-                        <a href="mailto:contato@plenitudesozo.com.br">
+                        <a href={`mailto:${s("contact_email")}`}>
                           Enviar E-mail
                         </a>
                       </Button>

@@ -1,18 +1,19 @@
 import { Link } from "react-router-dom";
 import { Mail, Instagram, Linkedin, Youtube } from "lucide-react";
+import { useSiteSettings } from "@/hooks/useSiteContent";
 
 const footerLinks = {
   testes: [
     { name: "DISC", href: "/testes/disc" },
-    { name: "Perfil Comportamental", href: "/testes/comportamental" },
-    { name: "Inteligência Emocional", href: "/testes/inteligencia-emocional" },
+    { name: "MBTI", href: "/testes/mbti" },
+    { name: "Temperamento", href: "/testes/temperamento" },
     { name: "Ver Todos", href: "/testes" },
   ],
   empresa: [
     { name: "Sobre Nós", href: "/sobre" },
-    { name: "Blog", href: "/blog" },
     { name: "Contato", href: "/contato" },
-    { name: "Trabalhe Conosco", href: "/carreiras" },
+    { name: "Para Empresas", href: "/empresas" },
+    { name: "Para Profissionais", href: "/profissionais" },
   ],
   suporte: [
     { name: "Central de Ajuda", href: "/ajuda" },
@@ -23,6 +24,9 @@ const footerLinks = {
 };
 
 export function Footer() {
+  const { data: settings } = useSiteSettings();
+  const s = (key: string, fallback: string = "") => settings?.[key] ?? fallback;
+
   return (
     <footer className="bg-primary text-primary-foreground">
       <div className="container mx-auto px-4 lg:px-8 py-16">
@@ -42,19 +46,22 @@ export function Footer() {
               O maior marketplace de testes de desenvolvimento pessoal do Brasil. Descubra seu potencial com ferramentas científicas e relatórios completos.
             </p>
             <div className="flex gap-4">
-              <a href="https://www.instagram.com/institutoplenitudesozo" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors">
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors">
-                <Linkedin className="w-5 h-5" />
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors">
-                <Youtube className="w-5 h-5" />
-              </a>
+              {[
+                { key: "social_instagram", icon: Instagram },
+                { key: "social_linkedin", icon: Linkedin },
+                { key: "social_youtube", icon: Youtube },
+              ].map(({ key, icon: Icon }) => {
+                const url = s(key);
+                if (!url) return null;
+                return (
+                  <a key={key} href={url} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors">
+                    <Icon className="w-5 h-5" />
+                  </a>
+                );
+              })}
             </div>
           </div>
 
-          {/* Links */}
           <div>
             <h3 className="font-heading font-bold mb-4">Testes</h3>
             <ul className="space-y-3">
@@ -100,9 +107,9 @@ export function Footer() {
             © {new Date().getFullYear()} Instituto Plenitude Sozo. Todos os direitos reservados.
           </p>
           <div className="flex items-center gap-6 text-sm text-primary-foreground/60">
-            <a href="mailto:contato@institutoplenitudesozo.com.br" className="flex items-center gap-2 hover:text-primary-foreground transition-colors">
+            <a href={`mailto:${s("contact_email", "contato@plenitudesozo.com.br")}`} className="flex items-center gap-2 hover:text-primary-foreground transition-colors">
               <Mail className="w-4 h-4" />
-              contato@institutoplenitudesozo.com.br
+              {s("contact_email", "contato@plenitudesozo.com.br")}
             </a>
           </div>
         </div>
