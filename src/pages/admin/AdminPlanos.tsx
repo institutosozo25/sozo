@@ -173,9 +173,10 @@ export default function AdminPlanos() {
                   <SelectValue placeholder="Selecione um plano..." />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="free">Gratuito</SelectItem>
                   <SelectItem value="individual">Individual</SelectItem>
-                  <SelectItem value="profissional">Profissional</SelectItem>
-                  <SelectItem value="empresarial">Empresarial</SelectItem>
+                  <SelectItem value="professional">Profissional</SelectItem>
+                  <SelectItem value="enterprise">Empresarial</SelectItem>
                 </SelectContent>
               </Select>
             </div>
