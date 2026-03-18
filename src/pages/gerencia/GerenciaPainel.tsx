@@ -20,7 +20,7 @@ export default function GerenciaPainel() {
         .eq("user_id", user.id);
 
       let pessoasCount = 0;
-      if (accountType === "empresa") {
+      if (isEnterprise) {
         const { data: empresa } = await supabase.from("empresas").select("id").eq("profile_id", user.id).single();
         if (empresa) {
           const { count } = await supabase.from("colaboradores").select("*", { count: "exact", head: true }).eq("empresa_id", empresa.id);
