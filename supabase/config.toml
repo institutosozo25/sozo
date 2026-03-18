@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.upload-mapso-to-drive]
 verify_jwt = false
+
+[functions.admin-config]
+verify_jwt = false
