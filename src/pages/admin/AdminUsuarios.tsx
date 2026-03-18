@@ -104,7 +104,7 @@ export default function AdminUsuarios() {
       .from("user_roles")
       .insert({ user_id: selectedUserId, role: selectedRole as "admin" | "professional" | "company" | "reseller" | "user" });
     if (error) {
-      toast({ title: "Erro ao adicionar papel", variant: "destructive" });
+      toast({ title: "Erro ao adicionar papel", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Papel adicionado!" });
       setIsRoleDialogOpen(false);
