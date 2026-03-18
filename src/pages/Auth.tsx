@@ -12,6 +12,7 @@ import { Building2, Stethoscope, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { loginSchema, signupSchema } from "@/lib/validation";
 import EmpresaSignupFields from "@/components/auth/EmpresaSignupFields";
+import ProfissionalSignupFields from "@/components/auth/ProfissionalSignupFields";
 
 type AccountType = "empresa" | "profissional" | "usuario";
 
@@ -39,6 +40,15 @@ export default function Auth() {
   const [nomeFantasia, setNomeFantasia] = useState("");
   const [responsavel, setResponsavel] = useState("");
 
+  // Profissional-specific fields
+  const [tipoPessoa, setTipoPessoa] = useState<"pf" | "pj">("pf");
+  const [profCpf, setProfCpf] = useState("");
+  const [profNomeMae, setProfNomeMae] = useState("");
+  const [profDataNascimento, setProfDataNascimento] = useState("");
+  const [profCnpj, setProfCnpj] = useState("");
+  const [profNomeFantasia, setProfNomeFantasia] = useState("");
+  const [profRazaoSocial, setProfRazaoSocial] = useState("");
+
   const { signIn, signUp, user, plan } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -60,6 +70,22 @@ export default function Auth() {
     if (!razaoSocial.trim()) fieldErrors.razaoSocial = "Razão social é obrigatória";
     if (!nomeFantasia.trim()) fieldErrors.nomeFantasia = "Nome fantasia é obrigatório";
     if (!responsavel.trim()) fieldErrors.responsavel = "Responsável é obrigatório";
+    return fieldErrors;
+  };
+
+  const validateProfissionalFields = (): Record<string, string> => {
+    const fieldErrors: Record<string, string> = {};
+    if (tipoPessoa === "pf") {
+      const cpfDigits = profCpf.replace(/\D/g, "");
+      if (cpfDigits.length !== 11) fieldErrors.cpf = "CPF deve ter 11 dígitos";
+      if (!profNomeMae.trim()) fieldErrors.nomeMae = "Nome da mãe é obrigatório";
+      if (!profDataNascimento) fieldErrors.dataNascimento = "Data de nascimento é obrigatória";
+    } else {
+      const cnpjDigits = profCnpj.replace(/\D/g, "");
+      if (cnpjDigits.length !== 14) fieldErrors.profCnpj = "CNPJ deve ter 14 dígitos";
+      if (!profNomeFantasia.trim()) fieldErrors.profNomeFantasia = "Nome fantasia é obrigatório";
+      if (!profRazaoSocial.trim()) fieldErrors.profRazaoSocial = "Razão social é obrigatória";
+    }
     return fieldErrors;
   };
 
@@ -105,11 +131,20 @@ export default function Auth() {
           return;
         }
 
-        // Validate empresa-specific fields
+        // Validate type-specific fields
         if (accountType === "empresa") {
           const empresaErrors = validateEmpresaFields();
           if (Object.keys(empresaErrors).length > 0) {
             setErrors(empresaErrors);
+            setIsSubmitting(false);
+            return;
+          }
+        }
+
+        if (accountType === "profissional") {
+          const profErrors = validateProfissionalFields();
+          if (Object.keys(profErrors).length > 0) {
+            setErrors(profErrors);
             setIsSubmitting(false);
             return;
           }
@@ -121,9 +156,17 @@ export default function Auth() {
           return;
         }
 
-        const { error } = await signUp(email, password, fullName, accountType, telefone,
-          accountType === "empresa" ? { cnpj: cnpj.replace(/\D/g, ""), razaoSocial, nomeFantasia, responsavel } : undefined
-        );
+        const empresaData = accountType === "empresa"
+          ? { cnpj: cnpj.replace(/\D/g, ""), razaoSocial, nomeFantasia, responsavel }
+          : undefined;
+
+        const profissionalData = accountType === "profissional"
+          ? tipoPessoa === "pf"
+            ? { tipoPessoa: "pf" as const, cpf: profCpf.replace(/\D/g, ""), nomeMae: profNomeMae, dataNascimento: profDataNascimento }
+            : { tipoPessoa: "pj" as const, cnpj: profCnpj.replace(/\D/g, ""), nomeFantasia: profNomeFantasia, razaoSocial: profRazaoSocial }
+          : undefined;
+
+        const { error } = await signUp(email, password, fullName, accountType, telefone, empresaData, profissionalData);
         if (error) {
           let message = error.message;
           if (error.message.includes("already registered")) {
@@ -244,6 +287,20 @@ export default function Auth() {
                         razaoSocial={razaoSocial} setRazaoSocial={setRazaoSocial}
                         nomeFantasia={nomeFantasia} setNomeFantasia={setNomeFantasia}
                         responsavel={responsavel} setResponsavel={setResponsavel}
+                        errors={errors}
+                      />
+                    )}
+
+                    {/* Profissional-specific fields */}
+                    {accountType === "profissional" && (
+                      <ProfissionalSignupFields
+                        tipoPessoa={tipoPessoa} setTipoPessoa={setTipoPessoa}
+                        cpf={profCpf} setCpf={setProfCpf}
+                        nomeMae={profNomeMae} setNomeMae={setProfNomeMae}
+                        dataNascimento={profDataNascimento} setDataNascimento={setProfDataNascimento}
+                        cnpj={profCnpj} setCnpj={setProfCnpj}
+                        nomeFantasia={profNomeFantasia} setNomeFantasia={setProfNomeFantasia}
+                        razaoSocial={profRazaoSocial} setRazaoSocial={setProfRazaoSocial}
                         errors={errors}
                       />
                     )}

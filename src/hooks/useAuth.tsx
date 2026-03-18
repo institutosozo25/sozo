@@ -13,6 +13,22 @@ interface EmpresaData {
   responsavel: string;
 }
 
+interface ProfissionalDataPF {
+  tipoPessoa: "pf";
+  cpf: string;
+  nomeMae: string;
+  dataNascimento: string;
+}
+
+interface ProfissionalDataPJ {
+  tipoPessoa: "pj";
+  cnpj: string;
+  nomeFantasia: string;
+  razaoSocial: string;
+}
+
+type ProfissionalData = ProfissionalDataPF | ProfissionalDataPJ;
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -21,7 +37,7 @@ interface AuthContextType {
   isAdmin: boolean;
   plan: PlanType;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string, accountType?: string, telefone?: string, empresaData?: EmpresaData) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, accountType?: string, telefone?: string, empresaData?: EmpresaData, profissionalData?: ProfissionalData) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshPlan: () => Promise<void>;
 }
@@ -92,8 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const rawPlan = data.subscription_plan;
       if (rawPlan === "individual" || rawPlan === "professional" || rawPlan === "enterprise") {
         setPlan(rawPlan);
-      } else if (rawPlan === "free" || !rawPlan) {
-        setPlan("free");
       } else {
         setPlan("free");
       }
@@ -114,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (
     email: string, password: string, fullName: string,
     accountType: string = "usuario", telefone?: string,
-    empresaData?: EmpresaData
+    empresaData?: EmpresaData, profissionalData?: ProfissionalData
   ) => {
     const metadata: Record<string, string | undefined> = {
       full_name: fullName,
@@ -127,6 +141,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       metadata.razao_social = empresaData.razaoSocial;
       metadata.nome_fantasia = empresaData.nomeFantasia;
       metadata.responsavel = empresaData.responsavel;
+    }
+
+    if (profissionalData) {
+      metadata.tipo_pessoa = profissionalData.tipoPessoa;
+      if (profissionalData.tipoPessoa === "pf") {
+        metadata.cpf = profissionalData.cpf;
+        metadata.nome_mae = profissionalData.nomeMae;
+        metadata.data_nascimento = profissionalData.dataNascimento;
+      } else {
+        metadata.prof_cnpj = profissionalData.cnpj;
+        metadata.prof_nome_fantasia = profissionalData.nomeFantasia;
+        metadata.prof_razao_social = profissionalData.razaoSocial;
+      }
     }
 
     const { error } = await supabase.auth.signUp({
