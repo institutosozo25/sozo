@@ -830,6 +830,54 @@ export type Database = {
         }
         Relationships: []
       }
+      test_history: {
+        Row: {
+          completed_at: string
+          created_at: string
+          drive_action_plan_id: string | null
+          drive_diagnostic_id: string | null
+          drive_report_id: string | null
+          id: string
+          metadata: Json | null
+          pdf_action_plan_path: string | null
+          pdf_diagnostic_path: string | null
+          pdf_report_path: string | null
+          test_name: string
+          test_type: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          drive_action_plan_id?: string | null
+          drive_diagnostic_id?: string | null
+          drive_report_id?: string | null
+          id?: string
+          metadata?: Json | null
+          pdf_action_plan_path?: string | null
+          pdf_diagnostic_path?: string | null
+          pdf_report_path?: string | null
+          test_name: string
+          test_type: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          drive_action_plan_id?: string | null
+          drive_diagnostic_id?: string | null
+          drive_report_id?: string | null
+          id?: string
+          metadata?: Json | null
+          pdf_action_plan_path?: string | null
+          pdf_diagnostic_path?: string | null
+          pdf_report_path?: string | null
+          test_name?: string
+          test_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       test_submissions: {
         Row: {
           applied_by: string | null
