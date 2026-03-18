@@ -18,15 +18,17 @@ interface Profile {
 }
 
 const planLabels: Record<string, string> = {
+  free: "Gratuito",
   individual: "Individual",
-  profissional: "Profissional",
-  empresarial: "Empresarial",
+  professional: "Profissional",
+  enterprise: "Empresarial",
 };
 
 const planColors: Record<string, string> = {
+  free: "bg-muted text-muted-foreground",
   individual: "bg-secondary text-secondary-foreground",
-  profissional: "bg-primary text-primary-foreground",
-  empresarial: "bg-accent text-accent-foreground",
+  professional: "bg-primary text-primary-foreground",
+  enterprise: "bg-accent text-accent-foreground",
 };
 
 const statusLabels: Record<string, string> = {
