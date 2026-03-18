@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Settings, Lock } from "lucide-react";
 import { sanitizeString } from "@/lib/validation";
+import LogoUpload from "@/components/empresa/LogoUpload";
 
 const lockedEmpresaFields = [
   { key: "cnpj", label: "CNPJ" },
