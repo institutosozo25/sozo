@@ -20,6 +20,7 @@ const PROFILE_DESCRIPTIONS: Record<string, string> = {
 const DiscPartialResult = () => {
   const { result, setStep, setFullReport, respondentName, respondentEmail } = useDisc();
   const { user } = useAuth();
+  const { isFree, isLoading: accessLoading } = useTestAccess("disc");
   const [loading, setLoading] = useState(false);
 
   if (!result) return null;
