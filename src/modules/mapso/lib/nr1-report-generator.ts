@@ -2,6 +2,13 @@ import type { AssessmentResult, DimensionResult } from "./miarpo-engine";
 import type { OrganizationInfo } from "../contexts/AssessmentContext";
 import { generateActionPlan, type ActionPlanItem } from "./action-plan-generator";
 
+export interface CompanyBranding {
+  logoUrl?: string | null;
+  cnpj?: string | null;
+  razaoSocial?: string | null;
+  nomeFantasia?: string | null;
+}
+
 const getRiskLabel = (score: number): string => {
   if (score <= 20) return "Muito Baixo";
   if (score <= 40) return "Baixo";
@@ -21,9 +28,22 @@ const getRiskColor = (score: number): string => {
 const formatDate = (iso: string): string =>
   new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
+const buildBrandingBlock = (branding?: CompanyBranding): string => {
+  if (!branding || (!branding.logoUrl && !branding.cnpj)) return "";
+  const logo = branding.logoUrl
+    ? `<img src="${branding.logoUrl}" alt="Logo" style="max-height:60px;max-width:200px;object-fit:contain;margin-bottom:8px;" />`
+    : "";
+  const details = [
+    branding.nomeFantasia || branding.razaoSocial,
+    branding.cnpj ? `CNPJ: ${branding.cnpj}` : null,
+  ].filter(Boolean).join(" · ");
+  return `<div style="text-align:center;margin-bottom:20px;">${logo}${details ? `<p style="margin:4px 0 0;font-size:13px;opacity:0.85;">${details}</p>` : ""}</div>`;
+};
+
 export const generateDiagnosisHtml = (
   result: AssessmentResult,
-  organization: OrganizationInfo
+  organization: OrganizationInfo,
+  branding?: CompanyBranding
 ): string => {
   const dimRows = result.dimensions
     .map(
@@ -43,6 +63,7 @@ export const generateDiagnosisHtml = (
 
   return `
 <div style="max-width:800px;margin:0 auto;font-family:'Segoe UI',Arial,sans-serif;color:#1a1a2e;line-height:1.7;">
+  ${buildBrandingBlock(branding)}
   <div style="text-align:center;padding:30px;background:linear-gradient(135deg,#0f3460,#533483);color:white;border-radius:12px;margin-bottom:30px;">
     <h1 style="margin:0 0 8px;font-size:24px;">DIAGNÓSTICO PSICOSSOCIAL — MAPSO</h1>
     <p style="margin:0;opacity:0.9;">${organization.name} · ${organization.sector}</p>
@@ -93,7 +114,8 @@ export const generateDiagnosisHtml = (
 
 export const generateNR1ReportHtml = (
   result: AssessmentResult,
-  organization: OrganizationInfo
+  organization: OrganizationInfo,
+  branding?: CompanyBranding
 ): string => {
   const actionPlan = generateActionPlan(result);
   const criticalDims = result.dimensions.filter((d) => d.riskScore > 60).sort((a, b) => b.riskScore - a.riskScore);
@@ -141,8 +163,10 @@ export const generateNR1ReportHtml = (
 </style></head>
 <body>
   <div class="header">
+    ${branding?.logoUrl ? `<img src="${branding.logoUrl}" alt="Logo" style="max-height:50px;max-width:180px;object-fit:contain;margin-bottom:12px;" />` : ""}
     <h1>RELATÓRIO FINAL — AVALIAÇÃO DE RISCOS PSICOSSOCIAIS</h1>
     <p style="margin:8px 0 0;opacity:0.9;">Em conformidade com a NR-1 e NR-17</p>
+    ${branding?.cnpj || branding?.razaoSocial ? `<p style="margin:4px 0 0;opacity:0.8;font-size:13px;">${[branding.razaoSocial, branding.cnpj ? 'CNPJ: ' + branding.cnpj : null].filter(Boolean).join(' · ')}</p>` : ""}
   </div>
 
   <table>

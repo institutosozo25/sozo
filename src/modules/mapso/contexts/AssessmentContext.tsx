@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, type ReactNode } from "react";
 import { type Answers, type AssessmentResult, calculateAssessment } from "../lib/miarpo-engine";
-import { generateDiagnosisHtml, generateNR1ReportHtml } from "../lib/nr1-report-generator";
+import { generateDiagnosisHtml, generateNR1ReportHtml, type CompanyBranding } from "../lib/nr1-report-generator";
 import { generateActionPlan, type ActionPlanItem } from "../lib/action-plan-generator";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -71,9 +71,32 @@ export const AssessmentProvider = ({ children }: { children: ReactNode }) => {
     const assessmentResult = calculateAssessment(answers);
     setResult(assessmentResult);
 
+    // Fetch company branding if enterprise user
+    let branding: CompanyBranding | undefined;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: empresa } = await supabase
+          .from("empresas")
+          .select("logo_url, cnpj, razao_social, nome_fantasia")
+          .eq("profile_id", user.id)
+          .single();
+        if (empresa) {
+          branding = {
+            logoUrl: empresa.logo_url,
+            cnpj: empresa.cnpj,
+            razaoSocial: empresa.razao_social,
+            nomeFantasia: empresa.nome_fantasia,
+          };
+        }
+      }
+    } catch (e) {
+      console.warn("Could not fetch company branding:", e);
+    }
+
     // Generate reports
-    const diagnosis = generateDiagnosisHtml(assessmentResult, organization);
-    const report = generateNR1ReportHtml(assessmentResult, organization);
+    const diagnosis = generateDiagnosisHtml(assessmentResult, organization, branding);
+    const report = generateNR1ReportHtml(assessmentResult, organization, branding);
     const plan = generateActionPlan(assessmentResult);
 
     setDiagnosisHtml(diagnosis);

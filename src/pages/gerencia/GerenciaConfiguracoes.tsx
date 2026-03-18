@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Settings, Lock } from "lucide-react";
 import { sanitizeString } from "@/lib/validation";
+import LogoUpload from "@/components/empresa/LogoUpload";
 
 const lockedEmpresaFields = [
   { key: "cnpj", label: "CNPJ" },
@@ -102,6 +103,23 @@ export default function GerenciaConfiguracoes() {
           <p className="text-muted-foreground">Gerencie suas informações cadastrais.</p>
         </div>
       </div>
+
+      {/* Logo upload for empresa */}
+      {isEnterprise && user && entityId && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-base">Logo da Empresa</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LogoUpload
+              userId={user.id}
+              currentLogoUrl={form.logo_url || null}
+              onLogoChange={(url) => setForm({ ...form, logo_url: url })}
+              empresaId={entityId}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Locked fields for empresa */}
       {isEnterprise && (

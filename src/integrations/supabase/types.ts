@@ -126,6 +126,7 @@ export type Database = {
           dados_bloqueados: boolean
           email: string | null
           id: string
+          logo_url: string | null
           nome_fantasia: string | null
           numero: string | null
           profile_id: string
@@ -142,6 +143,7 @@ export type Database = {
           dados_bloqueados?: boolean
           email?: string | null
           id?: string
+          logo_url?: string | null
           nome_fantasia?: string | null
           numero?: string | null
           profile_id: string
@@ -158,6 +160,7 @@ export type Database = {
           dados_bloqueados?: boolean
           email?: string | null
           id?: string
+          logo_url?: string | null
           nome_fantasia?: string | null
           numero?: string | null
           profile_id?: string
