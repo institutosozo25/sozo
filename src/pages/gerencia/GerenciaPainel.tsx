@@ -37,7 +37,7 @@ export default function GerenciaPainel() {
       setStats({ historico: histCount || 0, pessoas: pessoasCount });
     };
     fetchStats();
-  }, [user, accountType]);
+  }, [user, plan, isEnterprise]);
 
   const quickLinks = accountType === "empresa"
     ? [
