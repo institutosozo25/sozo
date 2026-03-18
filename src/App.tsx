@@ -87,11 +87,7 @@ const App = () => (
                 <Route path="historico" element={<GerenciaHistorico />} />
                 <Route path="colaboradores" element={<GerenciaColaboradores />} />
                 <Route path="pacientes" element={<GerenciaPacientes />} />
-                <Route path="mapso" element={
-                  <ProtectedRoute allowedRoles={["company", "admin"]}>
-                    <DashboardEmpresaMapso />
-                  </ProtectedRoute>
-                } />
+                <Route path="mapso" element={<DashboardEmpresaMapso />} />
                 <Route path="pagamentos" element={<GerenciaPagamentos />} />
                 <Route path="notificacoes" element={<GerenciaNotificacoes />} />
                 <Route path="configuracoes" element={<GerenciaConfiguracoes />} />
@@ -104,21 +100,9 @@ const App = () => (
                 </ProtectedRoute>
               } />
               {/* Redirect old empresa/profissional routes */}
-              <Route path="/dashboard/empresa" element={
-                <ProtectedRoute allowedRoles={["company", "admin"]}>
-                  <GerenciaLayout />
-                </ProtectedRoute>
-              } />
-              <Route path="/dashboard/empresa/mapso" element={
-                <ProtectedRoute allowedRoles={["company", "admin"]}>
-                  <DashboardEmpresaMapso />
-                </ProtectedRoute>
-              } />
-              <Route path="/dashboard/profissional" element={
-                <ProtectedRoute allowedRoles={["professional", "admin"]}>
-                  <GerenciaLayout />
-                </ProtectedRoute>
-              } />
+              <Route path="/dashboard/empresa" element={<GerenciaLayout />} />
+              <Route path="/dashboard/empresa/mapso" element={<DashboardEmpresaMapso />} />
+              <Route path="/dashboard/profissional" element={<GerenciaLayout />} />
 
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />

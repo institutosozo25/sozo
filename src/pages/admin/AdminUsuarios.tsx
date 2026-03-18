@@ -120,7 +120,7 @@ export default function AdminUsuarios() {
     }
     const { error } = await supabase
       .from("user_roles")
-      .insert({ user_id: selectedUserId, role: selectedRole as "admin" | "professional" | "company" | "reseller" | "user" });
+      .insert({ user_id: selectedUserId, role: selectedRole as "admin" | "user" });
     if (error) {
       toast({ title: "Erro ao adicionar papel", description: error.message, variant: "destructive" });
     } else {
@@ -156,7 +156,7 @@ export default function AdminUsuarios() {
       .from("user_roles")
       .delete()
       .eq("user_id", userId)
-      .eq("role", role as "admin" | "professional" | "company" | "reseller" | "user");
+      .eq("role", role as "admin" | "user");
     if (error) {
       toast({ title: "Erro ao remover papel", variant: "destructive" });
     } else {
