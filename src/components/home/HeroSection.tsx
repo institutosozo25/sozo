@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Brain, Heart, Users, Sparkles } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteContent";
 export function HeroSection() {
+  const { data: settings } = useSiteSettings();
+  const s = (key: string, fallback: string) => settings?.[key] ?? fallback;
+
   return <section className="relative min-h-screen flex items-center gradient-hero overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
