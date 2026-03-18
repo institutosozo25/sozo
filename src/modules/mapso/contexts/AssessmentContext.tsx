@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, type ReactNode } from "react";
 import { type Answers, type AssessmentResult, calculateAssessment } from "../lib/miarpo-engine";
-import { generateDiagnosisHtml, generateNR1ReportHtml } from "../lib/nr1-report-generator";
+import { generateDiagnosisHtml, generateNR1ReportHtml, type CompanyBranding } from "../lib/nr1-report-generator";
 import { generateActionPlan, type ActionPlanItem } from "../lib/action-plan-generator";
 import { supabase } from "@/integrations/supabase/client";
 
