@@ -13,6 +13,7 @@ import { Link } from "react-router-dom";
 const MbtiPartialResult = () => {
   const { result, setStep, setFullReport, respondentName, respondentEmail } = useMbti();
   const { user } = useAuth();
+  const { isFree, isLoading: accessLoading } = useTestAccess("mbti");
   const [loading, setLoading] = useState(false);
 
   if (!result) return null;
