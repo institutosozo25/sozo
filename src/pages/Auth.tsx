@@ -32,22 +32,19 @@ export default function Auth() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { signIn, signUp, user, accountType: userAccountType } = useAuth();
+  const { signIn, signUp, user, plan } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user && userAccountType) {
-      const redirectMap: Record<string, string> = {
-        empresa: "/gerencia",
-        profissional: "/gerencia",
-        usuario: "/dashboard/usuario",
-      };
-      navigate(redirectMap[userAccountType] || "/");
-    } else if (user) {
-      navigate("/");
+    if (user) {
+      if (plan === "enterprise" || plan === "professional") {
+        navigate("/gerencia");
+      } else {
+        navigate("/dashboard/usuario");
+      }
     }
-  }, [user, userAccountType, navigate]);
+  }, [user, plan, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,7 +186,6 @@ export default function Auth() {
                       inputMode="numeric"
                       value={telefone}
                       onChange={(e) => {
-                        // Auto-mask: (XX) XXXXX-XXXX
                         const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
                         let masked = digits;
                         if (digits.length > 2) masked = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;

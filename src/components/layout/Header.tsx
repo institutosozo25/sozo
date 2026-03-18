@@ -18,19 +18,19 @@ const navigation = [
   { name: "Sobre", href: "/sobre" },
 ];
 
-function getDashboardPath(accountType: string | null, isAdmin: boolean): string {
+function getDashboardPath(plan: string | null, isAdmin: boolean): string {
   if (isAdmin) return "/admin";
-  if (accountType === "empresa" || accountType === "profissional") return "/gerencia";
+  if (plan === "enterprise" || plan === "professional") return "/gerencia";
   return "/dashboard/usuario";
 }
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const { user, isAdmin, accountType, signOut } = useAuth();
+  const { user, isAdmin, plan, signOut } = useAuth();
 
-  const dashboardPath = getDashboardPath(accountType, isAdmin);
-  const showGerencia = accountType === "empresa" || accountType === "profissional";
+  const dashboardPath = getDashboardPath(plan, isAdmin);
+  const showGerencia = plan === "enterprise" || plan === "professional";
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
