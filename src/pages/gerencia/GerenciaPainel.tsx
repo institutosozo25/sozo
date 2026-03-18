@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { History, Users, CreditCard, ArrowRight, FileText, Shield } from "lucide-react";
 
 export default function GerenciaPainel() {
-  const { user, accountType } = useAuth();
+  const { user, plan } = useAuth();
+  const isEnterprise = plan === "enterprise";
   const [stats, setStats] = useState({ historico: 0, pessoas: 0 });
 
   useEffect(() => {
