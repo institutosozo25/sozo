@@ -10,7 +10,8 @@ import { Settings } from "lucide-react";
 import { sanitizeString } from "@/lib/validation";
 
 export default function GerenciaConfiguracoes() {
-  const { user, accountType } = useAuth();
+  const { user, plan } = useAuth();
+  const isEnterprise = plan === "enterprise";
   const { toast } = useToast();
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState<Record<string, any>>({});
@@ -18,7 +19,7 @@ export default function GerenciaConfiguracoes() {
 
   useEffect(() => {
     if (!user) return;
-    if (accountType === "empresa") {
+    if (isEnterprise) {
       supabase.from("empresas").select("*").eq("profile_id", user.id).single().then(({ data }) => {
         if (data) { setForm(data); setEntityId(data.id); }
       });
@@ -27,13 +28,13 @@ export default function GerenciaConfiguracoes() {
         if (data) { setForm(data); setEntityId(data.id); }
       });
     }
-  }, [user, accountType]);
+  }, [user, plan, isEnterprise]);
 
   const save = async () => {
     if (!entityId) return;
-    const table = accountType === "empresa" ? "empresas" : "profissionais";
+    const table = isEnterprise ? "empresas" : "profissionais";
     
-    const updateData = accountType === "empresa"
+    const updateData = isEnterprise
       ? {
           razao_social: sanitizeString(form.razao_social, 200),
           cnpj: sanitizeString(form.cnpj, 20),
@@ -78,7 +79,7 @@ export default function GerenciaConfiguracoes() {
     { key: "sexo", label: "Sexo" },
   ];
 
-  const fields: { key: string; label: string; type?: string }[] = accountType === "empresa" ? empresaFields : profFields;
+  const fields: { key: string; label: string; type?: string }[] = isEnterprise ? empresaFields : profFields;
 
   return (
     <div>
@@ -86,7 +87,7 @@ export default function GerenciaConfiguracoes() {
         <Settings className="w-8 h-8 text-primary" />
         <div>
           <h1 className="font-heading text-3xl font-bold text-foreground">
-            {accountType === "empresa" ? "Dados da Empresa" : "Meus Dados"}
+            {isEnterprise ? "Dados da Empresa" : "Meus Dados"}
           </h1>
           <p className="text-muted-foreground">Gerencie suas informações cadastrais.</p>
         </div>

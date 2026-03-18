@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { History, Users, CreditCard, ArrowRight, FileText, Shield } from "lucide-react";
 
 export default function GerenciaPainel() {
-  const { user, accountType } = useAuth();
+  const { user, plan } = useAuth();
+  const isEnterprise = plan === "enterprise";
   const [stats, setStats] = useState({ historico: 0, pessoas: 0 });
 
   useEffect(() => {
@@ -19,7 +20,7 @@ export default function GerenciaPainel() {
         .eq("user_id", user.id);
 
       let pessoasCount = 0;
-      if (accountType === "empresa") {
+      if (isEnterprise) {
         const { data: empresa } = await supabase.from("empresas").select("id").eq("profile_id", user.id).single();
         if (empresa) {
           const { count } = await supabase.from("colaboradores").select("*", { count: "exact", head: true }).eq("empresa_id", empresa.id);
@@ -36,9 +37,9 @@ export default function GerenciaPainel() {
       setStats({ historico: histCount || 0, pessoas: pessoasCount });
     };
     fetchStats();
-  }, [user, accountType]);
+  }, [user, plan, isEnterprise]);
 
-  const quickLinks = accountType === "empresa"
+  const quickLinks = isEnterprise
     ? [
         { icon: History, label: "Histórico de Testes", path: "/gerencia/historico", count: stats.historico },
         { icon: Users, label: "Colaboradores", path: "/gerencia/colaboradores", count: stats.pessoas },
@@ -55,7 +56,7 @@ export default function GerenciaPainel() {
     <div>
       <h1 className="font-heading text-3xl font-bold text-foreground mb-2">Painel de Gerência</h1>
       <p className="text-muted-foreground mb-8">
-        {accountType === "empresa" ? "Gerencie sua empresa, colaboradores e avaliações." : "Gerencie seus pacientes e testes aplicados."}
+        {isEnterprise ? "Gerencie sua empresa, colaboradores e avaliações." : "Gerencie seus pacientes e testes aplicados."}
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -92,7 +93,7 @@ export default function GerenciaPainel() {
           <Button asChild>
             <Link to="/testes">Aplicar Novo Teste</Link>
           </Button>
-          {accountType === "empresa" && (
+          {isEnterprise && (
             <Button variant="outline" asChild>
               <Link to="/gerencia/mapso">Avaliação MAPSO</Link>
             </Button>

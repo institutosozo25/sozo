@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
 type AppRole = "admin" | "professional" | "company" | "reseller" | "user";
-type AccountType = "empresa" | "profissional" | "usuario";
+type PlanType = "free" | "individual" | "professional" | "enterprise" | null;
 
 interface AuthContextType {
   user: User | null;
@@ -12,26 +12,21 @@ interface AuthContextType {
   isLoading: boolean;
   roles: AppRole[];
   isAdmin: boolean;
-  accountType: AccountType | null;
+  plan: PlanType;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string, accountType?: AccountType, telefone?: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, accountType?: string, telefone?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  refreshPlan: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-function roleToAccountType(role: AppRole): AccountType | null {
-  if (role === "company") return "empresa";
-  if (role === "professional") return "profissional";
-  if (role === "user") return "usuario";
-  return null;
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [roles, setRoles] = useState<AppRole[]>([]);
+  const [plan, setPlan] = useState<PlanType>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -43,9 +38,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           setTimeout(() => {
             fetchUserRoles(session.user.id);
+            fetchUserPlan(session.user.id);
           }, 0);
         } else {
           setRoles([]);
+          setPlan(null);
         }
       }
     );
@@ -54,9 +51,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchUserRoles(session.user.id);
+        Promise.all([
+          fetchUserRoles(session.user.id),
+          fetchUserPlan(session.user.id),
+        ]).then(() => setIsLoading(false));
+      } else {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -73,12 +74,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const fetchUserPlan = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("subscription_plan")
+      .eq("id", userId)
+      .single();
+
+    if (!error && data) {
+      const rawPlan = data.subscription_plan;
+      if (rawPlan === "individual" || rawPlan === "professional" || rawPlan === "enterprise") {
+        setPlan(rawPlan);
+      } else if (rawPlan === "free" || !rawPlan) {
+        setPlan("free");
+      } else {
+        setPlan("free");
+      }
+    }
+  };
+
+  const refreshPlan = async () => {
+    if (user) {
+      await fetchUserPlan(user.id);
+    }
+  };
+
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string, accountType: AccountType = "usuario", telefone?: string) => {
+  const signUp = async (email: string, password: string, fullName: string, accountType: string = "usuario", telefone?: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -93,18 +119,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setRoles([]);
-    queryClient.clear(); // Limpa todo o cache do TanStack Query para evitar vazamento de dados entre sessões
+    setPlan(null);
+    queryClient.clear();
   };
 
   const isAdmin = roles.includes("admin");
-  
-  const accountType: AccountType | null = roles.length > 0
-    ? (roles.includes("admin") ? null : roleToAccountType(roles.find(r => r !== "admin") || "user"))
-    : null;
 
   return (
     <AuthContext.Provider
-      value={{ user, session, isLoading, roles, isAdmin, accountType, signIn, signUp, signOut }}
+      value={{ user, session, isLoading, roles, isAdmin, plan, signIn, signUp, signOut, refreshPlan }}
     >
       {children}
     </AuthContext.Provider>

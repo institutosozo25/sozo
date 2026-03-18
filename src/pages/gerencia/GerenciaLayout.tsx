@@ -16,7 +16,7 @@ import {
   Home,
 } from "lucide-react";
 
-const empresaNav = [
+const enterpriseNav = [
   { icon: LayoutDashboard, label: "Painel", path: "/gerencia" },
   { icon: History, label: "Histórico de Testes", path: "/gerencia/historico" },
   { icon: Users, label: "Colaboradores", path: "/gerencia/colaboradores" },
@@ -26,7 +26,7 @@ const empresaNav = [
   { icon: Settings, label: "Dados da Empresa", path: "/gerencia/configuracoes" },
 ];
 
-const profissionalNav = [
+const professionalNav = [
   { icon: LayoutDashboard, label: "Painel", path: "/gerencia" },
   { icon: History, label: "Histórico de Testes", path: "/gerencia/historico" },
   { icon: Users, label: "Pacientes", path: "/gerencia/pacientes" },
@@ -36,18 +36,22 @@ const profissionalNav = [
 ];
 
 export default function GerenciaLayout() {
-  const { user, isLoading, accountType, signOut } = useAuth();
+  const { user, isLoading, plan, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const isEnterprise = plan === "enterprise";
+  const isProfessional = plan === "professional";
+  const hasAccess = isEnterprise || isProfessional;
 
   useEffect(() => {
     if (!isLoading && !user) {
       navigate("/auth");
     }
-    if (!isLoading && user && accountType !== "empresa" && accountType !== "profissional") {
+    if (!isLoading && user && !hasAccess) {
       navigate("/");
     }
-  }, [user, isLoading, accountType, navigate]);
+  }, [user, isLoading, hasAccess, navigate]);
 
   if (isLoading) {
     return (
@@ -57,13 +61,13 @@ export default function GerenciaLayout() {
     );
   }
 
-  if (!user || (accountType !== "empresa" && accountType !== "profissional")) {
+  if (!user || !hasAccess) {
     return null;
   }
 
-  const navItems = accountType === "empresa" ? empresaNav : profissionalNav;
-  const Icon = accountType === "empresa" ? Building2 : Stethoscope;
-  const title = accountType === "empresa" ? "Gerência Empresarial" : "Gerência Profissional";
+  const navItems = isEnterprise ? enterpriseNav : professionalNav;
+  const Icon = isEnterprise ? Building2 : Stethoscope;
+  const title = isEnterprise ? "Gerência Empresarial" : "Gerência Profissional";
 
   return (
     <div className="min-h-screen bg-muted/30 flex">
