@@ -56,7 +56,7 @@ export default function GerenciaPainel() {
     <div>
       <h1 className="font-heading text-3xl font-bold text-foreground mb-2">Painel de Gerência</h1>
       <p className="text-muted-foreground mb-8">
-        {accountType === "empresa" ? "Gerencie sua empresa, colaboradores e avaliações." : "Gerencie seus pacientes e testes aplicados."}
+        {isEnterprise ? "Gerencie sua empresa, colaboradores e avaliações." : "Gerencie seus pacientes e testes aplicados."}
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
