@@ -19,7 +19,7 @@ export default function GerenciaConfiguracoes() {
 
   useEffect(() => {
     if (!user) return;
-    if (accountType === "empresa") {
+    if (isEnterprise) {
       supabase.from("empresas").select("*").eq("profile_id", user.id).single().then(({ data }) => {
         if (data) { setForm(data); setEntityId(data.id); }
       });
