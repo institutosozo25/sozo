@@ -1,0 +1,1 @@
+COMMENT ON TYPE public.app_role IS 'Only admin and user are actively used. professional/company/reseller are deprecated and unused.';
