@@ -87,11 +87,7 @@ const App = () => (
                 <Route path="historico" element={<GerenciaHistorico />} />
                 <Route path="colaboradores" element={<GerenciaColaboradores />} />
                 <Route path="pacientes" element={<GerenciaPacientes />} />
-                <Route path="mapso" element={
-                  <ProtectedRoute allowedRoles={["company", "admin"]}>
-                    <DashboardEmpresaMapso />
-                  </ProtectedRoute>
-                } />
+                <Route path="mapso" element={<DashboardEmpresaMapso />} />
                 <Route path="pagamentos" element={<GerenciaPagamentos />} />
                 <Route path="notificacoes" element={<GerenciaNotificacoes />} />
                 <Route path="configuracoes" element={<GerenciaConfiguracoes />} />
