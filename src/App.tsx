@@ -34,13 +34,21 @@ import DiscApp from "./modules/disc/DiscApp";
 import MbtiApp from "./modules/mbti/MbtiApp";
 import TemperamentoApp from "./modules/temperamento/TemperamentoApp";
 import EneagramaApp from "./modules/eneagrama/EneagramaApp";
-import DashboardEmpresa from "./pages/dashboard/DashboardEmpresa";
-import DashboardEmpresaMapso from "./pages/dashboard/DashboardEmpresaMapso";
-import DashboardProfissional from "./pages/dashboard/DashboardProfissional";
 import DashboardUsuario from "./pages/dashboard/DashboardUsuario";
 import ProtectedRoute from "./pages/dashboard/ProtectedRoute";
 import EmployeeRespondFlow from "./modules/mapso/components/EmployeeRespondFlow";
 import NotFound from "./pages/NotFound";
+
+// Gerência pages
+import GerenciaLayout from "./pages/gerencia/GerenciaLayout";
+import GerenciaPainel from "./pages/gerencia/GerenciaPainel";
+import GerenciaHistorico from "./pages/gerencia/GerenciaHistorico";
+import GerenciaColaboradores from "./pages/gerencia/GerenciaColaboradores";
+import GerenciaPacientes from "./pages/gerencia/GerenciaPacientes";
+import GerenciaPagamentos from "./pages/gerencia/GerenciaPagamentos";
+import GerenciaNotificacoes from "./pages/gerencia/GerenciaNotificacoes";
+import GerenciaConfiguracoes from "./pages/gerencia/GerenciaConfiguracoes";
+import DashboardEmpresaMapso from "./pages/dashboard/DashboardEmpresaMapso";
 
 const queryClient = new QueryClient();
 
@@ -72,9 +80,33 @@ const App = () => (
               <Route path="/testes/mbti/aplicar" element={<MbtiApp />} />
               <Route path="/testes/temperamento/aplicar" element={<TemperamentoApp />} />
               <Route path="/testes/eneagrama/aplicar" element={<EneagramaApp />} />
+
+              {/* Gerência - empresa/profissional dashboard */}
+              <Route path="/gerencia" element={<GerenciaLayout />}>
+                <Route index element={<GerenciaPainel />} />
+                <Route path="historico" element={<GerenciaHistorico />} />
+                <Route path="colaboradores" element={<GerenciaColaboradores />} />
+                <Route path="pacientes" element={<GerenciaPacientes />} />
+                <Route path="mapso" element={
+                  <ProtectedRoute allowedRoles={["company", "admin"]}>
+                    <DashboardEmpresaMapso />
+                  </ProtectedRoute>
+                } />
+                <Route path="pagamentos" element={<GerenciaPagamentos />} />
+                <Route path="notificacoes" element={<GerenciaNotificacoes />} />
+                <Route path="configuracoes" element={<GerenciaConfiguracoes />} />
+              </Route>
+
+              {/* Keep old dashboard routes for user */}
+              <Route path="/dashboard/usuario" element={
+                <ProtectedRoute allowedRoles={["user", "admin"]}>
+                  <DashboardUsuario />
+                </ProtectedRoute>
+              } />
+              {/* Redirect old empresa/profissional routes */}
               <Route path="/dashboard/empresa" element={
                 <ProtectedRoute allowedRoles={["company", "admin"]}>
-                  <DashboardEmpresa />
+                  <GerenciaLayout />
                 </ProtectedRoute>
               } />
               <Route path="/dashboard/empresa/mapso" element={
@@ -84,14 +116,10 @@ const App = () => (
               } />
               <Route path="/dashboard/profissional" element={
                 <ProtectedRoute allowedRoles={["professional", "admin"]}>
-                  <DashboardProfissional />
+                  <GerenciaLayout />
                 </ProtectedRoute>
               } />
-              <Route path="/dashboard/usuario" element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
-                  <DashboardUsuario />
-                </ProtectedRoute>
-              } />
+
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="mapso" element={<AdminMapso />} />

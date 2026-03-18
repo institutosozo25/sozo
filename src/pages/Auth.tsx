@@ -39,8 +39,8 @@ export default function Auth() {
   useEffect(() => {
     if (user && userAccountType) {
       const redirectMap: Record<string, string> = {
-        empresa: "/dashboard/empresa",
-        profissional: "/dashboard/profissional",
+        empresa: "/gerencia",
+        profissional: "/gerencia",
         usuario: "/dashboard/usuario",
       };
       navigate(redirectMap[userAccountType] || "/");
