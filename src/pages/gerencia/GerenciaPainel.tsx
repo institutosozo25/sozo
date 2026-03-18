@@ -39,7 +39,7 @@ export default function GerenciaPainel() {
     fetchStats();
   }, [user, plan, isEnterprise]);
 
-  const quickLinks = accountType === "empresa"
+  const quickLinks = isEnterprise
     ? [
         { icon: History, label: "Histórico de Testes", path: "/gerencia/historico", count: stats.historico },
         { icon: Users, label: "Colaboradores", path: "/gerencia/colaboradores", count: stats.pessoas },
