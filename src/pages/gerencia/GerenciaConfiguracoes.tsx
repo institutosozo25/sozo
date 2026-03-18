@@ -79,7 +79,7 @@ export default function GerenciaConfiguracoes() {
     { key: "sexo", label: "Sexo" },
   ];
 
-  const fields: { key: string; label: string; type?: string }[] = accountType === "empresa" ? empresaFields : profFields;
+  const fields: { key: string; label: string; type?: string }[] = isEnterprise ? empresaFields : profFields;
 
   return (
     <div>
