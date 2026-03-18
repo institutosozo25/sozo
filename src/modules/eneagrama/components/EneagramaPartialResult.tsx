@@ -13,6 +13,7 @@ import { Link } from "react-router-dom";
 const EneagramaPartialResult = () => {
   const { result, setStep, setFullReport, respondentName, respondentEmail } = useEneagrama();
   const { user } = useAuth();
+  const { isFree, isLoading: accessLoading } = useTestAccess("eneagrama");
   const [loading, setLoading] = useState(false);
 
   if (!result) return null;
