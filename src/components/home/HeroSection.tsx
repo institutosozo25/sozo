@@ -1,7 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, Brain, Heart, Users, Sparkles } from "lucide-react";
+import { useSiteSettings } from "@/hooks/useSiteContent";
 export function HeroSection() {
+  const { data: settings } = useSiteSettings();
+  const s = (key: string, fallback: string) => settings?.[key] ?? fallback;
+
   return <section className="relative min-h-screen flex items-center gradient-hero overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
@@ -53,16 +57,16 @@ export function HeroSection() {
             animationDelay: "0.4s"
           }}>
               <div>
-                <p className="font-heading text-3xl md:text-4xl font-bold text-accent">50+</p>
-                <p className="text-primary-foreground/70 text-sm">Testes Disponíveis</p>
+                <p className="font-heading text-3xl md:text-4xl font-bold text-accent">{s("hero_stats_tests", "10.000+")}</p>
+                <p className="text-primary-foreground/70 text-sm">Testes Realizados</p>
               </div>
               <div>
-                <p className="font-heading text-3xl md:text-4xl font-bold text-accent">10k+</p>
+                <p className="font-heading text-3xl md:text-4xl font-bold text-accent">{s("hero_stats_users", "2.500+")}</p>
                 <p className="text-primary-foreground/70 text-sm">Usuários Ativos</p>
               </div>
               <div>
-                <p className="font-heading text-3xl md:text-4xl font-bold text-accent">98%</p>
-                <p className="text-primary-foreground/70 text-sm">Satisfação</p>
+                <p className="font-heading text-3xl md:text-4xl font-bold text-accent">{s("hero_stats_companies", "150+")}</p>
+                <p className="text-primary-foreground/70 text-sm">Empresas Atendidas</p>
               </div>
             </div>
           </div>
