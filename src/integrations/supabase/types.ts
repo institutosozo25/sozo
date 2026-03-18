@@ -645,31 +645,52 @@ export type Database = {
       }
       profissionais: {
         Row: {
+          cnpj: string | null
+          cpf: string | null
           created_at: string
+          data_nascimento: string | null
           endereco: string | null
           estado_civil: string | null
           id: string
           idade: number | null
+          nome_fantasia: string | null
+          nome_mae: string | null
           profile_id: string
+          razao_social: string | null
           sexo: string | null
+          tipo_pessoa: string | null
         }
         Insert: {
+          cnpj?: string | null
+          cpf?: string | null
           created_at?: string
+          data_nascimento?: string | null
           endereco?: string | null
           estado_civil?: string | null
           id?: string
           idade?: number | null
+          nome_fantasia?: string | null
+          nome_mae?: string | null
           profile_id: string
+          razao_social?: string | null
           sexo?: string | null
+          tipo_pessoa?: string | null
         }
         Update: {
+          cnpj?: string | null
+          cpf?: string | null
           created_at?: string
+          data_nascimento?: string | null
           endereco?: string | null
           estado_civil?: string | null
           id?: string
           idade?: number | null
+          nome_fantasia?: string | null
+          nome_mae?: string | null
           profile_id?: string
+          razao_social?: string | null
           sexo?: string | null
+          tipo_pessoa?: string | null
         }
         Relationships: [
           {
