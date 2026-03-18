@@ -1,10 +1,11 @@
 import { useMbti } from "../contexts/MbtiContext";
 import { DIMENSION_LABELS, MBTI_TYPE_DESCRIPTIONS } from "../data/mbti-questionnaire";
 import { Button } from "@/components/ui/button";
-import { Lock, ArrowRight, Check, BarChart3, Sparkles, LogIn } from "lucide-react";
+import { Lock, ArrowRight, Check, BarChart3, Sparkles, LogIn, Crown } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useTestAccess } from "@/hooks/useTestAccess";
 import { toast } from "sonner";
 import { saveTestSubmission, saveGeneratedReport } from "@/lib/test-persistence";
 import { Link } from "react-router-dom";
