@@ -63,6 +63,7 @@ export const generateDiagnosisHtml = (
 
   return `
 <div style="max-width:800px;margin:0 auto;font-family:'Segoe UI',Arial,sans-serif;color:#1a1a2e;line-height:1.7;">
+  ${buildBrandingBlock(branding)}
   <div style="text-align:center;padding:30px;background:linear-gradient(135deg,#0f3460,#533483);color:white;border-radius:12px;margin-bottom:30px;">
     <h1 style="margin:0 0 8px;font-size:24px;">DIAGNÓSTICO PSICOSSOCIAL — MAPSO</h1>
     <p style="margin:0;opacity:0.9;">${organization.name} · ${organization.sector}</p>
