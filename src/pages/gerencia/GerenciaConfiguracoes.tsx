@@ -104,6 +104,23 @@ export default function GerenciaConfiguracoes() {
         </div>
       </div>
 
+      {/* Logo upload for empresa */}
+      {isEnterprise && user && entityId && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-base">Logo da Empresa</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LogoUpload
+              userId={user.id}
+              currentLogoUrl={form.logo_url || null}
+              onLogoChange={(url) => setForm({ ...form, logo_url: url })}
+              empresaId={entityId}
+            />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Locked fields for empresa */}
       {isEnterprise && (
         <Card className="mb-6">

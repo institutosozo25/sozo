@@ -2,6 +2,13 @@ import type { AssessmentResult, DimensionResult } from "./miarpo-engine";
 import type { OrganizationInfo } from "../contexts/AssessmentContext";
 import { generateActionPlan, type ActionPlanItem } from "./action-plan-generator";
 
+export interface CompanyBranding {
+  logoUrl?: string | null;
+  cnpj?: string | null;
+  razaoSocial?: string | null;
+  nomeFantasia?: string | null;
+}
+
 const getRiskLabel = (score: number): string => {
   if (score <= 20) return "Muito Baixo";
   if (score <= 40) return "Baixo";
