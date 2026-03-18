@@ -20,6 +20,7 @@ const TEMPERAMENTO_DESCRIPTIONS: Record<TemperamentoType, string> = {
 const TemperamentoPartialResult = () => {
   const { result, setStep, setFullReport, respondentName, respondentEmail } = useTemperamento();
   const { user } = useAuth();
+  const { isFree, isLoading: accessLoading } = useTestAccess("temperamento");
   const [loading, setLoading] = useState(false);
 
   if (!result) return null;
