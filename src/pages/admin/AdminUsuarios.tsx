@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, User, Eye, Ban, Trash2, Search } from "lucide-react";
+import { Shield, User, Eye, Ban, Trash2, Search, CreditCard } from "lucide-react";
 
 interface Profile {
   id: string;
@@ -16,6 +16,8 @@ interface Profile {
   created_at: string;
   suspended_at: string | null;
   telefone: string | null;
+  subscription_plan: string | null;
+  subscription_status: string | null;
 }
 
 interface UserRole {
@@ -26,18 +28,26 @@ interface UserRole {
 
 const roleLabels: Record<string, string> = {
   admin: "Administrador",
-  professional: "Profissional",
-  company: "Empresa",
-  reseller: "Revendedor",
   user: "Usuário",
 };
 
 const roleColors: Record<string, string> = {
   admin: "bg-primary text-primary-foreground",
-  professional: "bg-secondary text-secondary-foreground",
-  company: "bg-accent text-accent-foreground",
-  reseller: "bg-sozo-orange text-white",
   user: "bg-muted text-muted-foreground",
+};
+
+const planLabels: Record<string, string> = {
+  free: "Gratuito",
+  individual: "Individual",
+  professional: "Profissional",
+  enterprise: "Empresarial",
+};
+
+const planColors: Record<string, string> = {
+  free: "bg-muted text-muted-foreground",
+  individual: "bg-accent text-accent-foreground",
+  professional: "bg-secondary text-secondary-foreground",
+  enterprise: "bg-primary text-primary-foreground",
 };
 
 export default function AdminUsuarios() {
@@ -45,9 +55,11 @@ export default function AdminUsuarios() {
   const [userRoles, setUserRoles] = useState<Record<string, string[]>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [isPlanDialogOpen, setIsPlanDialogOpen] = useState(false);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [selectedRole, setSelectedRole] = useState<string>("");
+  const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [detailProfile, setDetailProfile] = useState<Profile | null>(null);
   const [detailSubmissions, setDetailSubmissions] = useState<number>(0);
@@ -78,6 +90,12 @@ export default function AdminUsuarios() {
     setSelectedUserId(userId);
     setSelectedRole("");
     setIsRoleDialogOpen(true);
+  }
+
+  function openPlanDialog(userId: string, currentPlan: string | null) {
+    setSelectedUserId(userId);
+    setSelectedPlan(currentPlan || "free");
+    setIsPlanDialogOpen(true);
   }
 
   async function openDetailDialog(profile: Profile) {
@@ -112,12 +130,28 @@ export default function AdminUsuarios() {
     }
   }
 
+  async function handleSetPlan() {
+    if (!selectedPlan) return;
+    const { error } = await supabase.rpc("admin_set_user_plan", {
+      _target_user_id: selectedUserId,
+      _plan: selectedPlan,
+      _status: "active",
+    });
+    if (error) {
+      toast({ title: "Erro ao alterar plano", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Plano atualizado com sucesso!" });
+      setIsPlanDialogOpen(false);
+      fetchData();
+    }
+  }
+
   async function handleRemoveRole(userId: string, role: string) {
     if (role === "user") {
       toast({ title: "Não é possível remover o papel de usuário básico", variant: "destructive" });
       return;
     }
-    if (!confirm(`Remover papel "${roleLabels[role]}" deste usuário?`)) return;
+    if (!confirm(`Remover papel "${roleLabels[role] || role}" deste usuário?`)) return;
     const { error } = await supabase
       .from("user_roles")
       .delete()
@@ -172,6 +206,11 @@ export default function AdminUsuarios() {
     );
   });
 
+  function getPlanDisplay(plan: string | null) {
+    const key = plan || "free";
+    return { label: planLabels[key] || key, color: planColors[key] || planColors.free };
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
@@ -200,6 +239,7 @@ export default function AdminUsuarios() {
           {filteredProfiles.map((profile) => {
             const roles = userRoles[profile.id] || ["user"];
             const isSuspended = !!profile.suspended_at;
+            const planInfo = getPlanDisplay(profile.subscription_plan);
             return (
               <Card key={profile.id} className={isSuspended ? "opacity-60 border-destructive/30" : ""}>
                 <CardHeader className="pb-2">
@@ -231,6 +271,9 @@ export default function AdminUsuarios() {
                       <Button variant="ghost" size="icon" title="Excluir usuário" onClick={() => handleDeleteUser(profile.id, profile.full_name || "Sem nome")}>
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
+                      <Button variant="outline" size="sm" onClick={() => openPlanDialog(profile.id, profile.subscription_plan)}>
+                        <CreditCard className="w-4 h-4 mr-1" /> Plano
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => openAddRoleDialog(profile.id)}>
                         <Shield className="w-4 h-4 mr-1" /> Papel
                       </Button>
@@ -238,17 +281,20 @@ export default function AdminUsuarios() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <span className="text-xs text-muted-foreground mr-1">Papéis:</span>
                     {roles.map((role) => (
                       <Badge
                         key={role}
-                        className={`${roleColors[role]} cursor-pointer hover:opacity-80`}
+                        className={`${roleColors[role] || "bg-muted text-muted-foreground"} cursor-pointer hover:opacity-80`}
                         onClick={() => handleRemoveRole(profile.id, role)}
                       >
-                        {roleLabels[role]}
+                        {roleLabels[role] || role}
                         {role !== "user" && " ×"}
                       </Badge>
                     ))}
+                    <span className="text-xs text-muted-foreground ml-3 mr-1">Plano:</span>
+                    <Badge className={planInfo.color}>{planInfo.label}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-3">
                     Cadastrado em: {new Date(profile.created_at).toLocaleDateString("pt-BR")}
@@ -265,6 +311,7 @@ export default function AdminUsuarios() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Adicionar Papel ao Usuário</DialogTitle>
+            <DialogDescription>Papéis controlam permissões do sistema (ex: admin).</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <Select value={selectedRole} onValueChange={setSelectedRole}>
@@ -273,14 +320,38 @@ export default function AdminUsuarios() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="admin">Administrador</SelectItem>
-                <SelectItem value="professional">Profissional</SelectItem>
-                <SelectItem value="company">Empresa</SelectItem>
-                <SelectItem value="reseller">Revendedor</SelectItem>
               </SelectContent>
             </Select>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>Cancelar</Button>
               <Button onClick={handleAddRole}>Adicionar</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Plan Dialog */}
+      <Dialog open={isPlanDialogOpen} onOpenChange={setIsPlanDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Alterar Plano do Usuário</DialogTitle>
+            <DialogDescription>O plano determina o acesso e dashboard do usuário.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <Select value={selectedPlan} onValueChange={setSelectedPlan}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um plano..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="free">Gratuito</SelectItem>
+                <SelectItem value="individual">Individual</SelectItem>
+                <SelectItem value="professional">Profissional</SelectItem>
+                <SelectItem value="enterprise">Empresarial</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsPlanDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={handleSetPlan}>Salvar Plano</Button>
             </div>
           </div>
         </DialogContent>
@@ -302,12 +373,13 @@ export default function AdminUsuarios() {
                 <div><strong className="text-muted-foreground">Cadastro:</strong><p>{new Date(detailProfile.created_at).toLocaleDateString("pt-BR")}</p></div>
                 <div><strong className="text-muted-foreground">Status:</strong><p>{detailProfile.suspended_at ? "Suspensa" : "Ativa"}</p></div>
                 <div><strong className="text-muted-foreground">Testes realizados:</strong><p>{detailSubmissions}</p></div>
+                <div><strong className="text-muted-foreground">Plano:</strong><p>{planLabels[detailProfile.subscription_plan || "free"] || "Gratuito"}</p></div>
               </div>
               <div>
                 <strong className="text-muted-foreground text-sm">Papéis:</strong>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {(userRoles[detailProfile.id] || ["user"]).map((r) => (
-                    <Badge key={r} className={roleColors[r]}>{roleLabels[r]}</Badge>
+                    <Badge key={r} className={roleColors[r] || "bg-muted text-muted-foreground"}>{roleLabels[r] || r}</Badge>
                   ))}
                 </div>
               </div>
