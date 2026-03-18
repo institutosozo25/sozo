@@ -18,15 +18,17 @@ interface Profile {
 }
 
 const planLabels: Record<string, string> = {
+  free: "Gratuito",
   individual: "Individual",
-  profissional: "Profissional",
-  empresarial: "Empresarial",
+  professional: "Profissional",
+  enterprise: "Empresarial",
 };
 
 const planColors: Record<string, string> = {
+  free: "bg-muted text-muted-foreground",
   individual: "bg-secondary text-secondary-foreground",
-  profissional: "bg-primary text-primary-foreground",
-  empresarial: "bg-accent text-accent-foreground",
+  professional: "bg-primary text-primary-foreground",
+  enterprise: "bg-accent text-accent-foreground",
 };
 
 const statusLabels: Record<string, string> = {
@@ -171,9 +173,10 @@ export default function AdminPlanos() {
                   <SelectValue placeholder="Selecione um plano..." />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="free">Gratuito</SelectItem>
                   <SelectItem value="individual">Individual</SelectItem>
-                  <SelectItem value="profissional">Profissional</SelectItem>
-                  <SelectItem value="empresarial">Empresarial</SelectItem>
+                  <SelectItem value="professional">Profissional</SelectItem>
+                  <SelectItem value="enterprise">Empresarial</SelectItem>
                 </SelectContent>
               </Select>
             </div>
