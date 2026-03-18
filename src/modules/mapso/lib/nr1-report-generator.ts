@@ -163,8 +163,10 @@ export const generateNR1ReportHtml = (
 </style></head>
 <body>
   <div class="header">
+    ${branding?.logoUrl ? `<img src="${branding.logoUrl}" alt="Logo" style="max-height:50px;max-width:180px;object-fit:contain;margin-bottom:12px;" />` : ""}
     <h1>RELATÓRIO FINAL — AVALIAÇÃO DE RISCOS PSICOSSOCIAIS</h1>
     <p style="margin:8px 0 0;opacity:0.9;">Em conformidade com a NR-1 e NR-17</p>
+    ${branding?.cnpj || branding?.razaoSocial ? `<p style="margin:4px 0 0;opacity:0.8;font-size:13px;">${[branding.razaoSocial, branding.cnpj ? 'CNPJ: ' + branding.cnpj : null].filter(Boolean).join(' · ')}</p>` : ""}
   </div>
 
   <table>
