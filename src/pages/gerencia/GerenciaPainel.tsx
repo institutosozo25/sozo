@@ -93,7 +93,7 @@ export default function GerenciaPainel() {
           <Button asChild>
             <Link to="/testes">Aplicar Novo Teste</Link>
           </Button>
-          {accountType === "empresa" && (
+          {isEnterprise && (
             <Button variant="outline" asChild>
               <Link to="/gerencia/mapso">Avaliação MAPSO</Link>
             </Button>

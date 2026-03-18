@@ -87,7 +87,7 @@ export default function GerenciaConfiguracoes() {
         <Settings className="w-8 h-8 text-primary" />
         <div>
           <h1 className="font-heading text-3xl font-bold text-foreground">
-            {accountType === "empresa" ? "Dados da Empresa" : "Meus Dados"}
+            {isEnterprise ? "Dados da Empresa" : "Meus Dados"}
           </h1>
           <p className="text-muted-foreground">Gerencie suas informações cadastrais.</p>
         </div>
