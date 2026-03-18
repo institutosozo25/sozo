@@ -114,7 +114,8 @@ export const generateDiagnosisHtml = (
 
 export const generateNR1ReportHtml = (
   result: AssessmentResult,
-  organization: OrganizationInfo
+  organization: OrganizationInfo,
+  branding?: CompanyBranding
 ): string => {
   const actionPlan = generateActionPlan(result);
   const criticalDims = result.dimensions.filter((d) => d.riskScore > 60).sort((a, b) => b.riskScore - a.riskScore);
