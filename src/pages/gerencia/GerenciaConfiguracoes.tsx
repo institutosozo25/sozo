@@ -32,7 +32,7 @@ export default function GerenciaConfiguracoes() {
 
   const save = async () => {
     if (!entityId) return;
-    const table = accountType === "empresa" ? "empresas" : "profissionais";
+    const table = isEnterprise ? "empresas" : "profissionais";
     
     const updateData = accountType === "empresa"
       ? {
