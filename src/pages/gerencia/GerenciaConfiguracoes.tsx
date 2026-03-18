@@ -34,7 +34,7 @@ export default function GerenciaConfiguracoes() {
     if (!entityId) return;
     const table = isEnterprise ? "empresas" : "profissionais";
     
-    const updateData = accountType === "empresa"
+    const updateData = isEnterprise
       ? {
           razao_social: sanitizeString(form.razao_social, 200),
           cnpj: sanitizeString(form.cnpj, 20),
