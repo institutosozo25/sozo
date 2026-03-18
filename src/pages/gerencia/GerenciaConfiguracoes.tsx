@@ -71,14 +71,14 @@ export default function GerenciaConfiguracoes() {
     { key: "celular", label: "Celular" },
   ];
 
-  const profFields = [
+  const profFields: { key: string; label: string; type?: string }[] = [
     { key: "endereco", label: "Endereço" },
     { key: "idade", label: "Idade", type: "number" },
     { key: "estado_civil", label: "Estado Civil" },
     { key: "sexo", label: "Sexo" },
   ];
 
-  const fields = accountType === "empresa" ? empresaFields : profFields;
+  const fields: { key: string; label: string; type?: string }[] = accountType === "empresa" ? empresaFields : profFields;
 
   return (
     <div>

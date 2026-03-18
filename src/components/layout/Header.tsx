@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, Settings, LayoutDashboard } from "lucide-react";
+import { Menu, X, LogIn, LogOut, Settings, LayoutDashboard, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -20,8 +20,7 @@ const navigation = [
 
 function getDashboardPath(accountType: string | null, isAdmin: boolean): string {
   if (isAdmin) return "/admin";
-  if (accountType === "empresa") return "/dashboard/empresa";
-  if (accountType === "profissional") return "/dashboard/profissional";
+  if (accountType === "empresa" || accountType === "profissional") return "/gerencia";
   return "/dashboard/usuario";
 }
 
@@ -31,6 +30,7 @@ export function Header() {
   const { user, isAdmin, accountType, signOut } = useAuth();
 
   const dashboardPath = getDashboardPath(accountType, isAdmin);
+  const showGerencia = accountType === "empresa" || accountType === "profissional";
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
@@ -74,15 +74,27 @@ export function Header() {
             {user ? (
               <>
                 <NotificationBell />
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to={dashboardPath}>
-                    {isAdmin ? (
-                      <><Settings className="w-4 h-4 mr-2" />Admin</>
-                    ) : (
-                      <><LayoutDashboard className="w-4 h-4 mr-2" />Dashboard</>
-                    )}
-                  </Link>
-                </Button>
+                {isAdmin && (
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/admin">
+                      <Settings className="w-4 h-4 mr-2" />Admin
+                    </Link>
+                  </Button>
+                )}
+                {showGerencia && (
+                  <Button variant="default" size="sm" asChild>
+                    <Link to="/gerencia">
+                      <Briefcase className="w-4 h-4 mr-2" />Gerência
+                    </Link>
+                  </Button>
+                )}
+                {!isAdmin && !showGerencia && (
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/dashboard/usuario">
+                      <LayoutDashboard className="w-4 h-4 mr-2" />Minha Conta
+                    </Link>
+                  </Button>
+                )}
                 <Button variant="ghost" size="sm" onClick={() => signOut()}>
                   <LogOut className="w-4 h-4 mr-2" />
                   Sair
@@ -134,15 +146,27 @@ export function Header() {
               <div className="flex flex-col gap-2 pt-4 mt-2 border-t border-border">
                 {user ? (
                   <>
-                    <Button variant="outline" asChild>
-                      <Link to={dashboardPath} onClick={() => setIsOpen(false)}>
-                        {isAdmin ? (
-                          <><Settings className="w-4 h-4 mr-2" />Admin</>
-                        ) : (
-                          <><LayoutDashboard className="w-4 h-4 mr-2" />Dashboard</>
-                        )}
-                      </Link>
-                    </Button>
+                    {isAdmin && (
+                      <Button variant="outline" asChild>
+                        <Link to="/admin" onClick={() => setIsOpen(false)}>
+                          <Settings className="w-4 h-4 mr-2" />Admin
+                        </Link>
+                      </Button>
+                    )}
+                    {showGerencia && (
+                      <Button variant="default" asChild>
+                        <Link to="/gerencia" onClick={() => setIsOpen(false)}>
+                          <Briefcase className="w-4 h-4 mr-2" />Gerência
+                        </Link>
+                      </Button>
+                    )}
+                    {!isAdmin && !showGerencia && (
+                      <Button variant="outline" asChild>
+                        <Link to="/dashboard/usuario" onClick={() => setIsOpen(false)}>
+                          <LayoutDashboard className="w-4 h-4 mr-2" />Minha Conta
+                        </Link>
+                      </Button>
+                    )}
                     <Button variant="outline" onClick={() => { signOut(); setIsOpen(false); }}>
                       <LogOut className="w-4 h-4 mr-2" />
                       Sair
