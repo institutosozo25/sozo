@@ -28,9 +28,22 @@ const getRiskColor = (score: number): string => {
 const formatDate = (iso: string): string =>
   new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
+const buildBrandingBlock = (branding?: CompanyBranding): string => {
+  if (!branding || (!branding.logoUrl && !branding.cnpj)) return "";
+  const logo = branding.logoUrl
+    ? `<img src="${branding.logoUrl}" alt="Logo" style="max-height:60px;max-width:200px;object-fit:contain;margin-bottom:8px;" />`
+    : "";
+  const details = [
+    branding.nomeFantasia || branding.razaoSocial,
+    branding.cnpj ? `CNPJ: ${branding.cnpj}` : null,
+  ].filter(Boolean).join(" · ");
+  return `<div style="text-align:center;margin-bottom:20px;">${logo}${details ? `<p style="margin:4px 0 0;font-size:13px;opacity:0.85;">${details}</p>` : ""}</div>`;
+};
+
 export const generateDiagnosisHtml = (
   result: AssessmentResult,
-  organization: OrganizationInfo
+  organization: OrganizationInfo,
+  branding?: CompanyBranding
 ): string => {
   const dimRows = result.dimensions
     .map(
