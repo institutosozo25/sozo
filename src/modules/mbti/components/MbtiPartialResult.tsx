@@ -1,10 +1,11 @@
 import { useMbti } from "../contexts/MbtiContext";
 import { DIMENSION_LABELS, MBTI_TYPE_DESCRIPTIONS } from "../data/mbti-questionnaire";
 import { Button } from "@/components/ui/button";
-import { Lock, ArrowRight, Check, BarChart3, Sparkles, LogIn } from "lucide-react";
+import { Lock, ArrowRight, Check, BarChart3, Sparkles, LogIn, Crown } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useTestAccess } from "@/hooks/useTestAccess";
 import { toast } from "sonner";
 import { saveTestSubmission, saveGeneratedReport } from "@/lib/test-persistence";
 import { Link } from "react-router-dom";
@@ -12,6 +13,7 @@ import { Link } from "react-router-dom";
 const MbtiPartialResult = () => {
   const { result, setStep, setFullReport, respondentName, respondentEmail } = useMbti();
   const { user } = useAuth();
+  const { isFree, isLoading: accessLoading } = useTestAccess("mbti");
   const [loading, setLoading] = useState(false);
 
   if (!result) return null;
@@ -168,7 +170,41 @@ const MbtiPartialResult = () => {
           </div>
         )}
 
-        {/* Paywall */}
+        {/* Free access banner for subscribers */}
+        {user && isFree && (
+          <div className="bg-card border-2 border-green-500/30 rounded-2xl p-6 mb-8 text-center">
+            <Crown className="h-8 w-8 text-green-500 mx-auto mb-3" />
+            <h3 className="font-heading text-xl font-bold text-foreground mb-2">
+              Relatório incluso no seu plano!
+            </h3>
+            <p className="text-muted-foreground text-sm mb-6">
+              Como assinante, você tem acesso gratuito ao relatório completo.
+            </p>
+            <Button
+              variant="accent"
+              size="xl"
+              className="w-full max-w-sm"
+              onClick={handleUnlock}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-accent-foreground border-t-transparent mr-2" />
+                  Gerando relatório...
+                </>
+              ) : (
+                <>
+                  <BarChart3 className="w-5 h-5 mr-2" />
+                  Gerar Meu Relatório Completo
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+
+        {/* Paywall for non-subscribers */}
+        {user && !isFree && !accessLoading && (
         <div className="bg-card border-2 border-accent/30 rounded-2xl p-8 mb-8">
           <div className="text-center mb-6">
             <Lock className="h-8 w-8 text-accent mx-auto mb-3" />
@@ -236,6 +272,7 @@ const MbtiPartialResult = () => {
             )}
           </Button>
         </div>
+        )}
       </div>
     </div>
   );
