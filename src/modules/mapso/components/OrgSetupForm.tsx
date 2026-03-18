@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { Building2, Users, Briefcase, ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Building2, Users, Briefcase, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAssessment } from "../contexts/AssessmentContext";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import ConsentDialog from "./ConsentDialog";
 import logoSozo from "../assets/logo-sozo.png";
 
@@ -15,8 +17,32 @@ const sectors = [
 
 const OrgSetupForm = () => {
   const { setOrganization, setCurrentStep, setConsentAccepted } = useAssessment();
+  const { user, plan } = useAuth();
+  const isEnterprise = plan === "enterprise";
+
   const [form, setForm] = useState({ name: "", sector: "", department: "", employeeCount: "" });
   const [showConsent, setShowConsent] = useState(false);
+  const [loadingEmpresa, setLoadingEmpresa] = useState(false);
+  const [empresaLoaded, setEmpresaLoaded] = useState(false);
+
+  // Auto-pull empresa data for enterprise users
+  useEffect(() => {
+    if (!isEnterprise || !user) return;
+    setLoadingEmpresa(true);
+    supabase
+      .from("empresas")
+      .select("razao_social, nome_fantasia, cnpj, responsavel")
+      .eq("profile_id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          const empresaName = (data as any).nome_fantasia || (data as any).razao_social || "";
+          setForm((prev) => ({ ...prev, name: empresaName }));
+          setEmpresaLoaded(true);
+        }
+        setLoadingEmpresa(false);
+      });
+  }, [isEnterprise, user]);
 
   const isValid = form.name.trim().length > 0 && form.sector.length > 0;
 
@@ -32,6 +58,14 @@ const OrgSetupForm = () => {
     setShowConsent(false);
     setCurrentStep("questionnaire");
   };
+
+  if (loadingEmpresa) {
+    return (
+      <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -57,7 +91,11 @@ const OrgSetupForm = () => {
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 maxLength={100}
+                disabled={empresaLoaded}
               />
+              {empresaLoaded && (
+                <p className="text-xs text-muted-foreground">Preenchido automaticamente a partir dos dados cadastrais.</p>
+              )}
             </div>
 
             <div className="space-y-2">

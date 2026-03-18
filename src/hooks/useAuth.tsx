@@ -6,6 +6,13 @@ import { useQueryClient } from "@tanstack/react-query";
 type AppRole = "admin" | "user";
 type PlanType = "free" | "individual" | "professional" | "enterprise" | null;
 
+interface EmpresaData {
+  cnpj: string;
+  razaoSocial: string;
+  nomeFantasia: string;
+  responsavel: string;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -14,7 +21,7 @@ interface AuthContextType {
   isAdmin: boolean;
   plan: PlanType;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string, accountType?: string, telefone?: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, accountType?: string, telefone?: string, empresaData?: EmpresaData) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshPlan: () => Promise<void>;
 }
@@ -104,13 +111,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string, accountType: string = "usuario", telefone?: string) => {
+  const signUp = async (
+    email: string, password: string, fullName: string,
+    accountType: string = "usuario", telefone?: string,
+    empresaData?: EmpresaData
+  ) => {
+    const metadata: Record<string, string | undefined> = {
+      full_name: fullName,
+      account_type: accountType,
+      telefone,
+    };
+
+    if (empresaData) {
+      metadata.cnpj = empresaData.cnpj;
+      metadata.razao_social = empresaData.razaoSocial;
+      metadata.nome_fantasia = empresaData.nomeFantasia;
+      metadata.responsavel = empresaData.responsavel;
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/`,
-        data: { full_name: fullName, account_type: accountType, telefone },
+        data: metadata,
       },
     });
     return { error };

@@ -123,11 +123,14 @@ export type Database = {
           cep: string | null
           cnpj: string | null
           created_at: string
+          dados_bloqueados: boolean
           email: string | null
           id: string
+          nome_fantasia: string | null
           numero: string | null
           profile_id: string
           razao_social: string | null
+          responsavel: string | null
           rua: string | null
           telefone: string | null
         }
@@ -136,11 +139,14 @@ export type Database = {
           cep?: string | null
           cnpj?: string | null
           created_at?: string
+          dados_bloqueados?: boolean
           email?: string | null
           id?: string
+          nome_fantasia?: string | null
           numero?: string | null
           profile_id: string
           razao_social?: string | null
+          responsavel?: string | null
           rua?: string | null
           telefone?: string | null
         }
@@ -149,11 +155,14 @@ export type Database = {
           cep?: string | null
           cnpj?: string | null
           created_at?: string
+          dados_bloqueados?: boolean
           email?: string | null
           id?: string
+          nome_fantasia?: string | null
           numero?: string | null
           profile_id?: string
           razao_social?: string | null
+          responsavel?: string | null
           rua?: string | null
           telefone?: string | null
         }

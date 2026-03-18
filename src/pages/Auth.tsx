@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Building2, Stethoscope, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { loginSchema, signupSchema } from "@/lib/validation";
+import EmpresaSignupFields from "@/components/auth/EmpresaSignupFields";
 
 type AccountType = "empresa" | "profissional" | "usuario";
 
@@ -32,6 +33,12 @@ export default function Auth() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Empresa-specific fields
+  const [cnpj, setCnpj] = useState("");
+  const [razaoSocial, setRazaoSocial] = useState("");
+  const [nomeFantasia, setNomeFantasia] = useState("");
+  const [responsavel, setResponsavel] = useState("");
+
   const { signIn, signUp, user, plan } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -45,6 +52,16 @@ export default function Auth() {
       }
     }
   }, [user, plan, navigate]);
+
+  const validateEmpresaFields = (): Record<string, string> => {
+    const fieldErrors: Record<string, string> = {};
+    const cnpjDigits = cnpj.replace(/\D/g, "");
+    if (cnpjDigits.length !== 14) fieldErrors.cnpj = "CNPJ deve ter 14 dígitos";
+    if (!razaoSocial.trim()) fieldErrors.razaoSocial = "Razão social é obrigatória";
+    if (!nomeFantasia.trim()) fieldErrors.nomeFantasia = "Nome fantasia é obrigatório";
+    if (!responsavel.trim()) fieldErrors.responsavel = "Responsável é obrigatório";
+    return fieldErrors;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,11 +89,7 @@ export default function Auth() {
           } else if (error.message === "Email not confirmed") {
             message = "Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada.";
           }
-          toast({
-            title: "Erro ao entrar",
-            description: message,
-            variant: "destructive",
-          });
+          toast({ title: "Erro ao entrar", description: message, variant: "destructive" });
         } else {
           toast({ title: "Bem-vindo de volta!" });
         }
@@ -92,13 +105,25 @@ export default function Auth() {
           return;
         }
 
+        // Validate empresa-specific fields
+        if (accountType === "empresa") {
+          const empresaErrors = validateEmpresaFields();
+          if (Object.keys(empresaErrors).length > 0) {
+            setErrors(empresaErrors);
+            setIsSubmitting(false);
+            return;
+          }
+        }
+
         if (!lgpdConsent) {
           setErrors({ lgpd: "Você deve aceitar a Política de Privacidade para continuar." });
           setIsSubmitting(false);
           return;
         }
 
-        const { error } = await signUp(email, password, fullName, accountType, telefone);
+        const { error } = await signUp(email, password, fullName, accountType, telefone,
+          accountType === "empresa" ? { cnpj: cnpj.replace(/\D/g, ""), razaoSocial, nomeFantasia, responsavel } : undefined
+        );
         if (error) {
           let message = error.message;
           if (error.message.includes("already registered")) {
@@ -211,6 +236,17 @@ export default function Auth() {
                       <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" className={errors.confirmPassword ? "border-destructive" : ""} />
                       {errors.confirmPassword && <p className="text-destructive text-sm">{errors.confirmPassword}</p>}
                     </div>
+
+                    {/* Empresa-specific fields */}
+                    {accountType === "empresa" && (
+                      <EmpresaSignupFields
+                        cnpj={cnpj} setCnpj={setCnpj}
+                        razaoSocial={razaoSocial} setRazaoSocial={setRazaoSocial}
+                        nomeFantasia={nomeFantasia} setNomeFantasia={setNomeFantasia}
+                        responsavel={responsavel} setResponsavel={setResponsavel}
+                        errors={errors}
+                      />
+                    )}
 
                     <div className="flex items-start gap-3 rounded-lg border border-border p-3">
                       <Checkbox
