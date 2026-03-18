@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight, Brain, Heart, Users, Sparkles } from "lucide-react";
+import { useSiteSettings } from "@/hooks/useSiteContent";
 export function HeroSection() {
   return <section className="relative min-h-screen flex items-center gradient-hero overflow-hidden">
       {/* Background Elements */}
