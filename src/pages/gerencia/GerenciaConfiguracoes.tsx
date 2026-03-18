@@ -28,7 +28,7 @@ export default function GerenciaConfiguracoes() {
         if (data) { setForm(data); setEntityId(data.id); }
       });
     }
-  }, [user, accountType]);
+  }, [user, plan, isEnterprise]);
 
   const save = async () => {
     if (!entityId) return;
