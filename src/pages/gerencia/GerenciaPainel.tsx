@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { History, Users, CreditCard, ArrowRight, FileText, Shield } from "lucide-react";
+import { History, Users, CreditCard, ArrowRight, FileText, Shield, ClipboardList } from "lucide-react";
 
 export default function GerenciaPainel() {
   const { user, plan } = useAuth();
@@ -41,12 +41,14 @@ export default function GerenciaPainel() {
 
   const quickLinks = isEnterprise
     ? [
+        { icon: ClipboardList, label: "Aplicar Testes", path: "/gerencia/testes" },
         { icon: History, label: "Histórico de Testes", path: "/gerencia/historico", count: stats.historico },
         { icon: Users, label: "Colaboradores", path: "/gerencia/colaboradores", count: stats.pessoas },
         { icon: Shield, label: "MAPSO / NR1", path: "/gerencia/mapso" },
         { icon: CreditCard, label: "Pagamentos", path: "/gerencia/pagamentos" },
       ]
     : [
+        { icon: ClipboardList, label: "Aplicar Testes", path: "/gerencia/testes" },
         { icon: History, label: "Histórico de Testes", path: "/gerencia/historico", count: stats.historico },
         { icon: Users, label: "Pacientes", path: "/gerencia/pacientes", count: stats.pessoas },
         { icon: CreditCard, label: "Pagamentos", path: "/gerencia/pagamentos" },
@@ -91,7 +93,7 @@ export default function GerenciaPainel() {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
           <Button asChild>
-            <Link to="/testes">Aplicar Novo Teste</Link>
+            <Link to="/gerencia/testes">Aplicar Novo Teste</Link>
           </Button>
           {isEnterprise && (
             <Button variant="outline" asChild>

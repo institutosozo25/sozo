@@ -531,7 +531,9 @@ export type Database = {
       }
       pacientes: {
         Row: {
+          cpf: string | null
           created_at: string
+          data_nascimento: string | null
           email: string | null
           endereco: string | null
           estado_civil: string | null
@@ -543,7 +545,9 @@ export type Database = {
           telefone: string | null
         }
         Insert: {
+          cpf?: string | null
           created_at?: string
+          data_nascimento?: string | null
           email?: string | null
           endereco?: string | null
           estado_civil?: string | null
@@ -555,7 +559,9 @@ export type Database = {
           telefone?: string | null
         }
         Update: {
+          cpf?: string | null
           created_at?: string
+          data_nascimento?: string | null
           email?: string | null
           endereco?: string | null
           estado_civil?: string | null
@@ -828,6 +834,57 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shared_test_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          empresa_id: string | null
+          expires_at: string
+          id: string
+          profissional_id: string | null
+          status: string
+          test_type: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          empresa_id?: string | null
+          expires_at?: string
+          id?: string
+          profissional_id?: string | null
+          status?: string
+          test_type: string
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          empresa_id?: string | null
+          expires_at?: string
+          id?: string
+          profissional_id?: string | null
+          status?: string
+          test_type?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_test_links_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shared_test_links_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
             referencedColumns: ["id"]
           },
         ]
