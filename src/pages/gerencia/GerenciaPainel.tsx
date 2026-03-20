@@ -93,7 +93,7 @@ export default function GerenciaPainel() {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
           <Button asChild>
-            <Link to="/testes">Aplicar Novo Teste</Link>
+            <Link to="/gerencia/testes">Aplicar Novo Teste</Link>
           </Button>
           {isEnterprise && (
             <Button variant="outline" asChild>
