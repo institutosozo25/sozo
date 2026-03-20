@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { History, Users, CreditCard, ArrowRight, FileText, Shield } from "lucide-react";
+import { History, Users, CreditCard, ArrowRight, FileText, Shield, ClipboardList } from "lucide-react";
 
 export default function GerenciaPainel() {
   const { user, plan } = useAuth();
