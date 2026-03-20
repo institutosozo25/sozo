@@ -140,6 +140,7 @@ export default function DashboardEmpresaMapso() {
   const completedCount = assessments.length;
   const pendingCount = totalEmployees - completedCount;
   const completionRate = totalEmployees > 0 ? (completedCount / totalEmployees) * 100 : 0;
+  const allCompleted = totalEmployees > 0 && completedCount === totalEmployees;
 
   // Sector breakdown
   const sectorStats = useMemo(() => {
