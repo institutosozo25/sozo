@@ -24,15 +24,6 @@ const LandingSection = () => {
       {/* Hero */}
       <header className="bg-gradient-to-br from-primary to-primary/80 px-6 py-20 text-primary-foreground">
         <div className="mx-auto max-w-5xl animate-fade-up">
-          <div className="mb-8 inline-flex items-center gap-3">
-            <div className="w-14 h-14 rounded-full bg-primary-foreground/10 flex items-center justify-center border border-primary-foreground/20">
-              <span className="text-primary-foreground font-heading font-bold text-2xl">S</span>
-            </div>
-            <div className="text-left">
-              <p className="text-xs text-primary-foreground/70 uppercase tracking-widest">Instituto Plenitude</p>
-              <p className="font-heading font-bold text-2xl text-primary-foreground">SOZO Business</p>
-            </div>
-          </div>
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-4 py-1.5 text-sm font-medium">
             <Shield className="h-4 w-4" />
             Conforme NR1 · ISO 45003 · OMS · OIT
