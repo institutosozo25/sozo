@@ -31,6 +31,7 @@ export default function Auth() {
   const [telefone, setTelefone] = useState("");
   const [accountType, setAccountType] = useState<AccountType>("usuario");
   const [lgpdConsent, setLgpdConsent] = useState(false);
+  const [termosConsent, setTermosConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -152,6 +153,12 @@ export default function Auth() {
 
         if (!lgpdConsent) {
           setErrors({ lgpd: "Você deve aceitar a Política de Privacidade para continuar." });
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (!termosConsent) {
+          setErrors({ termos: "Você deve aceitar os Termos de Uso para continuar." });
           setIsSubmitting(false);
           return;
         }
@@ -319,6 +326,21 @@ export default function Auth() {
                       </label>
                     </div>
                     {errors.lgpd && <p className="text-destructive text-sm">{errors.lgpd}</p>}
+
+                    <div className="flex items-start gap-3 rounded-lg border border-border p-3">
+                      <Checkbox
+                        id="termos-consent"
+                        checked={termosConsent}
+                        onCheckedChange={(checked) => setTermosConsent(checked === true)}
+                        className="mt-0.5"
+                      />
+                      <label htmlFor="termos-consent" className="cursor-pointer text-xs text-muted-foreground leading-snug">
+                        Declaro que li e concordo com os{" "}
+                        <Link to="/termos" className="text-primary hover:underline">Termos de Uso</Link>{" "}
+                        da plataforma Plenitude Sozo.
+                      </label>
+                    </div>
+                    {errors.termos && <p className="text-destructive text-sm">{errors.termos}</p>}
                   </>
                 )}
 

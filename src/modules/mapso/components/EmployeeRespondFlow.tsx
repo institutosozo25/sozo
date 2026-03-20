@@ -12,10 +12,10 @@ import { calculateAssessment, type Answers } from "../lib/miarpo-engine";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import {
-  Shield, CheckCircle2, AlertTriangle, ChevronLeft, ChevronRight, Send, Loader2, Building2,
+  Shield, CheckCircle2, AlertTriangle, ChevronLeft, ChevronRight, Send, Loader2, Building2, KeyRound,
 } from "lucide-react";
 
-type Step = "loading" | "error" | "consent" | "identify" | "questionnaire" | "final-consent" | "done";
+type Step = "loading" | "error" | "validate" | "awareness" | "questionnaire" | "final-consent" | "done";
 
 interface LinkData {
   id: string;
@@ -27,24 +27,34 @@ interface LinkData {
   company_name?: string;
 }
 
-const guidelines = [
-  "Responda com sinceridade — não existem respostas certas ou erradas.",
-  "Garanta um ambiente tranquilo e sem interrupções para responder.",
-  "Suas respostas são anônimas e confidenciais.",
-  "O objetivo é a melhoria organizacional e o bem-estar dos colaboradores.",
-  "Os dados serão utilizados exclusivamente para fins de diagnóstico psicossocial conforme a NR1.",
-];
+function maskCpf(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+}
 
 const EmployeeRespondFlow = () => {
   const { token } = useParams<{ token: string }>();
   const [step, setStep] = useState<Step>("loading");
   const [linkData, setLinkData] = useState<LinkData | null>(null);
   const [error, setError] = useState("");
-  const [consentAccepted, setConsentAccepted] = useState(false);
+
+  // Validation fields
+  const [cpfInput, setCpfInput] = useState("");
+  const [dobInput, setDobInput] = useState("");
+  const [validationError, setValidationError] = useState("");
+  const [validating, setValidating] = useState(false);
+
+  // Awareness
+  const [awarenessAccepted, setAwarenessAccepted] = useState(false);
+
+  // Final consent
   const [finalConsentAccepted, setFinalConsentAccepted] = useState(false);
   const [signatureName, setSignatureName] = useState("");
-  const [confirmedName, setConfirmedName] = useState("");
-  const [confirmedDept, setConfirmedDept] = useState("");
+
+  // Questionnaire
   const [answers, setAnswers] = useState<Answers>({});
   const [currentDimIndex, setCurrentDimIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -73,38 +83,90 @@ const EmployeeRespondFlow = () => {
       return;
     }
 
-    // Fetch employee info
-    const { data: emp } = await supabase
-      .from("mapso_employees" as any)
-      .select("name, department")
-      .eq("id", link.employee_id)
-      .single();
-
     // Fetch company name
     const { data: company } = await supabase
       .from("empresas")
-      .select("razao_social")
+      .select("razao_social, nome_fantasia")
       .eq("id", link.empresa_id)
       .single();
 
     setLinkData({
       ...link,
-      employee_name: (emp as any)?.name || "",
-      employee_department: (emp as any)?.department || "",
-      company_name: (company as any)?.razao_social || "",
+      company_name: (company as any)?.nome_fantasia || (company as any)?.razao_social || "",
     });
-    setConfirmedName((emp as any)?.name || "");
-    setConfirmedDept((emp as any)?.department || "");
-    setStep("consent");
+    setStep("validate");
   };
 
-  const handleConsentAccept = () => {
-    setStep("identify");
-  };
+  const handleValidate = async () => {
+    if (!linkData) return;
+    const cpfDigits = cpfInput.replace(/\D/g, "");
+    if (cpfDigits.length !== 11) {
+      setValidationError("CPF deve ter 11 dígitos.");
+      return;
+    }
+    if (!dobInput) {
+      setValidationError("Informe sua data de nascimento.");
+      return;
+    }
 
-  const handleIdentifySubmit = () => {
-    if (!confirmedName.trim()) return;
-    setStep("questionnaire");
+    setValidating(true);
+    setValidationError("");
+
+    try {
+      // Validate CPF + DOB against the employee record linked to this assessment
+      const { data: emp, error: empErr } = await supabase
+        .from("mapso_employees" as any)
+        .select("id, cpf, data_nascimento, name, department, status")
+        .eq("id", linkData.employee_id)
+        .single();
+
+      if (empErr || !emp) {
+        setValidationError("Colaborador não encontrado. Verifique com o RH da sua empresa.");
+        setValidating(false);
+        return;
+      }
+
+      const employee = emp as any;
+      const storedCpf = (employee.cpf || "").replace(/\D/g, "");
+      const storedDob = employee.data_nascimento || "";
+
+      if (storedCpf !== cpfDigits) {
+        setValidationError("CPF não corresponde ao cadastro. Verifique com o RH da sua empresa.");
+        setValidating(false);
+        return;
+      }
+
+      if (storedDob !== dobInput) {
+        setValidationError("Data de nascimento não corresponde ao cadastro. Verifique com o RH da sua empresa.");
+        setValidating(false);
+        return;
+      }
+
+      if (employee.status === "concluido") {
+        setError("Você já respondeu este questionário.");
+        setStep("error");
+        setValidating(false);
+        return;
+      }
+
+      // Update link status to in_progress
+      await supabase
+        .from("mapso_assessment_links" as any)
+        .update({ status: "in_progress" } as any)
+        .eq("id", linkData.id);
+
+      setLinkData({
+        ...linkData,
+        employee_name: employee.name || "",
+        employee_department: employee.department || "",
+      });
+
+      setStep("awareness");
+    } catch {
+      setValidationError("Erro ao validar. Tente novamente.");
+    } finally {
+      setValidating(false);
+    }
   };
 
   const setAnswer = (itemId: string, value: number) => {
@@ -122,10 +184,11 @@ const EmployeeRespondFlow = () => {
     setSubmitting(true);
     try {
       const result = calculateAssessment(answers);
+      const now = new Date().toISOString();
 
-      // Insert assessment via edge function or directly
+      // Insert assessment
       const { error: insertErr } = await supabase.from("mapso_assessments" as any).insert({
-        user_id: "00000000-0000-0000-0000-000000000000", // anonymous placeholder
+        user_id: "00000000-0000-0000-0000-000000000000",
         employee_id: linkData.employee_id,
         empresa_id: linkData.empresa_id,
         link_id: linkData.id,
@@ -140,16 +203,25 @@ const EmployeeRespondFlow = () => {
           score: Math.round(d.riskScore),
           classification: d.classification.label,
         })),
-        consent_accepted: consentAccepted,
+        consent_accepted: true,
+        final_consent_accepted: finalConsentAccepted,
+        final_consent_at: now,
+        signature_name: signatureName.trim(),
       } as any);
 
       if (insertErr) throw insertErr;
 
-      // Update link status
+      // Update link status to completed
       await supabase
         .from("mapso_assessment_links" as any)
         .update({ status: "completed" } as any)
         .eq("id", linkData.id);
+
+      // Update employee status to concluído
+      await supabase
+        .from("mapso_employees" as any)
+        .update({ status: "concluido" } as any)
+        .eq("id", linkData.employee_id);
 
       setStep("done");
     } catch (e) {
@@ -159,6 +231,8 @@ const EmployeeRespondFlow = () => {
       setSubmitting(false);
     }
   };
+
+  // --- RENDERS ---
 
   if (step === "loading") {
     return (
@@ -185,6 +259,13 @@ const EmployeeRespondFlow = () => {
   }
 
   if (step === "done") {
+    const completionDate = new Date().toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -192,9 +273,12 @@ const EmployeeRespondFlow = () => {
           <div className="max-w-md text-center">
             <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-primary" />
             <h1 className="mb-2 text-2xl font-bold text-foreground font-heading">Obrigado!</h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground mb-4">
               Suas respostas foram registradas com sucesso. Este diagnóstico é confidencial e será utilizado
               exclusivamente para a melhoria do ambiente organizacional.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Registrado em: {completionDate}
             </p>
           </div>
         </div>
@@ -203,7 +287,95 @@ const EmployeeRespondFlow = () => {
     );
   }
 
-  if (step === "consent") {
+  // STEP: VALIDATE (CPF + Data de Nascimento)
+  if (step === "validate") {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center px-4 py-12">
+          <div className="w-full max-w-lg animate-fade-up">
+            <div className="mb-6 text-center">
+              <div className="mx-auto mb-4 inline-flex rounded-xl bg-primary/10 p-3 text-primary">
+                <KeyRound className="h-8 w-8" />
+              </div>
+              <h1 className="mb-2 text-2xl font-bold text-foreground font-heading">
+                Validação de Acesso
+              </h1>
+              {linkData?.company_name && (
+                <p className="flex items-center justify-center gap-2 text-muted-foreground">
+                  <Building2 className="h-4 w-4" />
+                  {linkData.company_name}
+                </p>
+              )}
+              <p className="mt-2 text-sm text-muted-foreground">
+                Para garantir a segurança, informe seus dados de identificação.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-6 shadow-sm space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="cpf-validate">CPF *</Label>
+                <Input
+                  id="cpf-validate"
+                  value={cpfInput}
+                  onChange={(e) => setCpfInput(maskCpf(e.target.value))}
+                  placeholder="000.000.000-00"
+                  maxLength={14}
+                  inputMode="numeric"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="dob-validate">Data de Nascimento *</Label>
+                <Input
+                  id="dob-validate"
+                  type="date"
+                  value={dobInput}
+                  onChange={(e) => setDobInput(e.target.value)}
+                  max={new Date().toISOString().split("T")[0]}
+                />
+              </div>
+
+              {validationError && (
+                <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-3">
+                  <p className="text-sm text-destructive flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    {validationError}
+                  </p>
+                </div>
+              )}
+
+              <Button
+                onClick={handleValidate}
+                disabled={validating || !cpfInput.trim() || !dobInput}
+                className="w-full gap-2"
+                size="lg"
+              >
+                {validating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
+                {validating ? "Validando..." : "Validar e Continuar"}
+              </Button>
+            </div>
+
+            <p className="mt-4 text-center text-xs text-muted-foreground">
+              Seus dados são usados apenas para validação e não serão associados às suas respostas.
+            </p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // STEP: AWARENESS (Conscientização obrigatória)
+  if (step === "awareness") {
+    const guidelines = [
+      "Suas respostas são completamente anônimas — nem o RH nem a gestão terão acesso às respostas individuais.",
+      "Os dados serão utilizados exclusivamente para diagnóstico psicossocial conforme a NR1 (Norma Regulamentadora nº 1).",
+      "Responda com sinceridade — não existem respostas certas ou erradas.",
+      "Garanta um ambiente tranquilo e sem interrupções para responder.",
+      "O objetivo é a melhoria do ambiente de trabalho e o bem-estar de todos os colaboradores.",
+    ];
+
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -225,7 +397,7 @@ const EmployeeRespondFlow = () => {
             </div>
 
             <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-              <h2 className="mb-4 text-lg font-semibold text-foreground">Boas Práticas de Participação</h2>
+              <h2 className="mb-4 text-lg font-semibold text-foreground">Antes de Iniciar — Leia com Atenção</h2>
               <div className="space-y-3 mb-6">
                 {guidelines.map((text, i) => (
                   <div key={i} className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
@@ -239,31 +411,31 @@ const EmployeeRespondFlow = () => {
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                   <p className="text-xs text-muted-foreground">
-                    Este diagnóstico está em conformidade com a NR1 (Norma Regulamentadora nº 1)
-                    e será utilizado para avaliação de riscos psicossociais no ambiente de trabalho.
+                    <strong>Anonimato garantido:</strong> Suas respostas individuais nunca serão compartilhadas.
+                    O RH receberá apenas dados consolidados e agregados por setor.
                   </p>
                 </div>
               </div>
 
               <div className="mb-6 flex items-start gap-3 rounded-lg border border-border p-4">
                 <Checkbox
-                  id="consent"
-                  checked={consentAccepted}
-                  onCheckedChange={(checked) => setConsentAccepted(checked === true)}
+                  id="awareness"
+                  checked={awarenessAccepted}
+                  onCheckedChange={(checked) => setAwarenessAccepted(checked === true)}
                   className="mt-0.5"
                 />
-                <label htmlFor="consent" className="cursor-pointer text-sm font-medium text-foreground leading-snug">
-                  Estou ciente das orientações e concordo em participar da avaliação psicossocial.
+                <label htmlFor="awareness" className="cursor-pointer text-sm font-medium text-foreground leading-snug">
+                  Estou ciente das orientações acima e concordo em participar da avaliação psicossocial de forma voluntária.
                 </label>
               </div>
 
               <Button
-                onClick={handleConsentAccept}
-                disabled={!consentAccepted}
+                onClick={() => setStep("questionnaire")}
+                disabled={!awarenessAccepted}
                 className="w-full gap-2"
                 size="lg"
               >
-                <Shield className="h-4 w-4" /> Continuar
+                <Shield className="h-4 w-4" /> Iniciar Questionário
               </Button>
             </div>
           </div>
@@ -273,60 +445,14 @@ const EmployeeRespondFlow = () => {
     );
   }
 
-  if (step === "identify") {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center px-4 py-12">
-          <div className="w-full max-w-lg animate-fade-up">
-            <div className="mb-6 text-center">
-              <h1 className="mb-2 text-2xl font-bold text-foreground font-heading">Confirme seus Dados</h1>
-              <p className="text-muted-foreground">Verifique e confirme suas informações antes de iniciar.</p>
-            </div>
-
-            <div className="rounded-xl border border-border bg-card p-6 shadow-sm space-y-4">
-              <div className="space-y-2">
-                <Label>Nome Completo *</Label>
-                <Input
-                  value={confirmedName}
-                  onChange={(e) => setConfirmedName(e.target.value)}
-                  placeholder="Seu nome completo"
-                  maxLength={200}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Departamento / Setor</Label>
-                <Input
-                  value={confirmedDept}
-                  onChange={(e) => setConfirmedDept(e.target.value)}
-                  placeholder="Ex: Administrativo, Comercial"
-                  maxLength={100}
-                />
-              </div>
-              <Button
-                onClick={handleIdentifySubmit}
-                disabled={!confirmedName.trim()}
-                className="w-full gap-2"
-                size="lg"
-              >
-                Iniciar Questionário <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <button
-              onClick={() => setStep("consent")}
-              className="mt-4 block w-full text-center text-sm text-muted-foreground hover:text-foreground"
-            >
-              ← Voltar
-            </button>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
+  // STEP: FINAL CONSENT (Termo final pós-teste)
   if (step === "final-consent") {
+    const today = new Date().toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -336,17 +462,18 @@ const EmployeeRespondFlow = () => {
               <div className="mx-auto mb-4 inline-flex rounded-xl bg-primary/10 p-3 text-primary">
                 <Shield className="h-8 w-8" />
               </div>
-              <h1 className="mb-2 text-2xl font-bold text-foreground font-heading">Termo de Consentimento</h1>
-              <p className="text-muted-foreground">Confirme sua participação voluntária antes de enviar suas respostas.</p>
+              <h1 className="mb-2 text-2xl font-bold text-foreground font-heading">Termo de Consentimento Final</h1>
+              <p className="text-muted-foreground">Confirme sua participação antes de enviar.</p>
             </div>
 
             <div className="rounded-xl border border-border bg-card p-6 shadow-sm space-y-6">
               <div className="rounded-lg bg-muted/50 p-4">
                 <p className="text-sm text-foreground leading-relaxed">
-                  Declaro que respondi este questionário de forma <strong>voluntária e consciente</strong>,
-                  com base na minha experiência profissional nos últimos 3 meses. Estou ciente de que as
-                  informações serão utilizadas exclusivamente para fins de diagnóstico psicossocial
-                  organizacional, em conformidade com a NR-1.
+                  Confirmo que respondi este questionário na data <strong>{today}</strong>, de forma{" "}
+                  <strong>voluntária e consciente</strong>, com base na minha experiência profissional nos últimos
+                  3 meses. Estou ciente de que as informações serão utilizadas exclusivamente para fins de
+                  diagnóstico psicossocial organizacional, em conformidade com a NR-1, e que minhas respostas
+                  individuais permanecerão <strong>anônimas e confidenciais</strong>.
                 </p>
               </div>
 
@@ -358,12 +485,12 @@ const EmployeeRespondFlow = () => {
                   className="mt-0.5"
                 />
                 <label htmlFor="final-consent" className="cursor-pointer text-sm font-medium text-foreground leading-snug">
-                  Declaro que respondi de forma voluntária e consciente.
+                  Declaro que respondi de forma voluntária e consciente, e concordo com os termos acima.
                 </label>
               </div>
 
               <div className="space-y-2">
-                <Label>Assinatura (nome completo) *</Label>
+                <Label>Assinatura digital (nome completo) *</Label>
                 <Input
                   value={signatureName}
                   onChange={(e) => setSignatureName(e.target.value)}
@@ -396,7 +523,7 @@ const EmployeeRespondFlow = () => {
     );
   }
 
-  // Questionnaire step
+  // STEP: QUESTIONNAIRE
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -505,13 +632,13 @@ const EmployeeRespondFlow = () => {
               <Button
                 onClick={() => {
                   if (!canSubmit) return;
-                  setSignatureName(confirmedName);
+                  setSignatureName("");
                   setStep("final-consent");
                 }}
                 disabled={!canSubmit}
                 className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90"
               >
-                Próximo <ChevronRight className="h-4 w-4" />
+                Finalizar <ChevronRight className="h-4 w-4" />
               </Button>
             )}
           </div>
