@@ -430,6 +430,7 @@ export type Database = {
           id: string
           name: string
           position: string | null
+          setor_id: string | null
           status: string
         }
         Insert: {
@@ -442,6 +443,7 @@ export type Database = {
           id?: string
           name: string
           position?: string | null
+          setor_id?: string | null
           status?: string
         }
         Update: {
@@ -454,6 +456,7 @@ export type Database = {
           id?: string
           name?: string
           position?: string | null
+          setor_id?: string | null
           status?: string
         }
         Relationships: [
@@ -462,6 +465,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mapso_employees_setor_id_fkey"
+            columns: ["setor_id"]
+            isOneToOne: false
+            referencedRelation: "setores"
             referencedColumns: ["id"]
           },
         ]
@@ -789,6 +799,35 @@ export type Database = {
             columns: ["test_id"]
             isOneToOne: false
             referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setores: {
+        Row: {
+          created_at: string
+          empresa_id: string
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string
+          empresa_id: string
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string
+          empresa_id?: string
+          id?: string
+          nome?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setores_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
             referencedColumns: ["id"]
           },
         ]

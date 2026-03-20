@@ -44,6 +44,7 @@ import GerenciaLayout from "./pages/gerencia/GerenciaLayout";
 import GerenciaPainel from "./pages/gerencia/GerenciaPainel";
 import GerenciaHistorico from "./pages/gerencia/GerenciaHistorico";
 import GerenciaColaboradores from "./pages/gerencia/GerenciaColaboradores";
+import GerenciaSetores from "./pages/gerencia/GerenciaSetores";
 import GerenciaPacientes from "./pages/gerencia/GerenciaPacientes";
 import GerenciaPagamentos from "./pages/gerencia/GerenciaPagamentos";
 import GerenciaNotificacoes from "./pages/gerencia/GerenciaNotificacoes";
@@ -86,6 +87,7 @@ const App = () => (
                 <Route index element={<GerenciaPainel />} />
                 <Route path="historico" element={<GerenciaHistorico />} />
                 <Route path="colaboradores" element={<GerenciaColaboradores />} />
+                <Route path="setores" element={<GerenciaSetores />} />
                 <Route path="pacientes" element={<GerenciaPacientes />} />
                 <Route path="mapso" element={<DashboardEmpresaMapso />} />
                 <Route path="pagamentos" element={<GerenciaPagamentos />} />
