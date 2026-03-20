@@ -316,11 +316,30 @@ export default function DashboardEmpresaMapso() {
             </Card>
           </div>
 
+          {/* Anonymity blocking banner */}
+          {!allCompleted && totalEmployees > 0 && (
+            <div className="mb-6 rounded-xl border border-accent/30 bg-accent/5 p-4 flex items-start gap-3">
+              <Shield className="h-5 w-5 shrink-0 text-accent mt-0.5" />
+              <div>
+                <p className="font-semibold text-foreground text-sm">Resultados bloqueados — Anonimato garantido</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Para preservar o anonimato dos colaboradores, os diagnósticos consolidados e relatórios só serão
+                  liberados quando <strong>100% dos funcionários</strong> tiverem respondido ({completedCount}/{totalEmployees}).
+                  Acompanhe o status de participação abaixo.
+                </p>
+              </div>
+            </div>
+          )}
+
           <Tabs defaultValue="employees">
             <TabsList className="mb-4">
               <TabsTrigger value="employees">Funcionários</TabsTrigger>
-              <TabsTrigger value="sectors">Diagnóstico por Setor</TabsTrigger>
-              <TabsTrigger value="reports">Relatórios</TabsTrigger>
+              <TabsTrigger value="sectors" disabled={!allCompleted}>
+                Diagnóstico por Setor {!allCompleted && "🔒"}
+              </TabsTrigger>
+              <TabsTrigger value="reports" disabled={!allCompleted}>
+                Relatórios {!allCompleted && "🔒"}
+              </TabsTrigger>
             </TabsList>
 
             {/* Employees Tab */}
