@@ -33,14 +33,8 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <Link to="/" className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-full bg-primary-foreground/10 flex items-center justify-center border border-primary-foreground/20">
-                <span className="text-primary-foreground font-heading font-bold text-xl">S</span>
-              </div>
-              <div>
-                <p className="text-xs text-primary-foreground/70 uppercase tracking-widest">Instituto Plenitude</p>
-                <p className="font-heading font-bold text-xl">SOZO Business</p>
-              </div>
+            <Link to="/" className="flex items-center mb-6">
+              <img src="/images/logo-sozo-white.png" alt="SOZO Business - Instituto Plenitude" className="h-14 w-auto" />
             </Link>
             <p className="text-primary-foreground/80 mb-6 max-w-sm">
               O maior marketplace de testes de desenvolvimento pessoal do Brasil. Descubra seu potencial com ferramentas científicas e relatórios completos.
