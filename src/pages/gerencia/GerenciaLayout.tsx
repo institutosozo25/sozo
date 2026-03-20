@@ -20,6 +20,7 @@ const enterpriseNav = [
   { icon: LayoutDashboard, label: "Painel", path: "/gerencia" },
   { icon: History, label: "Histórico de Testes", path: "/gerencia/historico" },
   { icon: Users, label: "Colaboradores", path: "/gerencia/colaboradores" },
+  { icon: Layers, label: "Setores", path: "/gerencia/setores" },
   { icon: Shield, label: "MAPSO / NR1", path: "/gerencia/mapso" },
   { icon: CreditCard, label: "Pagamentos", path: "/gerencia/pagamentos" },
   { icon: Bell, label: "Notificações", path: "/gerencia/notificacoes" },
