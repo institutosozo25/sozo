@@ -326,6 +326,8 @@ export type Database = {
           employee_count: number | null
           employee_id: string | null
           empresa_id: string | null
+          final_consent_accepted: boolean
+          final_consent_at: string | null
           id: string
           ipp: number
           irp: number
@@ -336,6 +338,7 @@ export type Database = {
           organization_name: string
           organization_sector: string | null
           report_html: string | null
+          signature_name: string | null
           user_id: string
         }
         Insert: {
@@ -350,6 +353,8 @@ export type Database = {
           employee_count?: number | null
           employee_id?: string | null
           empresa_id?: string | null
+          final_consent_accepted?: boolean
+          final_consent_at?: string | null
           id?: string
           ipp: number
           irp: number
@@ -360,6 +365,7 @@ export type Database = {
           organization_name: string
           organization_sector?: string | null
           report_html?: string | null
+          signature_name?: string | null
           user_id: string
         }
         Update: {
@@ -374,6 +380,8 @@ export type Database = {
           employee_count?: number | null
           employee_id?: string | null
           empresa_id?: string | null
+          final_consent_accepted?: boolean
+          final_consent_at?: string | null
           id?: string
           ipp?: number
           irp?: number
@@ -384,6 +392,7 @@ export type Database = {
           organization_name?: string
           organization_sector?: string | null
           report_html?: string | null
+          signature_name?: string | null
           user_id?: string
         }
         Relationships: [
@@ -414,32 +423,38 @@ export type Database = {
         Row: {
           cpf: string | null
           created_at: string
+          data_nascimento: string | null
           department: string | null
           email: string | null
           empresa_id: string
           id: string
           name: string
           position: string | null
+          status: string
         }
         Insert: {
           cpf?: string | null
           created_at?: string
+          data_nascimento?: string | null
           department?: string | null
           email?: string | null
           empresa_id: string
           id?: string
           name: string
           position?: string | null
+          status?: string
         }
         Update: {
           cpf?: string | null
           created_at?: string
+          data_nascimento?: string | null
           department?: string | null
           email?: string | null
           empresa_id?: string
           id?: string
           name?: string
           position?: string | null
+          status?: string
         }
         Relationships: [
           {
