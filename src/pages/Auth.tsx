@@ -31,6 +31,7 @@ export default function Auth() {
   const [telefone, setTelefone] = useState("");
   const [accountType, setAccountType] = useState<AccountType>("usuario");
   const [lgpdConsent, setLgpdConsent] = useState(false);
+  const [termosConsent, setTermosConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 

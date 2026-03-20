@@ -27,8 +27,16 @@ export function escapeHtml(input: string): string {
 // Auth validation
 export const loginSchema = z.object({
   email: z.string().trim().email("E-mail inválido").max(255, "E-mail muito longo"),
-  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres").max(128, "Senha muito longa"),
+  password: z.string().min(8, "Senha deve ter no mínimo 8 caracteres").max(128, "Senha muito longa"),
 });
+
+export const strongPasswordSchema = z.string()
+  .min(8, "Senha deve ter no mínimo 8 caracteres")
+  .max(128, "Senha muito longa")
+  .regex(/[A-Z]/, "Senha deve conter pelo menos 1 letra maiúscula")
+  .regex(/[a-z]/, "Senha deve conter pelo menos 1 letra minúscula")
+  .regex(/[0-9]/, "Senha deve conter pelo menos 1 número")
+  .regex(/[^A-Za-z0-9]/, "Senha deve conter pelo menos 1 caractere especial");
 
 export const signupSchema = loginSchema.extend({
   fullName: z.string().trim()
