@@ -86,7 +86,10 @@ const App = () => (
               {/* Gerência - empresa/profissional dashboard */}
               <Route path="/gerencia" element={<GerenciaLayout />}>
                 <Route index element={<GerenciaPainel />} />
-                <Route path="testes" element={<GerenciaTestes />} />
+                <Route path="disc" element={<GerenciaTesteDashboard testType="disc" />} />
+                <Route path="mbti" element={<GerenciaTesteDashboard testType="mbti" />} />
+                <Route path="temperamento" element={<GerenciaTesteDashboard testType="temperamento" />} />
+                <Route path="eneagrama" element={<GerenciaTesteDashboard testType="eneagrama" />} />
                 <Route path="historico" element={<GerenciaHistorico />} />
                 <Route path="colaboradores" element={<GerenciaColaboradores />} />
                 <Route path="setores" element={<GerenciaSetores />} />
