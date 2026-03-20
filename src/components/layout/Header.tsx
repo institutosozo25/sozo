@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import logoSozo from "@/assets/logo-sozo.png";
 import { Button } from "@/components/ui/button";
 import { Menu, X, LogIn, LogOut, Settings, LayoutDashboard, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
