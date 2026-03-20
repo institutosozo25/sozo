@@ -38,7 +38,9 @@ export const strongPasswordSchema = z.string()
   .regex(/[0-9]/, "Senha deve conter pelo menos 1 número")
   .regex(/[^A-Za-z0-9]/, "Senha deve conter pelo menos 1 caractere especial");
 
-export const signupSchema = loginSchema.extend({
+export const signupSchema = z.object({
+  email: z.string().trim().email("E-mail inválido").max(255, "E-mail muito longo"),
+  password: strongPasswordSchema,
   fullName: z.string().trim()
     .min(2, "Nome deve ter no mínimo 2 caracteres")
     .max(100, "Nome deve ter no máximo 100 caracteres")

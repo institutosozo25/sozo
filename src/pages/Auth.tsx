@@ -157,6 +157,12 @@ export default function Auth() {
           return;
         }
 
+        if (!termosConsent) {
+          setErrors({ termos: "Você deve aceitar os Termos de Uso para continuar." });
+          setIsSubmitting(false);
+          return;
+        }
+
         const empresaData = accountType === "empresa"
           ? { cnpj: cnpj.replace(/\D/g, ""), razaoSocial, nomeFantasia, responsavel }
           : undefined;
