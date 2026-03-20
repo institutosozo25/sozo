@@ -42,6 +42,7 @@ import NotFound from "./pages/NotFound";
 // Gerência pages
 import GerenciaLayout from "./pages/gerencia/GerenciaLayout";
 import GerenciaPainel from "./pages/gerencia/GerenciaPainel";
+import GerenciaTestes from "./pages/gerencia/GerenciaTestes";
 import GerenciaHistorico from "./pages/gerencia/GerenciaHistorico";
 import GerenciaColaboradores from "./pages/gerencia/GerenciaColaboradores";
 import GerenciaSetores from "./pages/gerencia/GerenciaSetores";
