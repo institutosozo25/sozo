@@ -38,14 +38,8 @@ export function Header() {
       <nav className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-heading font-bold text-xl">S</span>
-            </div>
-            <div className="hidden sm:block">
-              <p className="text-xs text-muted-foreground uppercase tracking-widest">Instituto Plenitude</p>
-              <p className="font-heading font-bold text-xl text-primary">SOZO Business</p>
-            </div>
+            <Link to="/" className="flex items-center">
+              <img src={logoSozo} alt="SOZO Business - Instituto Plenitude" className="h-14 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}
