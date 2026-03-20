@@ -12,18 +12,14 @@ import {
   Stethoscope,
   LogOut,
   Settings,
-  Shield,
   Home,
-  ClipboardList,
 } from "lucide-react";
 
 const enterpriseNav = [
   { icon: LayoutDashboard, label: "Painel", path: "/gerencia" },
-  { icon: ClipboardList, label: "Aplicar Testes", path: "/gerencia/testes" },
-  { icon: History, label: "Histórico de Testes", path: "/gerencia/historico" },
+  { icon: History, label: "Histórico", path: "/gerencia/historico" },
   { icon: Users, label: "Colaboradores", path: "/gerencia/colaboradores" },
   { icon: Layers, label: "Setores", path: "/gerencia/setores" },
-  { icon: Shield, label: "MAPSO / NR1", path: "/gerencia/mapso" },
   { icon: CreditCard, label: "Pagamentos", path: "/gerencia/pagamentos" },
   { icon: Bell, label: "Notificações", path: "/gerencia/notificacoes" },
   { icon: Settings, label: "Dados da Empresa", path: "/gerencia/configuracoes" },
@@ -31,8 +27,7 @@ const enterpriseNav = [
 
 const professionalNav = [
   { icon: LayoutDashboard, label: "Painel", path: "/gerencia" },
-  { icon: ClipboardList, label: "Aplicar Testes", path: "/gerencia/testes" },
-  { icon: History, label: "Histórico de Testes", path: "/gerencia/historico" },
+  { icon: History, label: "Histórico", path: "/gerencia/historico" },
   { icon: Users, label: "Pacientes", path: "/gerencia/pacientes" },
   { icon: CreditCard, label: "Pagamentos", path: "/gerencia/pagamentos" },
   { icon: Bell, label: "Notificações", path: "/gerencia/notificacoes" },

@@ -4,7 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { History, Users, CreditCard, ArrowRight, FileText, Shield, ClipboardList } from "lucide-react";
+import {
+  History, Users, CreditCard, ArrowRight, FileText,
+  Brain, Sparkles, Heart, Shield, Users as UsersGroup,
+} from "lucide-react";
+
+const TEST_CARDS = [
+  { slug: "disc", name: "DISC", description: "Análise Comportamental", icon: Brain, path: "/gerencia/disc", gradient: "from-blue-500 to-cyan-500" },
+  { slug: "mbti", name: "MBTI", description: "Personalidade", icon: Sparkles, path: "/gerencia/mbti", gradient: "from-purple-500 to-pink-500" },
+  { slug: "temperamento", name: "Temperamento", description: "Análise Profunda", icon: Heart, path: "/gerencia/temperamento", gradient: "from-orange-500 to-red-500" },
+  { slug: "eneagrama", name: "Eneagrama", description: "9 Tipos", icon: UsersGroup, path: "/gerencia/eneagrama", gradient: "from-green-500 to-emerald-500" },
+  { slug: "mapso", name: "MAPSO / NR1", description: "Riscos Psicossociais", icon: Shield, path: "/gerencia/mapso", gradient: "from-primary to-secondary" },
+];
 
 export default function GerenciaPainel() {
   const { user, plan } = useAuth();
@@ -39,21 +50,6 @@ export default function GerenciaPainel() {
     fetchStats();
   }, [user, plan, isEnterprise]);
 
-  const quickLinks = isEnterprise
-    ? [
-        { icon: ClipboardList, label: "Aplicar Testes", path: "/gerencia/testes" },
-        { icon: History, label: "Histórico de Testes", path: "/gerencia/historico", count: stats.historico },
-        { icon: Users, label: "Colaboradores", path: "/gerencia/colaboradores", count: stats.pessoas },
-        { icon: Shield, label: "MAPSO / NR1", path: "/gerencia/mapso" },
-        { icon: CreditCard, label: "Pagamentos", path: "/gerencia/pagamentos" },
-      ]
-    : [
-        { icon: ClipboardList, label: "Aplicar Testes", path: "/gerencia/testes" },
-        { icon: History, label: "Histórico de Testes", path: "/gerencia/historico", count: stats.historico },
-        { icon: Users, label: "Pacientes", path: "/gerencia/pacientes", count: stats.pessoas },
-        { icon: CreditCard, label: "Pagamentos", path: "/gerencia/pagamentos" },
-      ];
-
   return (
     <div>
       <h1 className="font-heading text-3xl font-bold text-foreground mb-2">Painel de Gerência</h1>
@@ -61,27 +57,79 @@ export default function GerenciaPainel() {
         {isEnterprise ? "Gerencie sua empresa, colaboradores e avaliações." : "Gerencie seus pacientes e testes aplicados."}
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {quickLinks.map((link) => (
-          <Card key={link.path} className="hover:shadow-sozo-md transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="rounded-lg bg-primary/10 p-3">
-                  <link.icon className="h-6 w-6 text-primary" />
-                </div>
-                {"count" in link && link.count !== undefined && (
-                  <span className="text-2xl font-bold text-foreground">{link.count}</span>
-                )}
+      {/* Test Cards */}
+      <h2 className="font-heading text-xl font-semibold text-foreground mb-4">Ferramentas de Avaliação</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        {TEST_CARDS.map((test) => {
+          const Icon = test.icon;
+          return (
+            <Link key={test.slug} to={test.path}>
+              <Card className="hover:shadow-sozo-md transition-all hover:-translate-y-0.5 cursor-pointer h-full">
+                <div className={`h-1.5 bg-gradient-to-r ${test.gradient} rounded-t-lg`} />
+                <CardContent className="pt-5 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`rounded-lg bg-gradient-to-br ${test.gradient} p-2.5`}>
+                      <Icon className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-heading font-bold text-foreground">{test.name}</h3>
+                      <p className="text-xs text-muted-foreground">{test.description}</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-muted-foreground ml-auto flex-shrink-0" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Quick Stats */}
+      <h2 className="font-heading text-xl font-semibold text-foreground mb-4">Visão Geral</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card className="hover:shadow-sozo-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="rounded-lg bg-primary/10 p-3">
+                <History className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="font-semibold text-foreground mb-1">{link.label}</h3>
-              <Button variant="ghost" size="sm" asChild className="px-0 text-primary">
-                <Link to={link.path}>
-                  Acessar <ArrowRight className="w-4 h-4 ml-1" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+              <span className="text-2xl font-bold text-foreground">{stats.historico}</span>
+            </div>
+            <h3 className="font-semibold text-foreground mb-1">Histórico de Testes</h3>
+            <Button variant="ghost" size="sm" asChild className="px-0 text-primary">
+              <Link to="/gerencia/historico">Acessar <ArrowRight className="w-4 h-4 ml-1" /></Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-sozo-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="rounded-lg bg-primary/10 p-3">
+                <Users className="h-6 w-6 text-primary" />
+              </div>
+              <span className="text-2xl font-bold text-foreground">{stats.pessoas}</span>
+            </div>
+            <h3 className="font-semibold text-foreground mb-1">{isEnterprise ? "Colaboradores" : "Pacientes"}</h3>
+            <Button variant="ghost" size="sm" asChild className="px-0 text-primary">
+              <Link to={isEnterprise ? "/gerencia/colaboradores" : "/gerencia/pacientes"}>Acessar <ArrowRight className="w-4 h-4 ml-1" /></Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-sozo-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="rounded-lg bg-primary/10 p-3">
+                <CreditCard className="h-6 w-6 text-primary" />
+              </div>
+            </div>
+            <h3 className="font-semibold text-foreground mb-1">Pagamentos</h3>
+            <Button variant="ghost" size="sm" asChild className="px-0 text-primary">
+              <Link to="/gerencia/pagamentos">Acessar <ArrowRight className="w-4 h-4 ml-1" /></Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Quick Actions */}
@@ -93,7 +141,10 @@ export default function GerenciaPainel() {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
           <Button asChild>
-            <Link to="/gerencia/testes">Aplicar Novo Teste</Link>
+            <Link to="/gerencia/disc">Aplicar DISC</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/gerencia/mbti">Aplicar MBTI</Link>
           </Button>
           {isEnterprise && (
             <Button variant="outline" asChild>
