@@ -70,23 +70,31 @@ export const generateDiagnosisHtml = (
     <p style="margin:4px 0 0;opacity:0.7;font-size:14px;">Gerado em ${formatDate(result.completedAt)}</p>
   </div>
 
-  <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px;">
-    <div style="flex:1;min-width:180px;padding:20px;border-radius:12px;border:2px solid ${getRiskColor(result.irp)};text-align:center;">
-      <div style="font-size:14px;color:#666;margin-bottom:4px;">Índice de Risco (IRP)</div>
-      <div style="font-size:36px;font-weight:700;color:${getRiskColor(result.irp)};">${result.irp}</div>
-      <div style="font-size:13px;font-weight:600;color:${getRiskColor(result.irp)};">${result.irpClassification.label}</div>
-    </div>
-    <div style="flex:1;min-width:180px;padding:20px;border-radius:12px;border:2px solid #2ecc71;text-align:center;">
-      <div style="font-size:14px;color:#666;margin-bottom:4px;">Índice de Proteção (IPP)</div>
-      <div style="font-size:36px;font-weight:700;color:#2ecc71;">${result.ipp}</div>
-      <div style="font-size:13px;color:#666;">100 − IRP</div>
-    </div>
-    <div style="flex:1;min-width:180px;padding:20px;border-radius:12px;border:2px solid ${result.ivo >= 3 ? '#e74c3c' : '#f39c12'};text-align:center;">
-      <div style="font-size:14px;color:#666;margin-bottom:4px;">Vulnerabilidade (IVO)</div>
-      <div style="font-size:36px;font-weight:700;color:${result.ivo >= 3 ? '#e74c3c' : '#f39c12'};">${result.ivo}/8</div>
-      <div style="font-size:13px;color:#666;">Dimensões > 60 pts</div>
-    </div>
-  </div>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+    <tr>
+      <td style="width:33%;padding:8px;vertical-align:top;">
+        <div style="padding:20px;border-radius:12px;border:2px solid ${getRiskColor(result.irp)};text-align:center;">
+          <div style="font-size:14px;color:#666;margin-bottom:4px;">Índice de Risco (IRP)</div>
+          <div style="font-size:36px;font-weight:700;color:${getRiskColor(result.irp)};">${result.irp}</div>
+          <div style="font-size:13px;font-weight:600;color:${getRiskColor(result.irp)};">${result.irpClassification.label}</div>
+        </div>
+      </td>
+      <td style="width:33%;padding:8px;vertical-align:top;">
+        <div style="padding:20px;border-radius:12px;border:2px solid #2ecc71;text-align:center;">
+          <div style="font-size:14px;color:#666;margin-bottom:4px;">Índice de Proteção (IPP)</div>
+          <div style="font-size:36px;font-weight:700;color:#2ecc71;">${result.ipp}</div>
+          <div style="font-size:13px;color:#666;">100 − IRP</div>
+        </div>
+      </td>
+      <td style="width:33%;padding:8px;vertical-align:top;">
+        <div style="padding:20px;border-radius:12px;border:2px solid ${result.ivo >= 3 ? '#e74c3c' : '#f39c12'};text-align:center;">
+          <div style="font-size:14px;color:#666;margin-bottom:4px;">Vulnerabilidade (IVO)</div>
+          <div style="font-size:36px;font-weight:700;color:${result.ivo >= 3 ? '#e74c3c' : '#f39c12'};">${result.ivo}/8</div>
+          <div style="font-size:13px;color:#666;">Dimensões > 60 pts</div>
+        </div>
+      </td>
+    </tr>
+  </table>
 
   <h2 style="color:#0f3460;border-bottom:2px solid #0f3460;padding-bottom:8px;">Resultados por Dimensão</h2>
   <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
