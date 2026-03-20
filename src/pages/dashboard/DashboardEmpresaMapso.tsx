@@ -220,6 +220,10 @@ export default function DashboardEmpresaMapso() {
     setDownloading(filename);
     try {
       await downloadHtmlAsPdf(html, filename);
+      // Also upload to storage organized by empresa
+      if (empresaId) {
+        uploadPdfToStorage(html, empresaId, filename).catch(() => {});
+      }
       sonnerToast.success("PDF baixado!");
     } catch {
       sonnerToast.error("Erro ao gerar PDF");
