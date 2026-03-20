@@ -409,13 +409,17 @@ export default function DashboardEmpresaMapso() {
                             <div className="flex items-center gap-2 ml-2">
                               {assessment ? (
                                 <Badge className="bg-primary/10 text-primary border-primary/20">
-                                  <CheckCircle2 className="h-3 w-3 mr-1" /> IRP: {assessment.irp} — {assessment.irp_classification}
+                                  <CheckCircle2 className="h-3 w-3 mr-1" /> Concluído
                                 </Badge>
                               ) : link ? (
                                 <Badge variant="outline" className="text-muted-foreground">
                                   <Clock className="h-3 w-3 mr-1" /> Link enviado
                                 </Badge>
-                              ) : null}
+                              ) : (
+                                <Badge variant="outline" className="text-muted-foreground">
+                                  <Clock className="h-3 w-3 mr-1" /> Pendente
+                                </Badge>
+                              )}
                               {!assessment && (
                                 <Button
                                   variant="outline"
