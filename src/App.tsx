@@ -86,6 +86,7 @@ const App = () => (
               {/* Gerência - empresa/profissional dashboard */}
               <Route path="/gerencia" element={<GerenciaLayout />}>
                 <Route index element={<GerenciaPainel />} />
+                <Route path="testes" element={<GerenciaTestes />} />
                 <Route path="historico" element={<GerenciaHistorico />} />
                 <Route path="colaboradores" element={<GerenciaColaboradores />} />
                 <Route path="setores" element={<GerenciaSetores />} />
