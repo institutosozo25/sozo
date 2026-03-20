@@ -41,12 +41,14 @@ export default function GerenciaPainel() {
 
   const quickLinks = isEnterprise
     ? [
+        { icon: ClipboardList, label: "Aplicar Testes", path: "/gerencia/testes" },
         { icon: History, label: "Histórico de Testes", path: "/gerencia/historico", count: stats.historico },
         { icon: Users, label: "Colaboradores", path: "/gerencia/colaboradores", count: stats.pessoas },
         { icon: Shield, label: "MAPSO / NR1", path: "/gerencia/mapso" },
         { icon: CreditCard, label: "Pagamentos", path: "/gerencia/pagamentos" },
       ]
     : [
+        { icon: ClipboardList, label: "Aplicar Testes", path: "/gerencia/testes" },
         { icon: History, label: "Histórico de Testes", path: "/gerencia/historico", count: stats.historico },
         { icon: Users, label: "Pacientes", path: "/gerencia/pacientes", count: stats.pessoas },
         { icon: CreditCard, label: "Pagamentos", path: "/gerencia/pagamentos" },
