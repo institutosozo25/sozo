@@ -12,9 +12,7 @@ import {
   Stethoscope,
   LogOut,
   Settings,
-  Shield,
   Home,
-  ClipboardList,
 } from "lucide-react";
 
 const enterpriseNav = [
