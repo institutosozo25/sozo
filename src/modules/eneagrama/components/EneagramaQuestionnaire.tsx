@@ -122,7 +122,7 @@ const EneagramaQuestionnaire = () => {
               Próxima <ChevronRight className="h-4 w-4" />
             </Button>
           ) : (
-            <Button onClick={() => submitTest()} disabled={!canSubmit} className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
+            <Button onClick={async () => { await submitTest(); }} disabled={!canSubmit} className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
               <Send className="h-4 w-4" /> Finalizar
             </Button>
           )}
