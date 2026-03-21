@@ -1,6 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -248,21 +246,14 @@ export default function DashboardEmpresaMapso() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-        <Footer />
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <section className="pt-28 pb-20">
-        <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
+    <div>
           <div className="flex items-center gap-3 mb-8">
             <Shield className="w-8 h-8 text-primary" />
             <div>
@@ -548,9 +539,6 @@ export default function DashboardEmpresaMapso() {
               </Card>
             </TabsContent>
           </Tabs>
-        </div>
-      </section>
-      <Footer />
     </div>
   );
 }
