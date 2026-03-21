@@ -84,12 +84,17 @@ export default function DashboardEmpresaMapso() {
     if (!user || !empresaId) return;
     setIsGenerating(true);
     try {
+      // Calculate 72h expiration
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 72);
+
       const { data, error } = await supabase
         .from("shared_test_links")
         .insert({
           test_type: "mapso",
           created_by: user.id,
           empresa_id: empresaId,
+          expires_at: expiresAt.toISOString(),
         })
         .select("*")
         .single();
@@ -106,7 +111,7 @@ export default function DashboardEmpresaMapso() {
 
   const getLinkUrl = () => {
     if (!activeLink) return "";
-    return `${window.location.origin}/teste/respond/${(activeLink as any).token}`;
+    return `${window.location.origin}/teste/respond/${activeLink.token}`;
   };
 
   const copyToClipboard = async () => {
