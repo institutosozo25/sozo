@@ -109,12 +109,12 @@ export const DiscProvider = ({ children }: { children: ReactNode }) => {
           test_type: "disc",
           link_id: managedCtx.link_id,
           scores: {
-            primaryProfile: r.primaryProfile,
-            secondaryProfile: r.secondaryProfile,
+            primary: r.primary,
+            secondary: r.secondary,
             primaryLabel: r.primaryLabel,
             secondaryLabel: r.secondaryLabel,
             percentages: r.percentages,
-            rawScores: r.rawScores,
+            scores: r.scores,
           },
         },
       });

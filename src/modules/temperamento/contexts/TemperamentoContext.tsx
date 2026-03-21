@@ -109,11 +109,12 @@ export const TemperamentoProvider = ({ children }: { children: ReactNode }) => {
           test_type: "temperamento",
           link_id: managedCtx.link_id,
           scores: {
-            primaryType: r.primaryType,
-            secondaryType: r.secondaryType,
+            primary: r.primary,
+            secondary: r.secondary,
             primaryLabel: r.primaryLabel,
             secondaryLabel: r.secondaryLabel,
             percentages: r.percentages,
+            scores: r.scores,
           },
         },
       });
