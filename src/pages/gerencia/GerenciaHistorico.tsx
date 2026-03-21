@@ -27,6 +27,8 @@ interface TestHistoryItem {
     colaborador_name?: string;
     paciente_name?: string;
     scores?: Record<string, unknown> | null;
+    submission_id?: string;
+    has_report?: boolean;
   } | null;
 }
 
@@ -60,6 +62,23 @@ const getRiskBadgeClass = (classification: string) => {
   }
 };
 
+/** Convert markdown to basic HTML for display/PDF */
+function markdownToHtml(md: string): string {
+  return md
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, (match) => `<ul>${match}</ul>`)
+    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/^(?!<[hulo])/gm, '')
+    .replace(/\n/g, '<br>')
+    .replace(/<p><\/p>/g, '');
+}
+
 export default function GerenciaHistorico() {
   const { user } = useAuth();
   const [history, setHistory] = useState<TestHistoryItem[]>([]);
@@ -67,6 +86,8 @@ export default function GerenciaHistorico() {
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [viewHtml, setViewHtml] = useState<{ title: string; html: string } | null>(null);
+  const [loadingReport, setLoadingReport] = useState<string | null>(null);
+  const [reportCache, setReportCache] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!user) return;
@@ -108,8 +129,85 @@ export default function GerenciaHistorico() {
     }
   };
 
+  const fetchReport = async (submissionId: string): Promise<string | null> => {
+    if (reportCache[submissionId]) return reportCache[submissionId];
+    
+    const { data } = await supabase
+      .from("generated_reports")
+      .select("report_content")
+      .eq("submission_id", submissionId)
+      .single();
+    
+    if (data?.report_content) {
+      setReportCache(prev => ({ ...prev, [submissionId]: data.report_content! }));
+      return data.report_content;
+    }
+    return null;
+  };
+
+  const handleViewReport = async (item: TestHistoryItem) => {
+    const submissionId = item.metadata?.submission_id;
+    if (!submissionId) {
+      toast.error("Relatório não disponível.");
+      return;
+    }
+    
+    setLoadingReport(item.id);
+    try {
+      const report = await fetchReport(submissionId);
+      if (report) {
+        const respondentName = extractManagedRespondentName(item);
+        const html = markdownToHtml(report);
+        setViewHtml({
+          title: `Relatório ${item.test_type.toUpperCase()} — ${respondentName}`,
+          html,
+        });
+      } else {
+        toast.error("Relatório ainda não foi gerado. Tente novamente em alguns instantes.");
+      }
+    } catch {
+      toast.error("Erro ao carregar relatório.");
+    } finally {
+      setLoadingReport(null);
+    }
+  };
+
+  const handleDownloadReport = async (item: TestHistoryItem) => {
+    const submissionId = item.metadata?.submission_id;
+    if (!submissionId) return;
+    
+    setDownloading(item.id);
+    try {
+      const report = await fetchReport(submissionId);
+      if (report) {
+        const respondentName = extractManagedRespondentName(item);
+        const html = `
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; color: #1a1a1a; line-height: 1.7;">
+            <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #7c3aed;">
+              <h1 style="color: #7c3aed; font-size: 24px; margin: 0;">Relatório ${item.test_type.toUpperCase()}</h1>
+              <p style="color: #666; margin: 8px 0 0;">${respondentName}</p>
+              <p style="color: #999; font-size: 12px; margin: 4px 0 0;">${new Date(item.completed_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}</p>
+            </div>
+            ${markdownToHtml(report)}
+          </div>
+        `;
+        const filename = `Relatorio_${item.test_type.toUpperCase()}_${respondentName.replace(/\s+/g, "_")}.pdf`;
+        await downloadHtmlAsPdf(html, filename);
+        toast.success("PDF baixado!");
+      } else {
+        toast.error("Relatório não disponível.");
+      }
+    } catch {
+      toast.error("Erro ao gerar PDF.");
+    } finally {
+      setDownloading(null);
+    }
+  };
+
   const hasMapso = mapsoAssessments.length > 0;
   const hasTests = history.length > 0;
+  const hasManagedReport = (item: TestHistoryItem) => !!item.metadata?.submission_id;
+  const hasStoragePdfs = (item: TestHistoryItem) => !!(item.pdf_diagnostic_path || item.pdf_report_path || item.pdf_action_plan_path);
 
   return (
     <div>
@@ -207,64 +305,95 @@ export default function GerenciaHistorico() {
           {hasTests && (
             <TabsContent value="tests">
               <div className="space-y-3">
-                {history.map((item) => (
-                  <Card key={item.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="py-5">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="rounded-lg bg-primary/10 p-3">
-                            <FileText className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold text-foreground">{item.test_name}</h3>
-                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${testTypeColors[item.test_type] || "bg-muted text-muted-foreground"}`}>
-                                {item.test_type.toUpperCase()}
-                              </span>
-                            </div>
-                            {(item.metadata?.colaborador_name || item.metadata?.paciente_name) && (
-                              <div className="flex items-center gap-2 mb-1 text-sm text-muted-foreground">
-                                <Building2 className="h-3.5 w-3.5" />
-                                <span>{extractManagedRespondentName(item)}</span>
-                                {(() => {
-                                  const summary = getManagedScoreSummary(item.test_type, item.metadata?.scores || null);
-                                  return summary ? <span>· {summary.detail ? `${summary.label} — ${summary.detail}` : summary.label}</span> : null;
-                                })()}
-                              </div>
-                            )}
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <Calendar className="h-3.5 w-3.5" />
-                              {new Date(item.completed_at).toLocaleDateString("pt-BR", {
-                                day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
-                              })}
-                            </div>
-                          </div>
-                        </div>
+                {history.map((item) => {
+                  const respondentName = item.metadata?.colaborador_name || item.metadata?.paciente_name;
+                  const scoreSummary = getManagedScoreSummary(item.test_type, item.metadata?.scores || null);
 
-                        <div className="flex items-center gap-2">
-                          {item.pdf_diagnostic_path && (
-                            <Button variant="outline" size="sm"
-                              onClick={() => downloadFromStorage(item.pdf_diagnostic_path!, `diagnostico-${item.test_type}.pdf`)}>
-                              <Download className="w-3.5 h-3.5 mr-1" /> Diagnóstico
-                            </Button>
-                          )}
-                          {item.pdf_report_path && (
-                            <Button variant="outline" size="sm"
-                              onClick={() => downloadFromStorage(item.pdf_report_path!, `relatorio-${item.test_type}.pdf`)}>
-                              <Download className="w-3.5 h-3.5 mr-1" /> Relatório
-                            </Button>
-                          )}
-                          {item.pdf_action_plan_path && (
-                            <Button variant="outline" size="sm"
-                              onClick={() => downloadFromStorage(item.pdf_action_plan_path!, `plano-acao-${item.test_type}.pdf`)}>
-                              <Download className="w-3.5 h-3.5 mr-1" /> Plano de Ação
-                            </Button>
-                          )}
+                  return (
+                    <Card key={item.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="py-5">
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className="rounded-lg bg-primary/10 p-3">
+                              <FileText className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-semibold text-foreground">{item.test_name}</h3>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${testTypeColors[item.test_type] || "bg-muted text-muted-foreground"}`}>
+                                  {item.test_type.toUpperCase()}
+                                </span>
+                              </div>
+                              {respondentName && (
+                                <div className="flex items-center gap-2 mb-1 text-sm text-muted-foreground">
+                                  <Building2 className="h-3.5 w-3.5" />
+                                  <span>{respondentName}</span>
+                                  {scoreSummary && (
+                                    <span>· {scoreSummary.detail ? `${scoreSummary.label} — ${scoreSummary.detail}` : scoreSummary.label}</span>
+                                  )}
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <Calendar className="h-3.5 w-3.5" />
+                                {new Date(item.completed_at).toLocaleDateString("pt-BR", {
+                                  day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+                                })}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {/* Storage PDFs (from regular test flow) */}
+                            {item.pdf_diagnostic_path && (
+                              <Button variant="outline" size="sm"
+                                onClick={() => downloadFromStorage(item.pdf_diagnostic_path!, `diagnostico-${item.test_type}.pdf`)}>
+                                <Download className="w-3.5 h-3.5 mr-1" /> Diagnóstico
+                              </Button>
+                            )}
+                            {item.pdf_report_path && (
+                              <Button variant="outline" size="sm"
+                                onClick={() => downloadFromStorage(item.pdf_report_path!, `relatorio-${item.test_type}.pdf`)}>
+                                <Download className="w-3.5 h-3.5 mr-1" /> Relatório
+                              </Button>
+                            )}
+                            {item.pdf_action_plan_path && (
+                              <Button variant="outline" size="sm"
+                                onClick={() => downloadFromStorage(item.pdf_action_plan_path!, `plano-acao-${item.test_type}.pdf`)}>
+                                <Download className="w-3.5 h-3.5 mr-1" /> Plano de Ação
+                              </Button>
+                            )}
+
+                            {/* AI-generated reports (from managed test flow) */}
+                            {!hasStoragePdfs(item) && hasManagedReport(item) && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="gap-1"
+                                  onClick={() => handleViewReport(item)}
+                                  disabled={loadingReport === item.id}
+                                >
+                                  {loadingReport === item.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Eye className="h-3 w-3" />}
+                                  Ver Relatório
+                                </Button>
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  className="gap-1"
+                                  onClick={() => handleDownloadReport(item)}
+                                  disabled={downloading === item.id}
+                                >
+                                  {downloading === item.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+                                  Baixar PDF
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </TabsContent>
           )}
