@@ -146,12 +146,12 @@ const EmployeeRespondFlow = () => {
         return;
       }
 
-      // Check if this colaborador already completed this test type for this link
+      // Check if this colaborador already completed MAPSO for this empresa
       const { data: existing } = await supabase
         .from("mapso_assessments")
         .select("id")
         .eq("empresa_id", linkData.empresa_id)
-        .eq("employee_id", match.id)
+        .eq("colaborador_id" as any, match.id)
         .limit(1);
 
       if (existing && existing.length > 0) {
