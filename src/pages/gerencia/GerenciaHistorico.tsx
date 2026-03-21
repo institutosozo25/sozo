@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { downloadHtmlAsPdf } from "@/lib/pdf-generator";
+import { downloadTestReportPdf, downloadMapsoDiagnosisPdf, downloadMapsoNR1Pdf, fetchEmpresaBranding, type BrandingInfo } from "@/lib/searchable-pdf";
+import { sanitizeAndFormatReport } from "@/lib/pdf-generator";
 import { toast } from "sonner";
 import { extractManagedRespondentName, getManagedScoreSummary } from "@/lib/manager-notifications";
 import {
@@ -36,10 +37,14 @@ interface MapsoAssessment {
   id: string;
   organization_name: string;
   organization_sector: string | null;
+  organization_department: string | null;
+  employee_count: number | null;
   irp: number;
   irp_classification: string;
   ipp: number;
   ivo: number;
+  dimension_scores: any;
+  action_plan: any;
   diagnosis_html: string | null;
   report_html: string | null;
   created_at: string;
@@ -62,7 +67,7 @@ const getRiskBadgeClass = (classification: string) => {
   }
 };
 
-/** Convert markdown to basic HTML for display/PDF */
+/** Convert markdown to basic HTML for display */
 function markdownToHtml(md: string): string {
   return md
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
@@ -80,7 +85,7 @@ function markdownToHtml(md: string): string {
 }
 
 export default function GerenciaHistorico() {
-  const { user } = useAuth();
+  const { user, plan } = useAuth();
   const [history, setHistory] = useState<TestHistoryItem[]>([]);
   const [mapsoAssessments, setMapsoAssessments] = useState<MapsoAssessment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,20 +93,29 @@ export default function GerenciaHistorico() {
   const [viewHtml, setViewHtml] = useState<{ title: string; html: string } | null>(null);
   const [loadingReport, setLoadingReport] = useState<string | null>(null);
   const [reportCache, setReportCache] = useState<Record<string, string>>({});
+  const [branding, setBranding] = useState<BrandingInfo | null>(null);
 
   useEffect(() => {
     if (!user) return;
     const fetchAll = async () => {
       const [histRes, mapsoRes] = await Promise.all([
         supabase.from("test_history").select("*").eq("user_id", user.id).order("completed_at", { ascending: false }),
-        supabase.from("mapso_assessments" as any).select("id, organization_name, organization_sector, irp, irp_classification, ipp, ivo, diagnosis_html, report_html, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
+        supabase.from("mapso_assessments" as any)
+          .select("id, organization_name, organization_sector, organization_department, employee_count, irp, irp_classification, ipp, ivo, dimension_scores, action_plan, diagnosis_html, report_html, created_at")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false }),
       ]);
       if (histRes.data) setHistory(histRes.data as TestHistoryItem[]);
       if (mapsoRes.data) setMapsoAssessments(mapsoRes.data as MapsoAssessment[]);
       setLoading(false);
     };
     fetchAll();
-  }, [user]);
+
+    // Fetch empresa branding for PDF logos
+    if (plan === "enterprise") {
+      fetchEmpresaBranding(user.id).then(setBranding);
+    }
+  }, [user, plan]);
 
   const downloadFromStorage = async (path: string, filename: string) => {
     const { data, error } = await supabase.storage.from("test-pdfs").download(path);
@@ -117,10 +131,45 @@ export default function GerenciaHistorico() {
     URL.revokeObjectURL(url);
   };
 
-  const handleDownloadMapsoPdf = async (html: string, filename: string) => {
-    setDownloading(filename);
+  const handleDownloadMapsoDiagnosis = async (a: MapsoAssessment) => {
+    setDownloading(`diag-${a.id}`);
     try {
-      await downloadHtmlAsPdf(html, filename);
+      await downloadMapsoDiagnosisPdf({
+        organizationName: a.organization_name,
+        organizationSector: a.organization_sector,
+        organizationDepartment: a.organization_department,
+        employeeCount: a.employee_count,
+        irp: a.irp,
+        ipp: a.ipp,
+        ivo: a.ivo,
+        irpClassification: a.irp_classification,
+        dimensionScores: a.dimension_scores || [],
+        createdAt: a.created_at,
+      }, branding || undefined);
+      toast.success("PDF baixado!");
+    } catch {
+      toast.error("Erro ao gerar PDF.");
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  const handleDownloadMapsoNR1 = async (a: MapsoAssessment) => {
+    setDownloading(`nr1-${a.id}`);
+    try {
+      await downloadMapsoNR1Pdf({
+        organizationName: a.organization_name,
+        organizationSector: a.organization_sector,
+        organizationDepartment: a.organization_department,
+        employeeCount: a.employee_count,
+        irp: a.irp,
+        ipp: a.ipp,
+        ivo: a.ivo,
+        irpClassification: a.irp_classification,
+        dimensionScores: a.dimension_scores || [],
+        actionPlan: a.action_plan || [],
+        createdAt: a.created_at,
+      }, branding || undefined);
       toast.success("PDF baixado!");
     } catch {
       toast.error("Erro ao gerar PDF.");
@@ -131,13 +180,13 @@ export default function GerenciaHistorico() {
 
   const fetchReport = async (submissionId: string): Promise<string | null> => {
     if (reportCache[submissionId]) return reportCache[submissionId];
-    
+
     const { data } = await supabase
       .from("generated_reports")
       .select("report_content")
       .eq("submission_id", submissionId)
       .single();
-    
+
     if (data?.report_content) {
       setReportCache(prev => ({ ...prev, [submissionId]: data.report_content! }));
       return data.report_content;
@@ -151,7 +200,7 @@ export default function GerenciaHistorico() {
       toast.error("Relatório não disponível.");
       return;
     }
-    
+
     setLoadingReport(item.id);
     try {
       const report = await fetchReport(submissionId);
@@ -175,24 +224,34 @@ export default function GerenciaHistorico() {
   const handleDownloadReport = async (item: TestHistoryItem) => {
     const submissionId = item.metadata?.submission_id;
     if (!submissionId) return;
-    
+
     setDownloading(item.id);
     try {
       const report = await fetchReport(submissionId);
       if (report) {
         const respondentName = extractManagedRespondentName(item);
-        const html = `
-          <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; color: #1a1a1a; line-height: 1.7;">
-            <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #7c3aed;">
-              <h1 style="color: #7c3aed; font-size: 24px; margin: 0;">Relatório ${item.test_type.toUpperCase()}</h1>
-              <p style="color: #666; margin: 8px 0 0;">${respondentName}</p>
-              <p style="color: #999; font-size: 12px; margin: 4px 0 0;">${new Date(item.completed_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}</p>
-            </div>
-            ${markdownToHtml(report)}
-          </div>
-        `;
-        const filename = `Relatorio_${item.test_type.toUpperCase()}_${respondentName.replace(/\s+/g, "_")}.pdf`;
-        await downloadHtmlAsPdf(html, filename);
+        const testLabel = item.test_type.toUpperCase();
+        const scores = item.metadata?.scores;
+
+        // Build score items from metadata if available
+        const scoreItems = scores
+          ? Object.entries(scores).map(([key, val]) => ({
+              label: key,
+              value: `${val}%`,
+              color: "#533483",
+            }))
+          : [];
+
+        await downloadTestReportPdf({
+          title: `RELAT\u00D3RIO ${testLabel}`,
+          subtitle: respondentName,
+          respondentName,
+          scores: scoreItems,
+          content: report,
+          logoBase64: branding?.logoBase64,
+          companyName: branding?.companyName,
+          companyCnpj: branding?.companyCnpj,
+        }, `Relatorio_${testLabel}_${respondentName.replace(/\s+/g, "_")}.pdf`);
         toast.success("PDF baixado!");
       } else {
         toast.error("Relatório não disponível.");
@@ -277,18 +336,18 @@ export default function GerenciaHistorico() {
                                 <Eye className="h-3 w-3" /> Ver
                               </Button>
                               <Button variant="outline" size="sm" className="gap-1"
-                                onClick={() => handleDownloadMapsoPdf(a.diagnosis_html!, `Diagnostico_${a.organization_name.replace(/\s+/g, "_")}.pdf`)}
+                                onClick={() => handleDownloadMapsoDiagnosis(a)}
                                 disabled={downloading !== null}>
-                                {downloading?.includes("Diagnostico") ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+                                {downloading === `diag-${a.id}` ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
                                 Diagnóstico
                               </Button>
                             </>
                           )}
                           {a.report_html && (
                             <Button variant="outline" size="sm" className="gap-1"
-                              onClick={() => handleDownloadMapsoPdf(a.report_html!, `Relatorio_NR1_${a.organization_name.replace(/\s+/g, "_")}.pdf`)}
+                              onClick={() => handleDownloadMapsoNR1(a)}
                               disabled={downloading !== null}>
-                              {downloading?.includes("NR1") ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+                              {downloading === `nr1-${a.id}` ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
                               NR1
                             </Button>
                           )}
