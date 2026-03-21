@@ -329,6 +329,7 @@ export type Database = {
       mapso_assessments: {
         Row: {
           action_plan: Json | null
+          colaborador_id: string | null
           completed_at: string | null
           consent_accepted: boolean
           created_at: string
@@ -356,6 +357,7 @@ export type Database = {
         }
         Insert: {
           action_plan?: Json | null
+          colaborador_id?: string | null
           completed_at?: string | null
           consent_accepted?: boolean
           created_at?: string
@@ -383,6 +385,7 @@ export type Database = {
         }
         Update: {
           action_plan?: Json | null
+          colaborador_id?: string | null
           completed_at?: string | null
           consent_accepted?: boolean
           created_at?: string
@@ -409,6 +412,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "mapso_assessments_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "mapso_assessments_employee_id_fkey"
             columns: ["employee_id"]

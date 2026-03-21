@@ -146,12 +146,12 @@ const EmployeeRespondFlow = () => {
         return;
       }
 
-      // Check if this colaborador already completed this test type for this link
+      // Check if this colaborador already completed MAPSO for this empresa
       const { data: existing } = await supabase
         .from("mapso_assessments")
         .select("id")
         .eq("empresa_id", linkData.empresa_id)
-        .eq("employee_id", match.id)
+        .eq("colaborador_id" as any, match.id)
         .limit(1);
 
       if (existing && existing.length > 0) {
@@ -204,10 +204,11 @@ const EmployeeRespondFlow = () => {
       const result = calculateAssessment(answers);
       const now = new Date().toISOString();
 
-      // Insert assessment linked to colaborador
+      // Insert assessment linked to colaborador via colaborador_id
       const { error: insertErr } = await supabase.from("mapso_assessments").insert({
         user_id: "00000000-0000-0000-0000-000000000000",
-        employee_id: colaborador.id,
+        colaborador_id: colaborador.id,
+        employee_id: null,
         empresa_id: linkData.empresa_id,
         link_id: null,
         organization_name: linkData.company_name || "Empresa",
