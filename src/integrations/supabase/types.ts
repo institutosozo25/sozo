@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notification_preferences: {
+        Row: {
+          auto_cleanup_days: number | null
+          created_at: string | null
+          email_notifications_to: string | null
+          id: string
+          notify_mapso_completion: boolean | null
+          notify_promotions: boolean | null
+          notify_system_updates: boolean | null
+          notify_test_completion: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auto_cleanup_days?: number | null
+          created_at?: string | null
+          email_notifications_to?: string | null
+          id?: string
+          notify_mapso_completion?: boolean | null
+          notify_promotions?: boolean | null
+          notify_system_updates?: boolean | null
+          notify_test_completion?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auto_cleanup_days?: number | null
+          created_at?: string | null
+          email_notifications_to?: string | null
+          id?: string
+          notify_mapso_completion?: boolean | null
+          notify_promotions?: boolean | null
+          notify_system_updates?: boolean | null
+          notify_test_completion?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       answer_options: {
         Row: {
           created_at: string
@@ -521,6 +560,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "notification_reads_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_status: {
+        Row: {
+          archived_at: string | null
+          created_at: string | null
+          deleted_at: string | null
+          id: string
+          is_archived: boolean | null
+          is_deleted: boolean | null
+          is_read: boolean | null
+          notification_id: string
+          read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string
+          is_archived?: boolean | null
+          is_deleted?: boolean | null
+          is_read?: boolean | null
+          notification_id: string
+          read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string
+          is_archived?: boolean | null
+          is_deleted?: boolean | null
+          is_read?: boolean | null
+          notification_id?: string
+          read_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_status_notification_id_fkey"
             columns: ["notification_id"]
             isOneToOne: false
             referencedRelation: "notifications"
