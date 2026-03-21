@@ -128,8 +128,46 @@ export const MbtiProvider = ({ children }: { children: ReactNode }) => {
     setResult(r);
     clearTestState(TEST_SLUG);
 
-    if (isManaged) {
-      saveManagedResult(r);
+    // Check both React state AND sessionStorage as fallback
+    let managed = isManaged;
+    let ctx = managedCtx;
+    if (!managed) {
+      const raw = sessionStorage.getItem("managed_test_context");
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw) as ManagedContext;
+          if (parsed.test_type === "mbti" && parsed.colaborador_id) {
+            managed = true;
+            ctx = parsed;
+            setIsManaged(true);
+            setManagedCtx(parsed);
+          }
+        } catch {}
+      }
+    }
+
+    if (managed && ctx) {
+      // Call edge function inline to avoid stale closure
+      supabase.functions.invoke("save-managed-result", {
+        body: {
+          colaborador_id: ctx.colaborador_id,
+          empresa_id: ctx.empresa_id,
+          profissional_id: ctx.profissional_id,
+          test_type: "mbti",
+          link_id: ctx.link_id,
+          scores: {
+            type: r.type,
+            typeName: r.typeName,
+            scores: r.scores,
+            percentages: r.percentages,
+            dimensions: r.dimensions,
+          },
+        },
+      }).then(({ error }) => {
+        if (error) console.error("Failed to save managed result:", error);
+        else console.log("Managed result saved successfully");
+      }).catch((e) => console.error("Failed to save managed result:", e));
+
       sessionStorage.removeItem("managed_test_context");
       setStep("managed-done");
     } else {
