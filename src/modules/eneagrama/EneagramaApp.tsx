@@ -5,6 +5,7 @@ import EneagramaWelcome from "./components/EneagramaWelcome";
 import EneagramaQuestionnaire from "./components/EneagramaQuestionnaire";
 import EneagramaPartialResult from "./components/EneagramaPartialResult";
 import EneagramaFullReport from "./components/EneagramaFullReport";
+import ManagedTestDone from "@/components/managed/ManagedTestDone";
 
 const EneagramaContent = () => {
   const { step } = useEneagrama();
@@ -15,6 +16,7 @@ const EneagramaContent = () => {
       {step === "questionnaire" && <EneagramaQuestionnaire />}
       {step === "partial-result" && <EneagramaPartialResult />}
       {step === "full-report" && <EneagramaFullReport />}
+      {step === "managed-done" && <ManagedTestDone />}
     </>
   );
 };

@@ -2,9 +2,19 @@ import React, { createContext, useContext, useState, useEffect, useCallback, typ
 import { type DiscAnswers, type DiscResult, calculateDiscScores, isTestComplete } from "../lib/disc-engine";
 import { DISC_QUESTION_GROUPS } from "../data/disc-questionnaire";
 import { saveTestState, loadTestState, clearTestState } from "@/lib/test-state-storage";
+import { supabase } from "@/integrations/supabase/client";
 
 const TEST_SLUG = "disc";
-type Step = "welcome" | "questionnaire" | "partial-result" | "full-report";
+type Step = "welcome" | "questionnaire" | "partial-result" | "full-report" | "managed-done";
+
+interface ManagedContext {
+  colaborador_id: string;
+  colaborador_nome: string;
+  empresa_id?: string;
+  profissional_id?: string;
+  test_type: string;
+  link_id?: string;
+}
 
 interface DiscContextType {
   step: Step;
@@ -43,6 +53,8 @@ export const DiscProvider = ({ children }: { children: ReactNode }) => {
   const [respondentName, setRespondentName] = useState("");
   const [respondentEmail, setRespondentEmail] = useState("");
   const [currentGroupIndex, setCurrentGroupIndex] = useState(0);
+  const [isManaged, setIsManaged] = useState(false);
+  const [managedCtx, setManagedCtx] = useState<ManagedContext | null>(null);
 
   const totalGroups = DISC_QUESTION_GROUPS.length;
   const answeredCount = Object.keys(answers).length;
@@ -52,10 +64,12 @@ export const DiscProvider = ({ children }: { children: ReactNode }) => {
     const managedRaw = sessionStorage.getItem("managed_test_context");
     if (managedRaw) {
       try {
-        const managed = JSON.parse(managedRaw);
+        const managed = JSON.parse(managedRaw) as ManagedContext;
         if (managed.test_type === "disc") {
           setRespondentName(managed.colaborador_nome || "Colaborador");
           setRespondentEmail("managed@sozo.app");
+          setIsManaged(true);
+          setManagedCtx(managed);
           setStep("questionnaire");
           return;
         }
@@ -84,12 +98,44 @@ export const DiscProvider = ({ children }: { children: ReactNode }) => {
     setAnswers((prev) => ({ ...prev, [groupId]: { most, least } }));
   }, []);
 
+  const saveManagedResult = async (r: DiscResult) => {
+    if (!managedCtx) return;
+    try {
+      await supabase.functions.invoke("save-managed-result", {
+        body: {
+          colaborador_id: managedCtx.colaborador_id,
+          empresa_id: managedCtx.empresa_id,
+          profissional_id: managedCtx.profissional_id,
+          test_type: "disc",
+          link_id: managedCtx.link_id,
+          scores: {
+            primary: r.primary,
+            secondary: r.secondary,
+            primaryLabel: r.primaryLabel,
+            secondaryLabel: r.secondaryLabel,
+            percentages: r.percentages,
+            scores: r.scores,
+          },
+        },
+      });
+    } catch (e) {
+      console.error("Failed to save managed result:", e);
+    }
+  };
+
   const submitTest = () => {
     if (!canSubmit) return null;
     const r = calculateDiscScores(answers);
     setResult(r);
-    setStep("partial-result");
     clearTestState(TEST_SLUG);
+
+    if (isManaged) {
+      saveManagedResult(r);
+      sessionStorage.removeItem("managed_test_context");
+      setStep("managed-done");
+    } else {
+      setStep("partial-result");
+    }
     return r;
   };
 
@@ -101,6 +147,8 @@ export const DiscProvider = ({ children }: { children: ReactNode }) => {
     setRespondentName("");
     setRespondentEmail("");
     setCurrentGroupIndex(0);
+    setIsManaged(false);
+    setManagedCtx(null);
     clearTestState(TEST_SLUG);
   };
 

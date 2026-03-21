@@ -69,7 +69,7 @@ export default function GerenciaTesteDashboard({ testType }: Props) {
 
       // Get people count
       if (isEnterprise) {
-        const { count } = await supabase.from("mapso_employees" as any).select("*", { count: "exact", head: true }).eq("empresa_id", ownerId);
+        const { count } = await supabase.from("colaboradores").select("*", { count: "exact", head: true }).eq("empresa_id", ownerId);
         setPeopleCount(count || 0);
       } else {
         const { count } = await supabase.from("pacientes").select("*", { count: "exact", head: true }).eq("profissional_id", ownerId);

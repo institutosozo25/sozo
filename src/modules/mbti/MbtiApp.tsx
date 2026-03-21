@@ -5,6 +5,7 @@ import MbtiWelcome from "./components/MbtiWelcome";
 import MbtiQuestionnaire from "./components/MbtiQuestionnaire";
 import MbtiPartialResult from "./components/MbtiPartialResult";
 import MbtiFullReport from "./components/MbtiFullReport";
+import ManagedTestDone from "@/components/managed/ManagedTestDone";
 
 const MbtiContent = () => {
   const { step } = useMbti();
@@ -15,6 +16,7 @@ const MbtiContent = () => {
       {step === "questionnaire" && <MbtiQuestionnaire />}
       {step === "partial-result" && <MbtiPartialResult />}
       {step === "full-report" && <MbtiFullReport />}
+      {step === "managed-done" && <ManagedTestDone />}
     </>
   );
 };
