@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -13,13 +13,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import {
   Shield, CheckCircle2, AlertTriangle, ChevronLeft, ChevronRight, Send, Loader2, Building2, KeyRound,
+  Brain, Sparkles, Heart, Users as UsersIcon,
 } from "lucide-react";
 
-type Step = "loading" | "error" | "validate" | "awareness" | "questionnaire" | "final-consent" | "done";
+const TEST_META: Record<string, { name: string; fullName: string; icon: any; route: string }> = {
+  disc: { name: "DISC", fullName: "Análise Comportamental DISC", icon: Brain, route: "/testes/disc/aplicar" },
+  mbti: { name: "MBTI", fullName: "Teste de Personalidade MBTI", icon: Sparkles, route: "/testes/mbti/aplicar" },
+  temperamento: { name: "Temperamento", fullName: "Análise de Temperamento", icon: Heart, route: "/testes/temperamento/aplicar" },
+  eneagrama: { name: "Eneagrama", fullName: "Teste de Eneagrama", icon: UsersIcon, route: "/testes/eneagrama/aplicar" },
+  mapso: { name: "MAPSO", fullName: "Avaliação Psicossocial — MAPSO", icon: Shield, route: "" },
+};
+
+type Step = "loading" | "error" | "validate" | "awareness" | "redirect-test" | "questionnaire" | "final-consent" | "done";
 
 interface LinkData {
   id: string;
   empresa_id: string;
+  profissional_id?: string;
   test_type: string;
   company_name?: string;
 }
@@ -41,6 +51,7 @@ function maskCpf(value: string): string {
 
 const EmployeeRespondFlow = () => {
   const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
   const [step, setStep] = useState<Step>("loading");
   const [linkData, setLinkData] = useState<LinkData | null>(null);
   const [colaborador, setColaborador] = useState<ColaboradorData | null>(null);
@@ -52,27 +63,29 @@ const EmployeeRespondFlow = () => {
   const [validationError, setValidationError] = useState("");
   const [validating, setValidating] = useState(false);
 
-  // Awareness
+  // Awareness (MAPSO only)
   const [awarenessAccepted, setAwarenessAccepted] = useState(false);
 
-  // Final consent
+  // Final consent (MAPSO only)
   const [finalConsentAccepted, setFinalConsentAccepted] = useState(false);
   const [signatureName, setSignatureName] = useState("");
 
-  // Questionnaire
+  // Questionnaire (MAPSO only)
   const [answers, setAnswers] = useState<Answers>({});
   const [currentDimIndex, setCurrentDimIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+
+  const isMapso = linkData?.test_type === "mapso";
+  const testMeta = linkData ? TEST_META[linkData.test_type] || TEST_META.mapso : TEST_META.mapso;
 
   useEffect(() => {
     if (token) loadLink();
   }, [token]);
 
   const loadLink = async () => {
-    // Look up the generic link from shared_test_links
     const { data, error: err } = await supabase
       .from("shared_test_links")
-      .select("id, empresa_id, test_type, status, expires_at")
+      .select("id, empresa_id, profissional_id, test_type, status, expires_at")
       .eq("token", token)
       .single();
 
@@ -94,18 +107,23 @@ const EmployeeRespondFlow = () => {
       return;
     }
 
-    // Fetch company name
-    const { data: company } = await supabase
-      .from("empresas")
-      .select("razao_social, nome_fantasia")
-      .eq("id", data.empresa_id!)
-      .single();
+    // Fetch company name if empresa_id exists
+    let companyName = "";
+    if (data.empresa_id) {
+      const { data: company } = await supabase
+        .from("empresas")
+        .select("razao_social, nome_fantasia")
+        .eq("id", data.empresa_id)
+        .single();
+      companyName = company?.nome_fantasia || company?.razao_social || "";
+    }
 
     setLinkData({
       id: data.id,
       empresa_id: data.empresa_id!,
+      profissional_id: data.profissional_id || undefined,
       test_type: data.test_type,
-      company_name: company?.nome_fantasia || company?.razao_social || "",
+      company_name: companyName,
     });
     setStep("validate");
   };
@@ -146,22 +164,24 @@ const EmployeeRespondFlow = () => {
         return;
       }
 
-      // Check if this colaborador already completed MAPSO for this empresa
-      const { data: existing } = await supabase
-        .from("mapso_assessments")
-        .select("id")
-        .eq("empresa_id", linkData.empresa_id)
-        .eq("colaborador_id" as any, match.id)
-        .limit(1);
+      // For MAPSO: check if already completed
+      if (isMapso) {
+        const { data: existing } = await supabase
+          .from("mapso_assessments")
+          .select("id")
+          .eq("empresa_id", linkData.empresa_id)
+          .eq("colaborador_id" as any, match.id)
+          .limit(1);
 
-      if (existing && existing.length > 0) {
-        setError("Você já respondeu este questionário.");
-        setStep("error");
-        setValidating(false);
-        return;
+        if (existing && existing.length > 0) {
+          setError("Você já respondeu este questionário.");
+          setStep("error");
+          setValidating(false);
+          return;
+        }
       }
 
-      // Fetch setor name if available
+      // Fetch setor name
       let setorNome: string | null = null;
       if ((match as any).setor_id) {
         const { data: setor } = await supabase
@@ -179,7 +199,21 @@ const EmployeeRespondFlow = () => {
         setor_nome: setorNome,
       });
 
-      setStep("awareness");
+      if (isMapso) {
+        setStep("awareness");
+      } else {
+        // For non-MAPSO tests, store context and go to redirect step
+        sessionStorage.setItem("managed_test_context", JSON.stringify({
+          colaborador_id: match.id,
+          colaborador_nome: match.nome,
+          empresa_id: linkData.empresa_id,
+          profissional_id: linkData.profissional_id,
+          test_type: linkData.test_type,
+          link_id: linkData.id,
+          company_name: linkData.company_name,
+        }));
+        setStep("redirect-test");
+      }
     } catch {
       setValidationError("Erro ao validar. Tente novamente.");
     } finally {
@@ -187,6 +221,7 @@ const EmployeeRespondFlow = () => {
     }
   };
 
+  // MAPSO-specific handlers
   const setAnswer = (itemId: string, value: number) => {
     setAnswers((prev) => ({ ...prev, [itemId]: value }));
   };
@@ -204,7 +239,6 @@ const EmployeeRespondFlow = () => {
       const result = calculateAssessment(answers);
       const now = new Date().toISOString();
 
-      // Insert assessment linked to colaborador via colaborador_id
       const { error: insertErr } = await supabase.from("mapso_assessments").insert({
         user_id: "00000000-0000-0000-0000-000000000000",
         colaborador_id: colaborador.id,
@@ -230,7 +264,6 @@ const EmployeeRespondFlow = () => {
       } as any);
 
       if (insertErr) throw insertErr;
-
       setStep("done");
     } catch (e) {
       console.error("Submit error:", e);
@@ -268,11 +301,7 @@ const EmployeeRespondFlow = () => {
 
   if (step === "done") {
     const completionDate = new Date().toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+      day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
     });
     return (
       <div className="min-h-screen bg-background">
@@ -282,12 +311,11 @@ const EmployeeRespondFlow = () => {
             <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-primary" />
             <h1 className="mb-2 text-2xl font-bold text-foreground font-heading">Obrigado!</h1>
             <p className="text-muted-foreground mb-4">
-              Suas respostas foram registradas com sucesso. Este diagnóstico é confidencial e será utilizado
-              exclusivamente para a melhoria do ambiente organizacional.
+              {isMapso
+                ? "Suas respostas foram registradas com sucesso. Este diagnóstico é confidencial e será utilizado exclusivamente para a melhoria do ambiente organizacional."
+                : "Suas respostas foram registradas com sucesso. Os resultados serão analisados pelo profissional responsável."}
             </p>
-            <p className="text-xs text-muted-foreground">
-              Registrado em: {completionDate}
-            </p>
+            <p className="text-xs text-muted-foreground">Registrado em: {completionDate}</p>
           </div>
         </div>
         <Footer />
@@ -295,8 +323,9 @@ const EmployeeRespondFlow = () => {
     );
   }
 
-  // STEP: VALIDATE (CPF + Data de Nascimento)
+  // STEP: VALIDATE (CPF + Data de Nascimento) — shared by all test types
   if (step === "validate") {
+    const TestIcon = testMeta.icon;
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -309,6 +338,9 @@ const EmployeeRespondFlow = () => {
               <h1 className="mb-2 text-2xl font-bold text-foreground font-heading">
                 Validação de Acesso
               </h1>
+              <p className="text-sm text-muted-foreground mb-1">
+                Teste: <strong>{testMeta.fullName}</strong>
+              </p>
               {linkData?.company_name && (
                 <p className="flex items-center justify-center gap-2 text-muted-foreground">
                   <Building2 className="h-4 w-4" />
@@ -374,7 +406,79 @@ const EmployeeRespondFlow = () => {
     );
   }
 
-  // STEP: AWARENESS (Conscientização obrigatória)
+  // STEP: REDIRECT-TEST — For non-MAPSO tests, show confirmation and redirect
+  if (step === "redirect-test") {
+    const TestIcon = testMeta.icon;
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center px-4 py-12">
+          <div className="w-full max-w-lg animate-fade-up">
+            <div className="mb-6 text-center">
+              <div className="mx-auto mb-4 inline-flex rounded-xl bg-primary/10 p-3 text-primary">
+                <TestIcon className="h-8 w-8" />
+              </div>
+              <h1 className="mb-2 text-2xl font-bold text-foreground font-heading">
+                {testMeta.fullName}
+              </h1>
+              {linkData?.company_name && (
+                <p className="flex items-center justify-center gap-2 text-muted-foreground">
+                  <Building2 className="h-4 w-4" />
+                  {linkData.company_name}
+                </p>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+              <h2 className="mb-4 text-lg font-semibold text-foreground">Identidade Verificada ✓</h2>
+              
+              <div className="mb-4 rounded-lg bg-primary/5 border border-primary/20 p-4">
+                <p className="text-sm text-foreground">
+                  Olá{colaborador?.nome ? `, ${colaborador.nome}` : ""}! Sua identidade foi confirmada com sucesso.
+                </p>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <div className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                  <p className="text-sm text-foreground">
+                    Você será direcionado(a) ao <strong>{testMeta.fullName}</strong>.
+                  </p>
+                </div>
+                <div className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                  <p className="text-sm text-foreground">
+                    Responda com sinceridade — não existem respostas certas ou erradas.
+                  </p>
+                </div>
+                <div className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                  <p className="text-sm text-foreground">
+                    Os resultados serão enviados ao profissional responsável pela aplicação.
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                onClick={() => navigate(testMeta.route)}
+                className="w-full gap-2"
+                size="lg"
+              >
+                <TestIcon className="h-4 w-4" /> Iniciar {testMeta.name}
+              </Button>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // ============================================
+  // MAPSO-ONLY STEPS BELOW
+  // ============================================
+
+  // STEP: AWARENESS (MAPSO — Conscientização NR1)
   if (step === "awareness") {
     const guidelines = [
       "Suas respostas são completamente anônimas — nem o RH nem a gestão terão acesso às respostas individuais.",
@@ -453,12 +557,10 @@ const EmployeeRespondFlow = () => {
     );
   }
 
-  // STEP: FINAL CONSENT (Termo final pós-teste)
+  // STEP: FINAL CONSENT (MAPSO only)
   if (step === "final-consent") {
     const today = new Date().toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
+      day: "2-digit", month: "long", year: "numeric",
     });
 
     return (
@@ -531,7 +633,7 @@ const EmployeeRespondFlow = () => {
     );
   }
 
-  // STEP: QUESTIONNAIRE
+  // STEP: QUESTIONNAIRE (MAPSO only)
   return (
     <div className="min-h-screen bg-background">
       <Header />
