@@ -197,7 +197,7 @@ Deno.serve(async (req) => {
     }
 
     // Insert test history entry first so the completion never depends on report generation
-    await supabase.from("test_history").insert({
+    const { data: historyEntry, error: historyError } = await supabase.from("test_history").insert({
       user_id: ownerId,
       test_type,
       test_name: `${test_type.toUpperCase()} — ${respondentName}`,
@@ -209,7 +209,11 @@ Deno.serve(async (req) => {
         has_report: false,
         link_id,
       },
-    });
+    }).select("id").single();
+
+    if (historyError) {
+      console.error("Test history insert error:", historyError);
+    }
 
     // Generate AI report as best effort, but never block completion for long
     console.log(`Generating AI report for ${test_type} - ${respondentName}...`);
@@ -226,22 +230,21 @@ Deno.serve(async (req) => {
       if (reportError) {
         console.error("Generated report insert error:", reportError);
       } else {
-        await supabase
-          .from("test_history")
-          .update({
-            metadata: {
-              colaborador_id,
-              colaborador_name: respondentName,
-              scores,
-              submission_id: submission.id,
-              has_report: true,
-              link_id,
-            },
-          })
-          .eq("user_id", ownerId)
-          .eq("test_type", test_type)
-          .eq("test_name", `${test_type.toUpperCase()} — ${respondentName}`)
-          .eq("metadata->>submission_id", submission.id);
+        if (historyEntry?.id) {
+          await supabase
+            .from("test_history")
+            .update({
+              metadata: {
+                colaborador_id,
+                colaborador_name: respondentName,
+                scores,
+                submission_id: submission.id,
+                has_report: true,
+                link_id,
+              },
+            })
+            .eq("id", historyEntry.id);
+        }
       }
     }
 
@@ -250,7 +253,8 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
