@@ -255,10 +255,7 @@ export default function DashboardEmpresaMapso() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <section className="pt-28 pb-20">
-        <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
+    <div>
           <div className="flex items-center gap-3 mb-8">
             <Shield className="w-8 h-8 text-primary" />
             <div>
