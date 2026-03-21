@@ -32,6 +32,14 @@ interface SharedLink {
   created_at: string;
 }
 
+interface SubmissionResult {
+  id: string;
+  respondent_name: string;
+  completed_at: string;
+  colaborador_id: string | null;
+  scores: Record<string, any> | null;
+}
+
 export default function GerenciaTesteDashboard({ testType }: Props) {
   const { user, plan } = useAuth();
   const isEnterprise = plan === "enterprise";
@@ -45,13 +53,13 @@ export default function GerenciaTesteDashboard({ testType }: Props) {
   const [shareOpen, setShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [submissions, setSubmissions] = useState<SubmissionResult[]>([]);
 
   useEffect(() => {
     if (!user) return;
     const fetchData = async () => {
       setLoading(true);
 
-      // Get owner
       let ownerId = "";
       let ownerName = "";
       let ownerType: "empresa" | "profissional" = "empresa";
@@ -78,7 +86,7 @@ export default function GerenciaTesteDashboard({ testType }: Props) {
 
       // Get active link for this test
       const { data: links } = await supabase
-        .from("shared_test_links" as any)
+        .from("shared_test_links")
         .select("*")
         .eq("created_by", user.id)
         .eq("test_type", testType)
@@ -87,6 +95,45 @@ export default function GerenciaTesteDashboard({ testType }: Props) {
         .limit(1);
 
       if (links && links.length > 0) setActiveLink(links[0] as any);
+
+      // Get test submissions (results) — look up the test_id for this test_type
+      const { data: testData } = await supabase
+        .from("tests")
+        .select("id")
+        .eq("slug", testType)
+        .single();
+
+      if (testData) {
+        const { data: subs } = await supabase
+          .from("test_submissions")
+          .select("id, respondent_name, completed_at, colaborador_id")
+          .eq("user_id", user.id)
+          .eq("test_id", testData.id)
+          .eq("status", "completed")
+          .order("completed_at", { ascending: false });
+
+        if (subs && subs.length > 0) {
+          // Fetch scores from generated_reports
+          const subIds = subs.map((s) => s.id);
+          const { data: reports } = await supabase
+            .from("generated_reports")
+            .select("submission_id, scores")
+            .in("submission_id", subIds);
+
+          const scoresMap: Record<string, any> = {};
+          reports?.forEach((r) => { scoresMap[r.submission_id] = r.scores; });
+
+          setSubmissions(
+            subs.map((s) => ({
+              id: s.id,
+              respondent_name: s.respondent_name,
+              completed_at: s.completed_at || "",
+              colaborador_id: s.colaborador_id,
+              scores: scoresMap[s.id] || null,
+            }))
+          );
+        }
+      }
 
       setLoading(false);
     };
@@ -106,7 +153,7 @@ export default function GerenciaTesteDashboard({ testType }: Props) {
       };
 
       const { data, error } = await supabase
-        .from("shared_test_links" as any)
+        .from("shared_test_links")
         .insert(insertData)
         .select("*")
         .single();
@@ -154,6 +201,15 @@ export default function GerenciaTesteDashboard({ testType }: Props) {
 
   const personLabel = isEnterprise ? "colaboradores" : "pacientes";
 
+  const getScoreSummary = (scores: Record<string, any> | null): string => {
+    if (!scores) return "—";
+    if (testType === "mbti") return scores.type ? `${scores.type} — ${scores.typeName || ""}` : "—";
+    if (testType === "disc") return scores.primaryLabel ? `${scores.primary} (${scores.primaryLabel})` : "—";
+    if (testType === "temperamento") return scores.primaryLabel ? `${scores.primaryLabel}` : "—";
+    if (testType === "eneagrama") return scores.dominantName ? `Tipo ${scores.dominant} — ${scores.dominantName}` : "—";
+    return "—";
+  };
+
   return (
     <div>
       {/* Header */}
@@ -196,7 +252,7 @@ export default function GerenciaTesteDashboard({ testType }: Props) {
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-secondary/10 p-2 text-secondary"><BarChart3 className="h-5 w-5" /></div>
               <div>
-                <p className="text-2xl font-bold text-foreground">—</p>
+                <p className="text-2xl font-bold text-foreground">{submissions.length}</p>
                 <p className="text-xs text-muted-foreground">Respostas recebidas</p>
               </div>
             </div>
@@ -250,7 +306,7 @@ export default function GerenciaTesteDashboard({ testType }: Props) {
         </CardContent>
       </Card>
 
-      {/* Placeholder for future: results tracking */}
+      {/* Results */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -258,9 +314,31 @@ export default function GerenciaTesteDashboard({ testType }: Props) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-8">
-            Os resultados dos {personLabel} que responderem aparecerão aqui. Compartilhe o link acima para começar.
-          </p>
+          {submissions.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              Os resultados dos {personLabel} que responderem aparecerão aqui. Compartilhe o link acima para começar.
+            </p>
+          ) : (
+            <div className="divide-y divide-border">
+              {submissions.map((sub) => (
+                <div key={sub.id} className="flex items-center justify-between py-3 gap-4">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground truncate">{sub.respondent_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {sub.completed_at
+                        ? new Date(sub.completed_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+                        : "—"}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <Badge variant="secondary" className="text-xs">
+                      {getScoreSummary(sub.scores)}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
