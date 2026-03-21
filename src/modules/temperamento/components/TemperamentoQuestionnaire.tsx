@@ -41,8 +41,8 @@ const TemperamentoQuestionnaire = () => {
     }
   };
 
-  const handleSubmit = () => {
-    submitTest();
+  const handleSubmit = async () => {
+    await submitTest();
   };
 
   return (

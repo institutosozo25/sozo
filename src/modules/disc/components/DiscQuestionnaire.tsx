@@ -58,8 +58,8 @@ const DiscQuestionnaire = () => {
     }
   };
 
-  const handleSubmit = () => {
-    submitTest();
+  const handleSubmit = async () => {
+    await submitTest();
   };
 
   const isGroupComplete = selectedMost && selectedLeast && selectedMost !== selectedLeast;

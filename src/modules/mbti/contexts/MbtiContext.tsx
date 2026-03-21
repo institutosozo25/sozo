@@ -3,6 +3,7 @@ import { type MbtiAnswers, type MbtiResult, calculateMbtiScores, isTestComplete 
 import { TOTAL_QUESTIONS } from "../data/mbti-questionnaire";
 import { saveTestState, loadTestState, clearTestState } from "@/lib/test-state-storage";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const TEST_SLUG = "mbti";
 type Step = "welcome" | "questionnaire" | "partial-result" | "full-report" | "managed-done";
@@ -24,7 +25,7 @@ interface MbtiContextType {
   result: MbtiResult | null;
   fullReport: string | null;
   setFullReport: (r: string) => void;
-  submitTest: () => MbtiResult | null;
+  submitTest: () => Promise<MbtiResult | null>;
   resetTest: () => void;
   respondentName: string;
   setRespondentName: (n: string) => void;
@@ -98,31 +99,29 @@ export const MbtiProvider = ({ children }: { children: ReactNode }) => {
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
   }, []);
 
-  const saveManagedResult = async (r: MbtiResult) => {
-    if (!managedCtx) return;
-    try {
-      await supabase.functions.invoke("save-managed-result", {
-        body: {
-          colaborador_id: managedCtx.colaborador_id,
-          empresa_id: managedCtx.empresa_id,
-          profissional_id: managedCtx.profissional_id,
-          test_type: "mbti",
-          link_id: managedCtx.link_id,
-          scores: {
-            type: r.type,
-            typeName: r.typeName,
-            scores: r.scores,
-            percentages: r.percentages,
-            dimensions: r.dimensions,
-          },
+  const persistManagedResult = async (ctx: ManagedContext, r: MbtiResult) => {
+    const { data, error } = await supabase.functions.invoke("save-managed-result", {
+      body: {
+        colaborador_id: ctx.colaborador_id,
+        empresa_id: ctx.empresa_id,
+        profissional_id: ctx.profissional_id,
+        test_type: "mbti",
+        link_id: ctx.link_id,
+        scores: {
+          type: r.type,
+          typeName: r.typeName,
+          scores: r.scores,
+          percentages: r.percentages,
+          dimensions: r.dimensions,
         },
-      });
-    } catch (e) {
-      console.error("Failed to save managed result:", e);
-    }
+      },
+    });
+
+    if (error) throw error;
+    if (!data?.success) throw new Error("O resultado não foi salvo no histórico.");
   };
 
-  const submitTest = () => {
+  const submitTest = async () => {
     if (!canSubmit) return null;
     const r = calculateMbtiScores(answers);
     setResult(r);
@@ -147,29 +146,15 @@ export const MbtiProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (managed && ctx) {
-      // Call edge function inline to avoid stale closure
-      supabase.functions.invoke("save-managed-result", {
-        body: {
-          colaborador_id: ctx.colaborador_id,
-          empresa_id: ctx.empresa_id,
-          profissional_id: ctx.profissional_id,
-          test_type: "mbti",
-          link_id: ctx.link_id,
-          scores: {
-            type: r.type,
-            typeName: r.typeName,
-            scores: r.scores,
-            percentages: r.percentages,
-            dimensions: r.dimensions,
-          },
-        },
-      }).then(({ error }) => {
-        if (error) console.error("Failed to save managed result:", error);
-        else console.log("Managed result saved successfully");
-      }).catch((e) => console.error("Failed to save managed result:", e));
-
-      sessionStorage.removeItem("managed_test_context");
-      setStep("managed-done");
+      try {
+        await persistManagedResult(ctx, r);
+        sessionStorage.removeItem("managed_test_context");
+        setStep("managed-done");
+      } catch (error) {
+        console.error("Failed to save managed result:", error);
+        toast.error("Não foi possível salvar o resultado no histórico. Tente novamente.");
+        return null;
+      }
     } else {
       setStep("partial-result");
     }
