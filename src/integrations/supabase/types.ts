@@ -14,45 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      admin_notification_preferences: {
-        Row: {
-          auto_cleanup_days: number | null
-          created_at: string | null
-          email_notifications_to: string | null
-          id: string
-          notify_mapso_completion: boolean | null
-          notify_promotions: boolean | null
-          notify_system_updates: boolean | null
-          notify_test_completion: boolean | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          auto_cleanup_days?: number | null
-          created_at?: string | null
-          email_notifications_to?: string | null
-          id?: string
-          notify_mapso_completion?: boolean | null
-          notify_promotions?: boolean | null
-          notify_system_updates?: boolean | null
-          notify_test_completion?: boolean | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          auto_cleanup_days?: number | null
-          created_at?: string | null
-          email_notifications_to?: string | null
-          id?: string
-          notify_mapso_completion?: boolean | null
-          notify_promotions?: boolean | null
-          notify_system_updates?: boolean | null
-          notify_test_completion?: boolean | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       answer_options: {
         Row: {
           created_at: string
@@ -319,6 +280,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      manager_notification_preferences: {
+        Row: {
+          auto_cleanup_days: number | null
+          created_at: string | null
+          email_notifications_to: string | null
+          id: string
+          notify_mapso_completion: boolean | null
+          notify_promotions: boolean | null
+          notify_system_updates: boolean | null
+          notify_test_completion: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auto_cleanup_days?: number | null
+          created_at?: string | null
+          email_notifications_to?: string | null
+          id?: string
+          notify_mapso_completion?: boolean | null
+          notify_promotions?: boolean | null
+          notify_system_updates?: boolean | null
+          notify_test_completion?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auto_cleanup_days?: number | null
+          created_at?: string | null
+          email_notifications_to?: string | null
+          id?: string
+          notify_mapso_completion?: boolean | null
+          notify_promotions?: boolean | null
+          notify_system_updates?: boolean | null
+          notify_test_completion?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       mapso_assessment_links: {
         Row: {
