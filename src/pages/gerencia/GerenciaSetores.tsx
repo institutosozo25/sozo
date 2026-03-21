@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Layers, Plus, Trash2, AlertTriangle } from "lucide-react";
+import { Layers, Plus, Trash2, AlertTriangle, Info } from "lucide-react";
 import { sanitizeString } from "@/lib/validation";
 import { toast } from "sonner";
 
@@ -15,16 +15,12 @@ interface Setor {
   created_at: string;
 }
 
-interface EmployeeCount {
-  setor_id: string | null;
-  count: number;
-}
-
 export default function GerenciaSetores() {
   const { user } = useAuth();
   const [empresaId, setEmpresaId] = useState<string | null>(null);
   const [setores, setSetores] = useState<Setor[]>([]);
-  const [employeeCounts, setEmployeeCounts] = useState<EmployeeCount[]>([]);
+  const [colaboradorCounts, setColaboradorCounts] = useState<Record<string, number>>({});
+  const [unassignedCount, setUnassignedCount] = useState(0);
   const [novoSetor, setNovoSetor] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -42,34 +38,31 @@ export default function GerenciaSetores() {
   }, [user]);
 
   const fetchData = async (eid: string) => {
-    const [setoresRes, employeesRes] = await Promise.all([
-      supabase.from("setores" as any).select("*").eq("empresa_id", eid).order("nome"),
-      supabase.from("mapso_employees" as any).select("setor_id").eq("empresa_id", eid),
+    const [setoresRes, colabRes] = await Promise.all([
+      supabase.from("setores").select("*").eq("empresa_id", eid).order("nome"),
+      supabase.from("colaboradores").select("setor_id").eq("empresa_id", eid),
     ]);
     setSetores((setoresRes.data as any[]) || []);
 
-    // Count employees per sector
     const counts: Record<string, number> = {};
     let noSector = 0;
-    for (const emp of (employeesRes.data as any[]) || []) {
-      if (emp.setor_id) {
-        counts[emp.setor_id] = (counts[emp.setor_id] || 0) + 1;
+    for (const c of (colabRes.data as any[]) || []) {
+      if (c.setor_id) {
+        counts[c.setor_id] = (counts[c.setor_id] || 0) + 1;
       } else {
         noSector++;
       }
     }
-    const countArr: EmployeeCount[] = Object.entries(counts).map(([setor_id, count]) => ({ setor_id, count }));
-    countArr.push({ setor_id: null, count: noSector });
-    setEmployeeCounts(countArr);
+    setColaboradorCounts(counts);
+    setUnassignedCount(noSector);
   };
 
-  const getCount = (setorId: string) => employeeCounts.find((c) => c.setor_id === setorId)?.count || 0;
-  const unassignedCount = employeeCounts.find((c) => c.setor_id === null)?.count || 0;
+  const getCount = (setorId: string) => colaboradorCounts[setorId] || 0;
 
   const addSetor = async () => {
     if (!empresaId || !novoSetor.trim()) return;
     const nome = sanitizeString(novoSetor.trim(), 100);
-    const { error } = await supabase.from("setores" as any).insert({ empresa_id: empresaId, nome } as any);
+    const { error } = await supabase.from("setores").insert({ empresa_id: empresaId, nome });
     if (error) {
       if (error.code === "23505") {
         toast.error("Já existe um setor com esse nome.");
@@ -90,7 +83,7 @@ export default function GerenciaSetores() {
       toast.error("Remova ou reatribua os colaboradores deste setor antes de excluí-lo.");
       return;
     }
-    await supabase.from("setores" as any).delete().eq("id", id);
+    await supabase.from("setores").delete().eq("id", id);
     toast.success("Setor excluído.");
     fetchData(empresaId);
   };
@@ -101,7 +94,7 @@ export default function GerenciaSetores() {
       employeeCount: getCount(s.id),
       warning: getCount(s.id) > 0 && getCount(s.id) < 3,
     }));
-  }, [setores, employeeCounts]);
+  }, [setores, colaboradorCounts]);
 
   if (loading) {
     return <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
@@ -113,17 +106,34 @@ export default function GerenciaSetores() {
         <Layers className="w-8 h-8 text-primary" />
         <div>
           <h1 className="font-heading text-3xl font-bold text-foreground">Setores</h1>
-          <p className="text-muted-foreground">Gerencie os setores da sua empresa para organizar as avaliações MAPSO.</p>
+          <p className="text-muted-foreground">Gerencie os setores da sua empresa para organizar colaboradores e avaliações.</p>
         </div>
       </div>
 
-      {/* Anonymity warning */}
-      <div className="mb-6 rounded-xl border-2 border-destructive/30 bg-destructive/5 p-4 flex items-start gap-3">
+      {/* Message 1: Precision per sector */}
+      <div className="mb-4 rounded-xl border border-primary/30 bg-primary/5 p-4 flex items-start gap-3">
+        <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-medium text-foreground">Resultado mais preciso por setor</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Para obter um plano de ação e diagnóstico específico por setor no teste MAPSO, cadastre os setores aqui
+            e atribua cada colaborador ao seu setor na seção <strong>"Colaboradores"</strong> (campo "Selecionar setor").
+          </p>
+        </div>
+      </div>
+
+      {/* Message 2: Anonymity warning (red) */}
+      <div className="mb-6 rounded-xl border-2 border-destructive/40 bg-destructive/5 p-4 flex items-start gap-3">
         <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-        <p className="text-sm font-medium text-destructive">
-          ATENÇÃO: Para garantir o anonimato do MAPSO, recomenda-se no mínimo 3 colaboradores por setor.
-          Setores com menos de 3 colaboradores podem comprometer a confidencialidade das respostas individuais.
-        </p>
+        <div>
+          <p className="text-sm font-semibold text-destructive">⚠️ Aviso de Privacidade — Leitura Obrigatória</p>
+          <p className="text-xs text-destructive/80 mt-1">
+            É <strong>altamente recomendável</strong> utilizar o diagnóstico por setor no MAPSO apenas quando cada setor
+            possuir <strong>no mínimo 3 colaboradores</strong>. Se um setor tiver apenas 1 ou 2 pessoas, o anonimato
+            das respostas pode ser comprometido — <strong>absolutamente ninguém deve saber que colaborador respondeu o que</strong>.
+            Setores com menos de 3 colaboradores serão sinalizados em vermelho abaixo.
+          </p>
+        </div>
       </div>
 
       <Card className="mb-6">

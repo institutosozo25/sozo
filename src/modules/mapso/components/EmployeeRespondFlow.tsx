@@ -204,10 +204,11 @@ const EmployeeRespondFlow = () => {
       const result = calculateAssessment(answers);
       const now = new Date().toISOString();
 
-      // Insert assessment linked to colaborador
+      // Insert assessment linked to colaborador via colaborador_id
       const { error: insertErr } = await supabase.from("mapso_assessments").insert({
         user_id: "00000000-0000-0000-0000-000000000000",
-        employee_id: colaborador.id,
+        colaborador_id: colaborador.id,
+        employee_id: null,
         empresa_id: linkData.empresa_id,
         link_id: null,
         organization_name: linkData.company_name || "Empresa",
