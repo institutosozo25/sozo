@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadHtmlAsPdf } from "@/lib/pdf-generator";
 import { toast } from "sonner";
+import { extractManagedRespondentName, getManagedScoreSummary } from "@/lib/manager-notifications";
 import {
   History, Download, FileText, Calendar, Shield, Loader2, Eye, Building2,
 } from "lucide-react";
@@ -22,6 +23,11 @@ interface TestHistoryItem {
   pdf_diagnostic_path: string | null;
   pdf_report_path: string | null;
   pdf_action_plan_path: string | null;
+  metadata?: {
+    colaborador_name?: string;
+    paciente_name?: string;
+    scores?: Record<string, unknown> | null;
+  } | null;
 }
 
 interface MapsoAssessment {
@@ -216,6 +222,16 @@ export default function GerenciaHistorico() {
                                 {item.test_type.toUpperCase()}
                               </span>
                             </div>
+                            {(item.metadata?.colaborador_name || item.metadata?.paciente_name) && (
+                              <div className="flex items-center gap-2 mb-1 text-sm text-muted-foreground">
+                                <Building2 className="h-3.5 w-3.5" />
+                                <span>{extractManagedRespondentName(item)}</span>
+                                {(() => {
+                                  const summary = getManagedScoreSummary(item.test_type, item.metadata?.scores || null);
+                                  return summary ? <span>· {summary.detail ? `${summary.label} — ${summary.detail}` : summary.label}</span> : null;
+                                })()}
+                              </div>
+                            )}
                             <div className="flex items-center gap-1 text-sm text-muted-foreground">
                               <Calendar className="h-3.5 w-3.5" />
                               {new Date(item.completed_at).toLocaleDateString("pt-BR", {

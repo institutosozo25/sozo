@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
+import { extractManagedScores, getManagedScoreSummary, type HistoryEntryLike } from "@/lib/manager-notifications";
 import {
   Users, BarChart3, CheckCircle2, Clock, Loader2,
   Copy, ExternalLink, Share2, LinkIcon, Brain, Sparkles, Heart, Users as UsersIcon, Shield,
@@ -96,44 +97,23 @@ export default function GerenciaTesteDashboard({ testType }: Props) {
 
       if (links && links.length > 0) setActiveLink(links[0] as any);
 
-      // Get test submissions (results) — look up the test_id for this test_type
-      const { data: testData } = await supabase
-        .from("tests")
-        .select("id")
-        .eq("slug", testType)
-        .single();
+      const { data: historyItems } = await supabase
+        .from("test_history")
+        .select("id, test_type, test_name, completed_at, metadata")
+        .eq("user_id", user.id)
+        .eq("test_type", testType)
+        .order("completed_at", { ascending: false });
 
-      if (testData) {
-        const { data: subs } = await supabase
-          .from("test_submissions")
-          .select("id, respondent_name, completed_at, colaborador_id")
-          .eq("user_id", user.id)
-          .eq("test_id", testData.id)
-          .eq("status", "completed")
-          .order("completed_at", { ascending: false });
-
-        if (subs && subs.length > 0) {
-          // Fetch scores from generated_reports
-          const subIds = subs.map((s) => s.id);
-          const { data: reports } = await supabase
-            .from("generated_reports")
-            .select("submission_id, scores")
-            .in("submission_id", subIds);
-
-          const scoresMap: Record<string, any> = {};
-          reports?.forEach((r) => { scoresMap[r.submission_id] = r.scores; });
-
-          setSubmissions(
-            subs.map((s) => ({
-              id: s.id,
-              respondent_name: s.respondent_name,
-              completed_at: s.completed_at || "",
-              colaborador_id: s.colaborador_id,
-              scores: scoresMap[s.id] || null,
-            }))
-          );
-        }
-      }
+      const normalizedHistory = (historyItems || []) as HistoryEntryLike[];
+      setSubmissions(
+        normalizedHistory.map((item) => ({
+          id: item.id,
+          respondent_name: item.metadata?.colaborador_name || item.metadata?.paciente_name || item.test_name.split("—")[1]?.trim() || item.test_name,
+          completed_at: item.completed_at,
+          colaborador_id: (item.metadata?.colaborador_id as string | undefined) || null,
+          scores: extractManagedScores(item.metadata),
+        }))
+      );
 
       setLoading(false);
     };
@@ -202,12 +182,9 @@ export default function GerenciaTesteDashboard({ testType }: Props) {
   const personLabel = isEnterprise ? "colaboradores" : "pacientes";
 
   const getScoreSummary = (scores: Record<string, any> | null): string => {
-    if (!scores) return "—";
-    if (testType === "mbti") return scores.type ? `${scores.type} — ${scores.typeName || ""}` : "—";
-    if (testType === "disc") return scores.primaryLabel ? `${scores.primary} (${scores.primaryLabel})` : "—";
-    if (testType === "temperamento") return scores.primaryLabel ? `${scores.primaryLabel}` : "—";
-    if (testType === "eneagrama") return scores.dominantName ? `Tipo ${scores.dominant} — ${scores.dominantName}` : "—";
-    return "—";
+    const summary = getManagedScoreSummary(testType, scores);
+    if (!summary) return "—";
+    return summary.detail ? `${summary.label} — ${summary.detail}` : summary.label;
   };
 
   return (
