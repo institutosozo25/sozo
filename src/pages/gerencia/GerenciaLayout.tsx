@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Outlet, useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useUnreadNotificationCount } from "@/hooks/useUnreadNotificationCount";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard, Layers,
@@ -36,6 +37,7 @@ const professionalNav = [
 
 export default function GerenciaLayout() {
   const { user, isLoading, plan, signOut } = useAuth();
+  const { count: unreadCount } = useUnreadNotificationCount();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -102,7 +104,14 @@ export default function GerenciaLayout() {
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
-                <item.icon className="w-5 h-5" />
+                <div className="relative">
+                  <item.icon className="w-5 h-5" />
+                  {item.label === "Notificações" && unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </div>
                 <span className="font-medium text-sm">{item.label}</span>
               </Link>
             );
