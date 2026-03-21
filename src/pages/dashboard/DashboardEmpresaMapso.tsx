@@ -111,7 +111,7 @@ export default function DashboardEmpresaMapso() {
 
   const getLinkUrl = () => {
     if (!activeLink) return "";
-    return `${window.location.origin}/teste/respond/${(activeLink as any).token}`;
+    return `${window.location.origin}/teste/respond/${activeLink.token}`;
   };
 
   const copyToClipboard = async () => {
