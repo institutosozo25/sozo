@@ -2,7 +2,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.46.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 const REPORT_PROMPTS: Record<string, { system: string; buildUserPrompt: (name: string, scores: Record<string, unknown>) => string }> = {
@@ -46,9 +47,13 @@ async function generateAIReport(testType: string, respondentName: string, scores
   }
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort("AI report timeout"), 8000);
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      signal: controller.signal,
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
@@ -56,9 +61,11 @@ async function generateAIReport(testType: string, respondentName: string, scores
           { role: "user", content: prompt.buildUserPrompt(respondentName, scores) },
         ],
         stream: false,
-        max_tokens: 12000,
+        max_tokens: 6000,
       }),
     });
+
+    clearTimeout(timeout);
 
     if (!response.ok) {
       console.error("AI gateway error:", response.status);
@@ -189,22 +196,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Generate AI report
-    console.log(`Generating AI report for ${test_type} - ${respondentName}...`);
-    const reportContent = await generateAIReport(test_type, respondentName, scores);
-    console.log(`AI report generated: ${reportContent ? 'success' : 'failed'} (${reportContent?.length || 0} chars)`);
-
-    // Save scores and report to generated_reports
-    if (submission) {
-      await supabase.from("generated_reports").insert({
-        submission_id: submission.id,
-        scores,
-        report_content: reportContent,
-      });
-    }
-
-    // Insert test history entry with submission_id reference
-    await supabase.from("test_history").insert({
+    // Insert test history entry first so the completion never depends on report generation
+    const { data: historyEntry, error: historyError } = await supabase.from("test_history").insert({
       user_id: ownerId,
       test_type,
       test_name: `${test_type.toUpperCase()} — ${respondentName}`,
@@ -213,17 +206,55 @@ Deno.serve(async (req) => {
         colaborador_name: respondentName,
         scores,
         submission_id: submission?.id,
-        has_report: !!reportContent,
+        has_report: false,
         link_id,
       },
-    });
+    }).select("id").single();
+
+    if (historyError) {
+      console.error("Test history insert error:", historyError);
+    }
+
+    // Generate AI report as best effort, but never block completion for long
+    console.log(`Generating AI report for ${test_type} - ${respondentName}...`);
+    const reportContent = await generateAIReport(test_type, respondentName, scores);
+    console.log(`AI report generated: ${reportContent ? 'success' : 'skipped'} (${reportContent?.length || 0} chars)`);
+
+    if (submission && reportContent) {
+      const { error: reportError } = await supabase.from("generated_reports").insert({
+        submission_id: submission.id,
+        scores,
+        report_content: reportContent,
+      });
+
+      if (reportError) {
+        console.error("Generated report insert error:", reportError);
+      } else {
+        if (historyEntry?.id) {
+          await supabase
+            .from("test_history")
+            .update({
+              metadata: {
+                colaborador_id,
+                colaborador_name: respondentName,
+                scores,
+                submission_id: submission.id,
+                has_report: true,
+                link_id,
+              },
+            })
+            .eq("id", historyEntry.id);
+        }
+      }
+    }
 
     return new Response(JSON.stringify({ success: true, submission_id: submission?.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
