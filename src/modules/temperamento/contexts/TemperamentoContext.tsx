@@ -2,9 +2,19 @@ import React, { createContext, useContext, useState, useEffect, useCallback, typ
 import { type TemperamentoAnswers, type TemperamentoResult, calculateTemperamentoScores, isTestComplete } from "../lib/temperamento-engine";
 import { TOTAL_QUESTIONS } from "../data/temperamento-questionnaire";
 import { saveTestState, loadTestState, clearTestState } from "@/lib/test-state-storage";
+import { supabase } from "@/integrations/supabase/client";
 
 const TEST_SLUG = "temperamento";
 type Step = "welcome" | "questionnaire" | "partial-result" | "full-report" | "managed-done";
+
+interface ManagedContext {
+  colaborador_id: string;
+  colaborador_nome: string;
+  empresa_id?: string;
+  profissional_id?: string;
+  test_type: string;
+  link_id?: string;
+}
 
 interface TemperamentoContextType {
   step: Step;
@@ -44,6 +54,7 @@ export const TemperamentoProvider = ({ children }: { children: ReactNode }) => {
   const [respondentEmail, setRespondentEmail] = useState("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isManaged, setIsManaged] = useState(false);
+  const [managedCtx, setManagedCtx] = useState<ManagedContext | null>(null);
 
   const totalQuestions = TOTAL_QUESTIONS;
   const answeredCount = Object.keys(answers).length;
@@ -53,11 +64,12 @@ export const TemperamentoProvider = ({ children }: { children: ReactNode }) => {
     const managedRaw = sessionStorage.getItem("managed_test_context");
     if (managedRaw) {
       try {
-        const managed = JSON.parse(managedRaw);
+        const managed = JSON.parse(managedRaw) as ManagedContext;
         if (managed.test_type === "temperamento") {
           setRespondentName(managed.colaborador_nome || "Colaborador");
           setRespondentEmail("managed@sozo.app");
           setIsManaged(true);
+          setManagedCtx(managed);
           setStep("questionnaire");
           return;
         }
@@ -86,6 +98,30 @@ export const TemperamentoProvider = ({ children }: { children: ReactNode }) => {
     setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
   }, []);
 
+  const saveManagedResult = async (r: TemperamentoResult) => {
+    if (!managedCtx) return;
+    try {
+      await supabase.functions.invoke("save-managed-result", {
+        body: {
+          colaborador_id: managedCtx.colaborador_id,
+          empresa_id: managedCtx.empresa_id,
+          profissional_id: managedCtx.profissional_id,
+          test_type: "temperamento",
+          link_id: managedCtx.link_id,
+          scores: {
+            primaryType: r.primaryType,
+            secondaryType: r.secondaryType,
+            primaryLabel: r.primaryLabel,
+            secondaryLabel: r.secondaryLabel,
+            percentages: r.percentages,
+          },
+        },
+      });
+    } catch (e) {
+      console.error("Failed to save managed result:", e);
+    }
+  };
+
   const submitTest = () => {
     if (!canSubmit) return null;
     const r = calculateTemperamentoScores(answers);
@@ -93,6 +129,7 @@ export const TemperamentoProvider = ({ children }: { children: ReactNode }) => {
     clearTestState(TEST_SLUG);
 
     if (isManaged) {
+      saveManagedResult(r);
       sessionStorage.removeItem("managed_test_context");
       setStep("managed-done");
     } else {
@@ -110,6 +147,7 @@ export const TemperamentoProvider = ({ children }: { children: ReactNode }) => {
     setRespondentEmail("");
     setCurrentQuestionIndex(0);
     setIsManaged(false);
+    setManagedCtx(null);
     clearTestState(TEST_SLUG);
   };
 
