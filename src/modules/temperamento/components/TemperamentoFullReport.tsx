@@ -4,11 +4,14 @@ import { TEMPERAMENTO_LABELS, TEMPERAMENTO_COLORS, type TemperamentoType } from 
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Download, Loader2 } from "lucide-react";
 import { escapeHtml } from "@/lib/validation";
-import { downloadHtmlAsPdf, sanitizeAndFormatReport } from "@/lib/pdf-generator";
+import { sanitizeAndFormatReport } from "@/lib/pdf-generator";
+import { downloadTestReportPdf, fetchEmpresaBranding } from "@/lib/searchable-pdf";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 const TemperamentoFullReport = () => {
   const { result, fullReport, resetTest, respondentName } = useTemperamento();
+  const { user, plan } = useAuth();
   const [downloading, setDownloading] = useState(false);
 
   if (!result || !fullReport) return null;
@@ -19,29 +22,23 @@ const TemperamentoFullReport = () => {
   const handleDownloadPdf = async () => {
     setDownloading(true);
     try {
-      const reportHtml = sanitizeAndFormatReport(fullReport);
-      const html = `
-<div style="max-width:750px;margin:0 auto;font-family:'Segoe UI',Arial,sans-serif;color:#1a1a2e;line-height:1.7;">
-  <div style="text-align:center;padding:30px 20px;background:linear-gradient(135deg,#0f3460,#533483);color:white;border-radius:12px;margin-bottom:30px;">
-    <h1 style="margin:0 0 8px;font-size:24px;">RELATÓRIO DE PERFIL TEMPERAMENTAL</h1>
-    <p style="margin:0;font-size:18px;">Temperamento ${escapeHtml(primaryLabel)} e ${escapeHtml(secondaryLabel)}</p>
-    <p style="margin:4px 0 0;opacity:0.8;font-size:14px;">${escapeHtml(respondentName)} · ${new Date().toLocaleDateString("pt-BR")}</p>
-  </div>
-  <table style="width:100%;margin:0 auto 24px;border-collapse:collapse;">
-    <tr>
-      ${temperamentos.map(t => `
-      <td style="text-align:center;padding:8px;">
-        <div style="width:60px;height:60px;border-radius:50%;background:${TEMPERAMENTO_COLORS[t]};color:white;line-height:60px;font-weight:700;font-size:18px;margin:0 auto 8px;text-align:center;">${percentages[t]}%</div>
-        <div style="font-size:12px;color:#666;">${TEMPERAMENTO_LABELS[t]}</div>
-      </td>`).join("")}
-    </tr>
-  </table>
-  <div style="padding:0 10px;">${reportHtml}</div>
-  <div style="text-align:center;margin-top:40px;padding-top:20px;border-top:2px solid #e0e0e0;color:#888;font-size:12px;">
-    <p>© Instituto Plenitude SOZO — Relatório gerado automaticamente</p>
-  </div>
-</div>`;
-      await downloadHtmlAsPdf(html, `Relatorio_Temperamento_${escapeHtml(respondentName).replace(/\s+/g, "_")}.pdf`);
+      let branding = {};
+      if (user && plan === "enterprise") {
+        branding = await fetchEmpresaBranding(user.id);
+      }
+
+      await downloadTestReportPdf({
+        title: "RELAT\u00D3RIO DE PERFIL TEMPERAMENTAL",
+        subtitle: `Temperamento ${primaryLabel} e ${secondaryLabel}`,
+        respondentName,
+        scores: temperamentos.map((t) => ({
+          label: TEMPERAMENTO_LABELS[t],
+          value: `${percentages[t]}%`,
+          color: TEMPERAMENTO_COLORS[t],
+        })),
+        content: fullReport,
+        ...branding,
+      }, `Relatorio_Temperamento_${respondentName.replace(/\s+/g, "_")}.pdf`);
       toast.success("PDF baixado com sucesso!");
     } catch (e) {
       console.error("PDF error:", e);
