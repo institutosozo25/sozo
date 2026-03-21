@@ -21,6 +21,11 @@ export interface DerivedManagerNotification {
   readKey: string;
 }
 
+export interface ManagedResultSummary {
+  label: string;
+  detail?: string;
+}
+
 const STORAGE_PREFIX = "manager-history-notification-reads";
 
 const TEST_TYPE_LABELS: Record<string, string> = {
@@ -80,4 +85,39 @@ export function buildManagerHistoryNotifications(entries: HistoryEntryLike[]): D
       message: "O resultado foi salvo no histórico e já está disponível no painel de gerência.",
     };
   });
+}
+
+export function getManagedScoreSummary(testType: string, scores: Record<string, unknown> | null): ManagedResultSummary | null {
+  if (!scores) return null;
+
+  if (testType === "mbti" && typeof scores.type === "string") {
+    return {
+      label: scores.type,
+      detail: typeof scores.typeName === "string" ? scores.typeName : undefined,
+    };
+  }
+
+  if (testType === "disc" && typeof scores.primary === "string") {
+    return {
+      label: scores.primary,
+      detail: typeof scores.primaryLabel === "string" ? scores.primaryLabel : undefined,
+    };
+  }
+
+  if (testType === "temperamento" && typeof scores.primaryLabel === "string") {
+    return {
+      label: scores.primaryLabel,
+      detail: typeof scores.secondaryLabel === "string" ? `Secundário: ${scores.secondaryLabel}` : undefined,
+    };
+  }
+
+  if (testType === "eneagrama" && typeof scores.dominant !== "undefined") {
+    const dominant = String(scores.dominant);
+    return {
+      label: `Tipo ${dominant}`,
+      detail: typeof scores.dominantName === "string" ? scores.dominantName : undefined,
+    };
+  }
+
+  return null;
 }
