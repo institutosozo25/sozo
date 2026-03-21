@@ -541,9 +541,6 @@ export default function DashboardEmpresaMapso() {
               </Card>
             </TabsContent>
           </Tabs>
-        </div>
-      </section>
-      <Footer />
     </div>
   );
 }
