@@ -37,6 +37,7 @@ const professionalNav = [
 
 export default function GerenciaLayout() {
   const { user, isLoading, plan, signOut } = useAuth();
+  const { count: unreadCount } = useUnreadNotificationCount();
   const navigate = useNavigate();
   const location = useLocation();
 
