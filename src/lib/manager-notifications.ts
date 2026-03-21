@@ -1,6 +1,8 @@
 type HistoryMetadata = {
   colaborador_name?: string;
+  colaborador_id?: string;
   paciente_name?: string;
+  paciente_id?: string;
   scores?: Record<string, unknown> | null;
 };
 

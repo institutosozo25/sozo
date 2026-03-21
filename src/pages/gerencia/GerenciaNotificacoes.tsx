@@ -4,6 +4,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Bell, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  buildManagerHistoryNotifications,
+  loadManagerHistoryReadIds,
+  saveManagerHistoryReadIds,
+  type HistoryEntryLike,
+} from "@/lib/manager-notifications";
 
 interface Notification {
   id: string;
@@ -21,14 +27,28 @@ export default function GerenciaNotificacoes() {
   useEffect(() => {
     if (!user) return;
     const fetch = async () => {
-      const [{ data: notifs }, { data: reads }] = await Promise.all([
+      const [{ data: notifs }, { data: reads }, { data: historyItems }] = await Promise.all([
         supabase.from("notifications").select("*").order("created_at", { ascending: false }).limit(50),
         supabase.from("notification_reads").select("notification_id").eq("user_id", user.id),
+        supabase
+          .from("test_history")
+          .select("id, test_type, test_name, completed_at, metadata")
+          .eq("user_id", user.id)
+          .order("completed_at", { ascending: false })
+          .limit(50),
       ]);
-      const readSet = new Set((reads || []).map((r) => r.notification_id));
+
+      const derivedNotifications = buildManagerHistoryNotifications((historyItems || []) as HistoryEntryLike[]);
+      const mergedNotifications = [...derivedNotifications, ...(notifs || [])]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      const readSet = new Set([
+        ...(reads || []).map((r) => r.notification_id),
+        ...loadManagerHistoryReadIds(user.id),
+      ]);
       setReadIds(readSet);
       setNotifications(
-        (notifs || []).map((n) => ({ ...n, read: readSet.has(n.id) }))
+        mergedNotifications.map((n) => ({ ...n, read: readSet.has(n.id) }))
       );
     };
     fetch();
@@ -36,7 +56,14 @@ export default function GerenciaNotificacoes() {
 
   const markAsRead = async (id: string) => {
     if (!user || readIds.has(id)) return;
-    await supabase.from("notification_reads").insert({ user_id: user.id, notification_id: id });
+
+    if (id.startsWith("history-")) {
+      const nextReadIds = new Set([...readIds, id]);
+      saveManagerHistoryReadIds(user.id, Array.from(nextReadIds).filter((value) => value.startsWith("history-")));
+    } else {
+      await supabase.from("notification_reads").insert({ user_id: user.id, notification_id: id });
+    }
+
     setReadIds((prev) => new Set(prev).add(id));
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
   };
