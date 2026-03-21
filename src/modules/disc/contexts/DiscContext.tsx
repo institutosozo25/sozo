@@ -3,6 +3,7 @@ import { type DiscAnswers, type DiscResult, calculateDiscScores, isTestComplete 
 import { DISC_QUESTION_GROUPS } from "../data/disc-questionnaire";
 import { saveTestState, loadTestState, clearTestState } from "@/lib/test-state-storage";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const TEST_SLUG = "disc";
 type Step = "welcome" | "questionnaire" | "partial-result" | "full-report" | "managed-done";
@@ -24,7 +25,7 @@ interface DiscContextType {
   result: DiscResult | null;
   fullReport: string | null;
   setFullReport: (r: string) => void;
-  submitTest: () => DiscResult | null;
+  submitTest: () => Promise<DiscResult | null>;
   resetTest: () => void;
   respondentName: string;
   setRespondentName: (n: string) => void;
@@ -98,32 +99,30 @@ export const DiscProvider = ({ children }: { children: ReactNode }) => {
     setAnswers((prev) => ({ ...prev, [groupId]: { most, least } }));
   }, []);
 
-  const saveManagedResult = async (r: DiscResult) => {
-    if (!managedCtx) return;
-    try {
-      await supabase.functions.invoke("save-managed-result", {
-        body: {
-          colaborador_id: managedCtx.colaborador_id,
-          empresa_id: managedCtx.empresa_id,
-          profissional_id: managedCtx.profissional_id,
-          test_type: "disc",
-          link_id: managedCtx.link_id,
-          scores: {
-            primary: r.primary,
-            secondary: r.secondary,
-            primaryLabel: r.primaryLabel,
-            secondaryLabel: r.secondaryLabel,
-            percentages: r.percentages,
-            scores: r.scores,
-          },
+  const persistManagedResult = async (ctx: ManagedContext, r: DiscResult) => {
+    const { data, error } = await supabase.functions.invoke("save-managed-result", {
+      body: {
+        colaborador_id: ctx.colaborador_id,
+        empresa_id: ctx.empresa_id,
+        profissional_id: ctx.profissional_id,
+        test_type: "disc",
+        link_id: ctx.link_id,
+        scores: {
+          primary: r.primary,
+          secondary: r.secondary,
+          primaryLabel: r.primaryLabel,
+          secondaryLabel: r.secondaryLabel,
+          percentages: r.percentages,
+          scores: r.scores,
         },
-      });
-    } catch (e) {
-      console.error("Failed to save managed result:", e);
-    }
+      },
+    });
+
+    if (error) throw error;
+    if (!data?.success) throw new Error("O resultado não foi salvo no histórico.");
   };
 
-  const submitTest = () => {
+  const submitTest = async () => {
     if (!canSubmit) return null;
     const r = calculateDiscScores(answers);
     setResult(r);
@@ -145,26 +144,15 @@ export const DiscProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (managed && ctx) {
-      supabase.functions.invoke("save-managed-result", {
-        body: {
-          colaborador_id: ctx.colaborador_id,
-          empresa_id: ctx.empresa_id,
-          profissional_id: ctx.profissional_id,
-          test_type: "disc",
-          link_id: ctx.link_id,
-          scores: {
-            primary: r.primary,
-            secondary: r.secondary,
-            primaryLabel: r.primaryLabel,
-            secondaryLabel: r.secondaryLabel,
-            percentages: r.percentages,
-            scores: r.scores,
-          },
-        },
-      }).catch((e) => console.error("Failed to save managed result:", e));
-
-      sessionStorage.removeItem("managed_test_context");
-      setStep("managed-done");
+      try {
+        await persistManagedResult(ctx, r);
+        sessionStorage.removeItem("managed_test_context");
+        setStep("managed-done");
+      } catch (error) {
+        console.error("Failed to save managed result:", error);
+        toast.error("Não foi possível salvar o resultado no histórico. Tente novamente.");
+        return null;
+      }
     } else {
       setStep("partial-result");
     }

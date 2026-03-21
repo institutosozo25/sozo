@@ -3,6 +3,7 @@ import { type EneagramaAnswers, type EneagramaResult, calculateEneagramaScores, 
 import { ENEAGRAMA_QUESTIONS } from "../data/eneagrama-questionnaire";
 import { saveTestState, loadTestState, clearTestState } from "@/lib/test-state-storage";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const TEST_SLUG = "eneagrama";
 type Step = "welcome" | "questionnaire" | "partial-result" | "full-report" | "managed-done";
@@ -24,7 +25,7 @@ interface EneagramaContextType {
   result: EneagramaResult | null;
   fullReport: string | null;
   setFullReport: (r: string) => void;
-  submitTest: () => EneagramaResult | null;
+  submitTest: () => Promise<EneagramaResult | null>;
   resetTest: () => void;
   respondentName: string;
   setRespondentName: (n: string) => void;
@@ -98,31 +99,29 @@ export const EneagramaProvider = ({ children }: { children: ReactNode }) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   }, []);
 
-  const saveManagedResult = async (r: EneagramaResult) => {
-    if (!managedCtx) return;
-    try {
-      await supabase.functions.invoke("save-managed-result", {
-        body: {
-          colaborador_id: managedCtx.colaborador_id,
-          empresa_id: managedCtx.empresa_id,
-          profissional_id: managedCtx.profissional_id,
-          test_type: "eneagrama",
-          link_id: managedCtx.link_id,
-          scores: {
-            dominant: r.dominant,
-            dominantName: r.dominantName,
-            wing: r.wing,
-            wingName: r.wingName,
-            percentages: r.percentages,
-          },
+  const persistManagedResult = async (ctx: ManagedContext, r: EneagramaResult) => {
+    const { data, error } = await supabase.functions.invoke("save-managed-result", {
+      body: {
+        colaborador_id: ctx.colaborador_id,
+        empresa_id: ctx.empresa_id,
+        profissional_id: ctx.profissional_id,
+        test_type: "eneagrama",
+        link_id: ctx.link_id,
+        scores: {
+          dominant: r.dominant,
+          dominantName: r.dominantName,
+          wing: r.wing,
+          wingName: r.wingName,
+          percentages: r.percentages,
         },
-      });
-    } catch (e) {
-      console.error("Failed to save managed result:", e);
-    }
+      },
+    });
+
+    if (error) throw error;
+    if (!data?.success) throw new Error("O resultado não foi salvo no histórico.");
   };
 
-  const submitTest = () => {
+  const submitTest = async () => {
     if (!canSubmit) return null;
     const r = calculateEneagramaScores(answers);
     setResult(r);
@@ -144,25 +143,15 @@ export const EneagramaProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (managed && ctx) {
-      supabase.functions.invoke("save-managed-result", {
-        body: {
-          colaborador_id: ctx.colaborador_id,
-          empresa_id: ctx.empresa_id,
-          profissional_id: ctx.profissional_id,
-          test_type: "eneagrama",
-          link_id: ctx.link_id,
-          scores: {
-            dominant: r.dominant,
-            dominantName: r.dominantName,
-            wing: r.wing,
-            wingName: r.wingName,
-            percentages: r.percentages,
-          },
-        },
-      }).catch((e) => console.error("Failed to save managed result:", e));
-
-      sessionStorage.removeItem("managed_test_context");
-      setStep("managed-done");
+      try {
+        await persistManagedResult(ctx, r);
+        sessionStorage.removeItem("managed_test_context");
+        setStep("managed-done");
+      } catch (error) {
+        console.error("Failed to save managed result:", error);
+        toast.error("Não foi possível salvar o resultado no histórico. Tente novamente.");
+        return null;
+      }
     } else {
       setStep("partial-result");
     }
