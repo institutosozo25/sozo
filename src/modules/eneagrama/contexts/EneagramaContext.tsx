@@ -128,8 +128,39 @@ export const EneagramaProvider = ({ children }: { children: ReactNode }) => {
     setResult(r);
     clearTestState(TEST_SLUG);
 
-    if (isManaged) {
-      saveManagedResult(r);
+    let managed = isManaged;
+    let ctx = managedCtx;
+    if (!managed) {
+      const raw = sessionStorage.getItem("managed_test_context");
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw) as ManagedContext;
+          if (parsed.test_type === "eneagrama" && parsed.colaborador_id) {
+            managed = true;
+            ctx = parsed;
+          }
+        } catch {}
+      }
+    }
+
+    if (managed && ctx) {
+      supabase.functions.invoke("save-managed-result", {
+        body: {
+          colaborador_id: ctx.colaborador_id,
+          empresa_id: ctx.empresa_id,
+          profissional_id: ctx.profissional_id,
+          test_type: "eneagrama",
+          link_id: ctx.link_id,
+          scores: {
+            dominant: r.dominant,
+            dominantName: r.dominantName,
+            wing: r.wing,
+            wingName: r.wingName,
+            percentages: r.percentages,
+          },
+        },
+      }).catch((e) => console.error("Failed to save managed result:", e));
+
       sessionStorage.removeItem("managed_test_context");
       setStep("managed-done");
     } else {
