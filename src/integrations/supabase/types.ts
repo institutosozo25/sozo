@@ -87,25 +87,31 @@ export type Database = {
       }
       colaboradores: {
         Row: {
+          cpf: string | null
           created_at: string
           data_nascimento: string | null
           empresa_id: string
           id: string
           nome: string | null
+          setor_id: string | null
         }
         Insert: {
+          cpf?: string | null
           created_at?: string
           data_nascimento?: string | null
           empresa_id: string
           id?: string
           nome?: string | null
+          setor_id?: string | null
         }
         Update: {
+          cpf?: string | null
           created_at?: string
           data_nascimento?: string | null
           empresa_id?: string
           id?: string
           nome?: string | null
+          setor_id?: string | null
         }
         Relationships: [
           {
@@ -113,6 +119,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "colaboradores_setor_id_fkey"
+            columns: ["setor_id"]
+            isOneToOne: false
+            referencedRelation: "setores"
             referencedColumns: ["id"]
           },
         ]
