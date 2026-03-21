@@ -20,11 +20,15 @@ type Step = "loading" | "error" | "validate" | "awareness" | "questionnaire" | "
 interface LinkData {
   id: string;
   empresa_id: string;
-  employee_id: string;
-  status: string;
-  employee_name?: string;
-  employee_department?: string;
+  test_type: string;
   company_name?: string;
+}
+
+interface ColaboradorData {
+  id: string;
+  nome: string | null;
+  setor_id: string | null;
+  setor_nome?: string | null;
 }
 
 function maskCpf(value: string): string {
@@ -39,6 +43,7 @@ const EmployeeRespondFlow = () => {
   const { token } = useParams<{ token: string }>();
   const [step, setStep] = useState<Step>("loading");
   const [linkData, setLinkData] = useState<LinkData | null>(null);
+  const [colaborador, setColaborador] = useState<ColaboradorData | null>(null);
   const [error, setError] = useState("");
 
   // Validation fields
@@ -64,9 +69,10 @@ const EmployeeRespondFlow = () => {
   }, [token]);
 
   const loadLink = async () => {
+    // Look up the generic link from shared_test_links
     const { data, error: err } = await supabase
-      .from("mapso_assessment_links" as any)
-      .select("id, empresa_id, employee_id, status")
+      .from("shared_test_links")
+      .select("id, empresa_id, test_type, status, expires_at")
       .eq("token", token)
       .single();
 
@@ -76,9 +82,14 @@ const EmployeeRespondFlow = () => {
       return;
     }
 
-    const link = data as any;
-    if (link.status === "completed") {
-      setError("Este questionário já foi respondido.");
+    if (data.status !== "active") {
+      setError("Este link não está mais ativo.");
+      setStep("error");
+      return;
+    }
+
+    if (new Date(data.expires_at) < new Date()) {
+      setError("Este link expirou. Solicite um novo link ao administrador.");
       setStep("error");
       return;
     }
@@ -87,12 +98,14 @@ const EmployeeRespondFlow = () => {
     const { data: company } = await supabase
       .from("empresas")
       .select("razao_social, nome_fantasia")
-      .eq("id", link.empresa_id)
+      .eq("id", data.empresa_id!)
       .single();
 
     setLinkData({
-      ...link,
-      company_name: (company as any)?.nome_fantasia || (company as any)?.razao_social || "",
+      id: data.id,
+      empresa_id: data.empresa_id!,
+      test_type: data.test_type,
+      company_name: company?.nome_fantasia || company?.razao_social || "",
     });
     setStep("validate");
   };
@@ -113,52 +126,57 @@ const EmployeeRespondFlow = () => {
     setValidationError("");
 
     try {
-      // Validate CPF + DOB against the employee record linked to this assessment
-      const { data: emp, error: empErr } = await supabase
-        .from("mapso_employees" as any)
-        .select("id, cpf, data_nascimento, name, department, status")
-        .eq("id", linkData.employee_id)
-        .single();
+      // Validate CPF + DOB against the colaboradores table for this empresa
+      const { data: colabs, error: colabErr } = await supabase
+        .from("colaboradores")
+        .select("id, nome, setor_id, data_nascimento")
+        .eq("empresa_id", linkData.empresa_id)
+        .eq("cpf" as any, cpfDigits);
 
-      if (empErr || !emp) {
-        setValidationError("Colaborador não encontrado. Verifique com o RH da sua empresa.");
+      if (colabErr || !colabs || colabs.length === 0) {
+        setValidationError("CPF não encontrado. Verifique com o RH da sua empresa.");
         setValidating(false);
         return;
       }
 
-      const employee = emp as any;
-      const storedCpf = (employee.cpf || "").replace(/\D/g, "");
-      const storedDob = employee.data_nascimento || "";
-
-      if (storedCpf !== cpfDigits) {
-        setValidationError("CPF não corresponde ao cadastro. Verifique com o RH da sua empresa.");
+      const match = colabs.find((c: any) => c.data_nascimento === dobInput);
+      if (!match) {
+        setValidationError("Data de nascimento não corresponde ao cadastro. Verifique com o RH.");
         setValidating(false);
         return;
       }
 
-      if (storedDob !== dobInput) {
-        setValidationError("Data de nascimento não corresponde ao cadastro. Verifique com o RH da sua empresa.");
-        setValidating(false);
-        return;
-      }
+      // Check if this colaborador already completed this test type for this link
+      const { data: existing } = await supabase
+        .from("mapso_assessments")
+        .select("id")
+        .eq("empresa_id", linkData.empresa_id)
+        .eq("employee_id", match.id)
+        .limit(1);
 
-      if (employee.status === "concluido") {
+      if (existing && existing.length > 0) {
         setError("Você já respondeu este questionário.");
         setStep("error");
         setValidating(false);
         return;
       }
 
-      // Update link status to in_progress
-      await supabase
-        .from("mapso_assessment_links" as any)
-        .update({ status: "in_progress" } as any)
-        .eq("id", linkData.id);
+      // Fetch setor name if available
+      let setorNome: string | null = null;
+      if ((match as any).setor_id) {
+        const { data: setor } = await supabase
+          .from("setores")
+          .select("nome")
+          .eq("id", (match as any).setor_id)
+          .single();
+        setorNome = setor?.nome || null;
+      }
 
-      setLinkData({
-        ...linkData,
-        employee_name: employee.name || "",
-        employee_department: employee.department || "",
+      setColaborador({
+        id: match.id,
+        nome: match.nome,
+        setor_id: (match as any).setor_id,
+        setor_nome: setorNome,
       });
 
       setStep("awareness");
@@ -180,19 +198,20 @@ const EmployeeRespondFlow = () => {
   const canSubmit = answeredCount === totalItems;
 
   const handleSubmit = async () => {
-    if (!linkData || !canSubmit) return;
+    if (!linkData || !colaborador || !canSubmit) return;
     setSubmitting(true);
     try {
       const result = calculateAssessment(answers);
       const now = new Date().toISOString();
 
-      // Insert assessment
-      const { error: insertErr } = await supabase.from("mapso_assessments" as any).insert({
+      // Insert assessment linked to colaborador
+      const { error: insertErr } = await supabase.from("mapso_assessments").insert({
         user_id: "00000000-0000-0000-0000-000000000000",
-        employee_id: linkData.employee_id,
+        employee_id: colaborador.id,
         empresa_id: linkData.empresa_id,
-        link_id: linkData.id,
+        link_id: null,
         organization_name: linkData.company_name || "Empresa",
+        organization_department: colaborador.setor_nome || null,
         irp: result.irp,
         irp_classification: result.irpClassification.label,
         ipp: result.ipp,
@@ -210,18 +229,6 @@ const EmployeeRespondFlow = () => {
       } as any);
 
       if (insertErr) throw insertErr;
-
-      // Update link status to completed
-      await supabase
-        .from("mapso_assessment_links" as any)
-        .update({ status: "completed" } as any)
-        .eq("id", linkData.id);
-
-      // Update employee status to concluído
-      await supabase
-        .from("mapso_employees" as any)
-        .update({ status: "concluido" } as any)
-        .eq("id", linkData.employee_id);
 
       setStep("done");
     } catch (e) {
