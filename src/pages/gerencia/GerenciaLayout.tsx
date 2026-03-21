@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Outlet, useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useUnreadNotificationCount } from "@/hooks/useUnreadNotificationCount";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard, Layers,
