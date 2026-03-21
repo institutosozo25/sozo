@@ -79,7 +79,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { colaborador_id, empresa_id, profissional_id, test_type, scores, link_id } = await req.json();
+    const payload = await req.json();
+    const { colaborador_id, test_type, scores, link_id } = payload;
+    let { empresa_id, profissional_id } = payload;
 
     if (!colaborador_id || !test_type || !scores) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -92,6 +94,23 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    if (!empresa_id && !profissional_id && link_id) {
+      const { data: linkData, error: linkError } = await supabase
+        .from("shared_test_links")
+        .select("empresa_id, profissional_id, created_by")
+        .eq("id", link_id)
+        .maybeSingle();
+
+      if (linkError) {
+        console.error("Link lookup error:", linkError);
+      }
+
+      if (linkData) {
+        empresa_id = linkData.empresa_id ?? empresa_id;
+        profissional_id = linkData.profissional_id ?? profissional_id;
+      }
+    }
 
     // Find the owner (empresa or profissional) to use as user_id
     let ownerId: string | null = null;
@@ -112,6 +131,16 @@ Deno.serve(async (req) => {
       ownerId = prof?.profile_id || null;
     }
 
+    if (!ownerId && link_id) {
+      const { data: linkOwner } = await supabase
+        .from("shared_test_links")
+        .select("created_by")
+        .eq("id", link_id)
+        .maybeSingle();
+
+      ownerId = linkOwner?.created_by || null;
+    }
+
     if (!ownerId) {
       return new Response(JSON.stringify({ error: "Owner not found" }), {
         status: 404,
@@ -119,14 +148,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get colaborador info
     const { data: colab } = await supabase
       .from("colaboradores")
       .select("nome")
       .eq("id", colaborador_id)
-      .single();
+      .maybeSingle();
 
-    const colaboradorName = colab?.nome || "Colaborador";
+    const respondentName = colab?.nome || "Colaborador";
 
     // Look up test in tests table
     const { data: testData } = await supabase
@@ -143,7 +171,7 @@ Deno.serve(async (req) => {
         user_id: ownerId,
         applied_by: ownerId,
         colaborador_id,
-        respondent_name: colaboradorName,
+        respondent_name: respondentName,
         respondent_email: "managed@sozo.app",
         status: "completed",
         completed_at: new Date().toISOString(),
@@ -162,8 +190,8 @@ Deno.serve(async (req) => {
     }
 
     // Generate AI report
-    console.log(`Generating AI report for ${test_type} - ${colaboradorName}...`);
-    const reportContent = await generateAIReport(test_type, colaboradorName, scores);
+    console.log(`Generating AI report for ${test_type} - ${respondentName}...`);
+    const reportContent = await generateAIReport(test_type, respondentName, scores);
     console.log(`AI report generated: ${reportContent ? 'success' : 'failed'} (${reportContent?.length || 0} chars)`);
 
     // Save scores and report to generated_reports
@@ -179,13 +207,14 @@ Deno.serve(async (req) => {
     await supabase.from("test_history").insert({
       user_id: ownerId,
       test_type,
-      test_name: `${test_type.toUpperCase()} — ${colaboradorName}`,
+      test_name: `${test_type.toUpperCase()} — ${respondentName}`,
       metadata: {
         colaborador_id,
-        colaborador_name: colaboradorName,
+        colaborador_name: respondentName,
         scores,
         submission_id: submission?.id,
         has_report: !!reportContent,
+        link_id,
       },
     });
 
