@@ -49,6 +49,18 @@ export const DiscProvider = ({ children }: { children: ReactNode }) => {
   const canSubmit = isTestComplete(answers);
 
   useEffect(() => {
+    const managedRaw = sessionStorage.getItem("managed_test_context");
+    if (managedRaw) {
+      try {
+        const managed = JSON.parse(managedRaw);
+        if (managed.test_type === "disc") {
+          setRespondentName(managed.colaborador_nome || "Colaborador");
+          setRespondentEmail("managed@sozo.app");
+          setStep("questionnaire");
+          return;
+        }
+      } catch {}
+    }
     const saved = loadTestState(TEST_SLUG);
     if (saved && saved.step === "questionnaire") {
       setStep("questionnaire");

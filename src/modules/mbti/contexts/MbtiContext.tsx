@@ -48,8 +48,20 @@ export const MbtiProvider = ({ children }: { children: ReactNode }) => {
   const answeredCount = Object.keys(answers).length;
   const canSubmit = isTestComplete(answers);
 
-  // Restore state on mount
+  // Restore state on mount — check managed context first
   useEffect(() => {
+    const managedRaw = sessionStorage.getItem("managed_test_context");
+    if (managedRaw) {
+      try {
+        const managed = JSON.parse(managedRaw);
+        if (managed.test_type === "mbti") {
+          setRespondentName(managed.colaborador_nome || "Colaborador");
+          setRespondentEmail("managed@sozo.app");
+          setStep("questionnaire");
+          return;
+        }
+      } catch {}
+    }
     const saved = loadTestState(TEST_SLUG);
     if (saved && saved.step === "questionnaire") {
       setStep("questionnaire");
