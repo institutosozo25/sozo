@@ -129,8 +129,40 @@ export const TemperamentoProvider = ({ children }: { children: ReactNode }) => {
     setResult(r);
     clearTestState(TEST_SLUG);
 
-    if (isManaged) {
-      saveManagedResult(r);
+    let managed = isManaged;
+    let ctx = managedCtx;
+    if (!managed) {
+      const raw = sessionStorage.getItem("managed_test_context");
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw) as ManagedContext;
+          if (parsed.test_type === "temperamento" && parsed.colaborador_id) {
+            managed = true;
+            ctx = parsed;
+          }
+        } catch {}
+      }
+    }
+
+    if (managed && ctx) {
+      supabase.functions.invoke("save-managed-result", {
+        body: {
+          colaborador_id: ctx.colaborador_id,
+          empresa_id: ctx.empresa_id,
+          profissional_id: ctx.profissional_id,
+          test_type: "temperamento",
+          link_id: ctx.link_id,
+          scores: {
+            primary: r.primary,
+            secondary: r.secondary,
+            primaryLabel: r.primaryLabel,
+            secondaryLabel: r.secondaryLabel,
+            percentages: r.percentages,
+            scores: r.scores,
+          },
+        },
+      }).catch((e) => console.error("Failed to save managed result:", e));
+
       sessionStorage.removeItem("managed_test_context");
       setStep("managed-done");
     } else {
