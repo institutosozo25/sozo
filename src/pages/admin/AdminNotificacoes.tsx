@@ -163,7 +163,7 @@ export default function AdminNotificacoes() {
 
     await supabase
       .from("notification_status")
-      .upsert(payload, { onConflict: "notification_id,user_id" });
+      .upsert(payload as any, { onConflict: "notification_id,user_id" });
 
     setNotifications((prev) =>
       prev.map((n) =>
