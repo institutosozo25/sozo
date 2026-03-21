@@ -4,7 +4,7 @@ import { DISC_QUESTION_GROUPS } from "../data/disc-questionnaire";
 import { saveTestState, loadTestState, clearTestState } from "@/lib/test-state-storage";
 
 const TEST_SLUG = "disc";
-type Step = "welcome" | "questionnaire" | "partial-result" | "full-report";
+type Step = "welcome" | "questionnaire" | "partial-result" | "full-report" | "managed-done";
 
 interface DiscContextType {
   step: Step;
@@ -43,6 +43,7 @@ export const DiscProvider = ({ children }: { children: ReactNode }) => {
   const [respondentName, setRespondentName] = useState("");
   const [respondentEmail, setRespondentEmail] = useState("");
   const [currentGroupIndex, setCurrentGroupIndex] = useState(0);
+  const [isManaged, setIsManaged] = useState(false);
 
   const totalGroups = DISC_QUESTION_GROUPS.length;
   const answeredCount = Object.keys(answers).length;
@@ -56,6 +57,7 @@ export const DiscProvider = ({ children }: { children: ReactNode }) => {
         if (managed.test_type === "disc") {
           setRespondentName(managed.colaborador_nome || "Colaborador");
           setRespondentEmail("managed@sozo.app");
+          setIsManaged(true);
           setStep("questionnaire");
           return;
         }
@@ -88,8 +90,14 @@ export const DiscProvider = ({ children }: { children: ReactNode }) => {
     if (!canSubmit) return null;
     const r = calculateDiscScores(answers);
     setResult(r);
-    setStep("partial-result");
     clearTestState(TEST_SLUG);
+
+    if (isManaged) {
+      sessionStorage.removeItem("managed_test_context");
+      setStep("managed-done");
+    } else {
+      setStep("partial-result");
+    }
     return r;
   };
 
@@ -101,6 +109,7 @@ export const DiscProvider = ({ children }: { children: ReactNode }) => {
     setRespondentName("");
     setRespondentEmail("");
     setCurrentGroupIndex(0);
+    setIsManaged(false);
     clearTestState(TEST_SLUG);
   };
 

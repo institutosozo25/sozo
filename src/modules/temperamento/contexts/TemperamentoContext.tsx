@@ -4,7 +4,7 @@ import { TOTAL_QUESTIONS } from "../data/temperamento-questionnaire";
 import { saveTestState, loadTestState, clearTestState } from "@/lib/test-state-storage";
 
 const TEST_SLUG = "temperamento";
-type Step = "welcome" | "questionnaire" | "partial-result" | "full-report";
+type Step = "welcome" | "questionnaire" | "partial-result" | "full-report" | "managed-done";
 
 interface TemperamentoContextType {
   step: Step;
@@ -43,6 +43,7 @@ export const TemperamentoProvider = ({ children }: { children: ReactNode }) => {
   const [respondentName, setRespondentName] = useState("");
   const [respondentEmail, setRespondentEmail] = useState("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [isManaged, setIsManaged] = useState(false);
 
   const totalQuestions = TOTAL_QUESTIONS;
   const answeredCount = Object.keys(answers).length;
@@ -56,6 +57,7 @@ export const TemperamentoProvider = ({ children }: { children: ReactNode }) => {
         if (managed.test_type === "temperamento") {
           setRespondentName(managed.colaborador_nome || "Colaborador");
           setRespondentEmail("managed@sozo.app");
+          setIsManaged(true);
           setStep("questionnaire");
           return;
         }
@@ -88,8 +90,14 @@ export const TemperamentoProvider = ({ children }: { children: ReactNode }) => {
     if (!canSubmit) return null;
     const r = calculateTemperamentoScores(answers);
     setResult(r);
-    setStep("partial-result");
     clearTestState(TEST_SLUG);
+
+    if (isManaged) {
+      sessionStorage.removeItem("managed_test_context");
+      setStep("managed-done");
+    } else {
+      setStep("partial-result");
+    }
     return r;
   };
 
@@ -101,6 +109,7 @@ export const TemperamentoProvider = ({ children }: { children: ReactNode }) => {
     setRespondentName("");
     setRespondentEmail("");
     setCurrentQuestionIndex(0);
+    setIsManaged(false);
     clearTestState(TEST_SLUG);
   };
 

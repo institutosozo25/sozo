@@ -4,7 +4,7 @@ import { TOTAL_QUESTIONS } from "../data/mbti-questionnaire";
 import { saveTestState, loadTestState, clearTestState } from "@/lib/test-state-storage";
 
 const TEST_SLUG = "mbti";
-type Step = "welcome" | "questionnaire" | "partial-result" | "full-report";
+type Step = "welcome" | "questionnaire" | "partial-result" | "full-report" | "managed-done";
 
 interface MbtiContextType {
   step: Step;
@@ -43,6 +43,7 @@ export const MbtiProvider = ({ children }: { children: ReactNode }) => {
   const [respondentName, setRespondentName] = useState("");
   const [respondentEmail, setRespondentEmail] = useState("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [isManaged, setIsManaged] = useState(false);
 
   const totalQuestions = TOTAL_QUESTIONS;
   const answeredCount = Object.keys(answers).length;
@@ -57,6 +58,7 @@ export const MbtiProvider = ({ children }: { children: ReactNode }) => {
         if (managed.test_type === "mbti") {
           setRespondentName(managed.colaborador_nome || "Colaborador");
           setRespondentEmail("managed@sozo.app");
+          setIsManaged(true);
           setStep("questionnaire");
           return;
         }
@@ -90,8 +92,14 @@ export const MbtiProvider = ({ children }: { children: ReactNode }) => {
     if (!canSubmit) return null;
     const r = calculateMbtiScores(answers);
     setResult(r);
-    setStep("partial-result");
     clearTestState(TEST_SLUG);
+
+    if (isManaged) {
+      sessionStorage.removeItem("managed_test_context");
+      setStep("managed-done");
+    } else {
+      setStep("partial-result");
+    }
     return r;
   };
 
@@ -103,6 +111,7 @@ export const MbtiProvider = ({ children }: { children: ReactNode }) => {
     setRespondentName("");
     setRespondentEmail("");
     setCurrentQuestionIndex(0);
+    setIsManaged(false);
     clearTestState(TEST_SLUG);
   };
 

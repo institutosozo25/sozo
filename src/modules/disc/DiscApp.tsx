@@ -5,6 +5,7 @@ import DiscWelcome from "./components/DiscWelcome";
 import DiscQuestionnaire from "./components/DiscQuestionnaire";
 import DiscPartialResult from "./components/DiscPartialResult";
 import DiscFullReport from "./components/DiscFullReport";
+import ManagedTestDone from "@/components/managed/ManagedTestDone";
 
 const DiscContent = () => {
   const { step } = useDisc();
@@ -15,6 +16,7 @@ const DiscContent = () => {
       {step === "questionnaire" && <DiscQuestionnaire />}
       {step === "partial-result" && <DiscPartialResult />}
       {step === "full-report" && <DiscFullReport />}
+      {step === "managed-done" && <ManagedTestDone />}
     </>
   );
 };

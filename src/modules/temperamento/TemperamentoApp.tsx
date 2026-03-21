@@ -5,6 +5,7 @@ import TemperamentoWelcome from "./components/TemperamentoWelcome";
 import TemperamentoQuestionnaire from "./components/TemperamentoQuestionnaire";
 import TemperamentoPartialResult from "./components/TemperamentoPartialResult";
 import TemperamentoFullReport from "./components/TemperamentoFullReport";
+import ManagedTestDone from "@/components/managed/ManagedTestDone";
 
 const TemperamentoContent = () => {
   const { step } = useTemperamento();
@@ -15,6 +16,7 @@ const TemperamentoContent = () => {
       {step === "questionnaire" && <TemperamentoQuestionnaire />}
       {step === "partial-result" && <TemperamentoPartialResult />}
       {step === "full-report" && <TemperamentoFullReport />}
+      {step === "managed-done" && <ManagedTestDone />}
     </>
   );
 };
