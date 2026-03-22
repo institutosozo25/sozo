@@ -954,6 +954,8 @@ export type Database = {
           empresa_id: string | null
           expires_at: string
           id: string
+          link_duration_hours: number | null
+          observation: string | null
           profissional_id: string | null
           status: string
           test_type: string
@@ -965,6 +967,8 @@ export type Database = {
           empresa_id?: string | null
           expires_at?: string
           id?: string
+          link_duration_hours?: number | null
+          observation?: string | null
           profissional_id?: string | null
           status?: string
           test_type: string
@@ -976,6 +980,8 @@ export type Database = {
           empresa_id?: string | null
           expires_at?: string
           id?: string
+          link_duration_hours?: number | null
+          observation?: string | null
           profissional_id?: string | null
           status?: string
           test_type?: string
