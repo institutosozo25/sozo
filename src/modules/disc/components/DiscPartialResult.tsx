@@ -20,17 +20,15 @@ const DiscPartialResult = () => {
   const { result, setStep, setFullReport, respondentName, respondentEmail } = useDisc();
   const { user } = useAuth();
 
-  if (!result) return null;
-
-  const { primary, secondary, primaryLabel, secondaryLabel, scores, percentages } = result;
-
   const generateReportFn = useCallback(async () => {
+    if (!result) throw new Error("No result");
+    const { primary, secondary, primaryLabel, secondaryLabel, scores } = result;
     const { data, error } = await supabase.functions.invoke("generate-disc-report", {
       body: { scores, primary, secondary, primaryLabel, secondaryLabel, respondentName },
     });
     if (error) throw error;
     return data.report as string;
-  }, [scores, primary, secondary, primaryLabel, secondaryLabel, respondentName]);
+  }, [result, respondentName]);
 
   const onReportReady = useCallback((report: string) => {
     setFullReport(report);
@@ -41,10 +39,14 @@ const DiscPartialResult = () => {
     testSlug: "disc",
     respondentName,
     respondentEmail,
-    scores: { ...scores },
+    scores: result ? { ...result.scores } : {},
     generateReportFn,
     onReportReady,
   });
+
+  if (!result) return null;
+
+  const { primary, secondary, primaryLabel, secondaryLabel, scores, percentages } = result;
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-background px-4 py-12">

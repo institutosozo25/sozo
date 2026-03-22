@@ -20,18 +20,15 @@ const TemperamentoPartialResult = () => {
   const { result, setStep, setFullReport, respondentName, respondentEmail } = useTemperamento();
   const { user } = useAuth();
 
-  if (!result) return null;
-
-  const { primary, secondary, primaryLabel, secondaryLabel, scores, percentages } = result;
-  const temperamentos: TemperamentoType[] = ["sanguineo", "colerico", "melancolico", "fleumatico"];
-
   const generateReportFn = useCallback(async () => {
+    if (!result) throw new Error("No result");
+    const { scores, percentages, primary, secondary, primaryLabel, secondaryLabel } = result;
     const { data, error } = await supabase.functions.invoke("generate-temperamento-report", {
       body: { scores, percentages, primary, secondary, primaryLabel, secondaryLabel, respondentName },
     });
     if (error) throw error;
     return data.report as string;
-  }, [scores, percentages, primary, secondary, primaryLabel, secondaryLabel, respondentName]);
+  }, [result, respondentName]);
 
   const onReportReady = useCallback((report: string) => {
     setFullReport(report);
@@ -42,10 +39,15 @@ const TemperamentoPartialResult = () => {
     testSlug: "temperamento",
     respondentName,
     respondentEmail,
-    scores: { ...scores },
+    scores: result ? { ...result.scores } : {},
     generateReportFn,
     onReportReady,
   });
+
+  if (!result) return null;
+
+  const { primary, secondary, primaryLabel, secondaryLabel, scores, percentages } = result;
+  const temperamentos: TemperamentoType[] = ["sanguineo", "colerico", "melancolico", "fleumatico"];
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-background px-4 py-12">

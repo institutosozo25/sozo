@@ -13,17 +13,15 @@ const EneagramaPartialResult = () => {
   const { result, setStep, setFullReport, respondentName, respondentEmail } = useEneagrama();
   const { user } = useAuth();
 
-  if (!result) return null;
-
-  const { dominant, dominantName, wing, wingName, scores, percentages, top3 } = result;
-
   const generateReportFn = useCallback(async () => {
+    if (!result) throw new Error("No result");
+    const { scores, percentages, dominant, dominantName, wing, wingName, top3 } = result;
     const { data, error } = await supabase.functions.invoke("generate-eneagrama-report", {
       body: { scores, percentages, dominant, dominantName, wing, wingName, top3, respondentName },
     });
     if (error) throw error;
     return data.report as string;
-  }, [scores, percentages, dominant, dominantName, wing, wingName, top3, respondentName]);
+  }, [result, respondentName]);
 
   const onReportReady = useCallback((report: string) => {
     setFullReport(report);
@@ -34,10 +32,14 @@ const EneagramaPartialResult = () => {
     testSlug: "eneagrama",
     respondentName,
     respondentEmail,
-    scores: { ...scores },
+    scores: result ? { ...result.scores } : {},
     generateReportFn,
     onReportReady,
   });
+
+  if (!result) return null;
+
+  const { dominant, dominantName, wing, wingName, scores, percentages, top3 } = result;
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-background px-4 py-12">

@@ -13,6 +13,30 @@ const MbtiPartialResult = () => {
   const { result, setStep, setFullReport, respondentName, respondentEmail } = useMbti();
   const { user } = useAuth();
 
+  const generateReportFn = useCallback(async () => {
+    if (!result) throw new Error("No result");
+    const { type, typeName, dimensions, percentages, scores } = result;
+    const { data, error } = await supabase.functions.invoke("generate-mbti-report", {
+      body: { scores, type, typeName, dimensions, percentages, respondentName },
+    });
+    if (error) throw error;
+    return data.report as string;
+  }, [result, respondentName]);
+
+  const onReportReady = useCallback((report: string) => {
+    setFullReport(report);
+    setStep("full-report");
+  }, [setFullReport, setStep]);
+
+  const paywall = useTestPaywall({
+    testSlug: "mbti",
+    respondentName,
+    respondentEmail,
+    scores: result ? { ...result.scores } : {},
+    generateReportFn,
+    onReportReady,
+  });
+
   if (!result) return null;
 
   const { type, typeName, dimensions, percentages } = result;
@@ -24,28 +48,6 @@ const MbtiPartialResult = () => {
     { key: "TF", left: "T", right: "F", leftPole: DIMENSION_LABELS.T, rightPole: DIMENSION_LABELS.F },
     { key: "JP", left: "J", right: "P", leftPole: DIMENSION_LABELS.J, rightPole: DIMENSION_LABELS.P },
   ];
-
-  const generateReportFn = useCallback(async () => {
-    const { data, error } = await supabase.functions.invoke("generate-mbti-report", {
-      body: { scores: result.scores, type, typeName, dimensions: result.dimensions, percentages, respondentName },
-    });
-    if (error) throw error;
-    return data.report as string;
-  }, [result, type, typeName, percentages, respondentName]);
-
-  const onReportReady = useCallback((report: string) => {
-    setFullReport(report);
-    setStep("full-report");
-  }, [setFullReport, setStep]);
-
-  const paywall = useTestPaywall({
-    testSlug: "mbti",
-    respondentName,
-    respondentEmail,
-    scores: { ...result.scores },
-    generateReportFn,
-    onReportReady,
-  });
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-background px-4 py-12">
