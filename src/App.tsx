@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
+import { getAppMode } from "@/hooks/useAppMode";
 import Index from "./pages/Index";
 import Testes from "./pages/Testes";
 import TesteDetalhe from "./pages/TesteDetalhe";
@@ -15,6 +16,7 @@ import Sobre from "./pages/Sobre";
 import NR1 from "./pages/NR1";
 import Contato from "./pages/Contato";
 import Auth from "./pages/Auth";
+import SistemaLogin from "./pages/SistemaLogin";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Relatorio from "./pages/Relatorio";
@@ -54,6 +56,92 @@ import DashboardEmpresaMapso from "./pages/dashboard/DashboardEmpresaMapso";
 
 const queryClient = new QueryClient();
 
+const appMode = getAppMode();
+
+function SalesRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/testes" element={<Testes />} />
+      <Route path="/testes/:id" element={<TesteDetalhe />} />
+      <Route path="/empresas" element={<Empresas />} />
+      <Route path="/profissionais" element={<Profissionais />} />
+      <Route path="/planos" element={<Planos />} />
+      <Route path="/sobre" element={<Sobre />} />
+      <Route path="/contato" element={<Contato />} />
+      <Route path="/nr1" element={<NR1 />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/relatorio/:id" element={<Relatorio />} />
+      <Route path="/teste/respond/:token" element={<EmployeeRespondFlow />} />
+      <Route path="/mapso/respond/:token" element={<EmployeeRespondFlow />} />
+      <Route path="/mapso/*" element={<MapsoApp />} />
+      <Route path="/testes/disc/aplicar" element={<DiscApp />} />
+      <Route path="/testes/mbti/aplicar" element={<MbtiApp />} />
+      <Route path="/testes/temperamento/aplicar" element={<TemperamentoApp />} />
+      <Route path="/testes/eneagrama/aplicar" element={<EneagramaApp />} />
+
+      <Route path="/dashboard/usuario" element={
+        <ProtectedRoute allowedRoles={["user", "admin"]}>
+          <DashboardUsuario />
+        </ProtectedRoute>
+      } />
+
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+
+function SistemaRoutes() {
+  return (
+    <Routes>
+      {/* Sistema login is the index */}
+      <Route path="/" element={<SistemaLogin />} />
+      <Route path="/auth" element={<SistemaLogin />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+
+      {/* Respond flow needs to work on both domains */}
+      <Route path="/teste/respond/:token" element={<EmployeeRespondFlow />} />
+      <Route path="/mapso/respond/:token" element={<EmployeeRespondFlow />} />
+
+      {/* Gerência - empresa/profissional dashboard */}
+      <Route path="/gerencia" element={<GerenciaLayout />}>
+        <Route index element={<GerenciaPainel />} />
+        <Route path="disc" element={<GerenciaTesteDashboard testType="disc" />} />
+        <Route path="mbti" element={<GerenciaTesteDashboard testType="mbti" />} />
+        <Route path="temperamento" element={<GerenciaTesteDashboard testType="temperamento" />} />
+        <Route path="eneagrama" element={<GerenciaTesteDashboard testType="eneagrama" />} />
+        <Route path="historico" element={<GerenciaHistorico />} />
+        <Route path="colaboradores" element={<GerenciaColaboradores />} />
+        <Route path="setores" element={<GerenciaSetores />} />
+        <Route path="pacientes" element={<GerenciaPacientes />} />
+        <Route path="mapso" element={<DashboardEmpresaMapso />} />
+        <Route path="pagamentos" element={<GerenciaPagamentos />} />
+        <Route path="notificacoes" element={<GerenciaNotificacoes />} />
+        <Route path="configuracoes" element={<GerenciaConfiguracoes />} />
+      </Route>
+
+      {/* Admin */}
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="mapso" element={<AdminMapso />} />
+        <Route path="testes" element={<AdminTestes />} />
+        <Route path="perguntas" element={<AdminPerguntas />} />
+        <Route path="relatorios" element={<AdminRelatorios />} />
+        <Route path="usuarios" element={<AdminUsuarios />} />
+        <Route path="planos" element={<AdminPlanos />} />
+        <Route path="auditoria" element={<AdminAuditLogs />} />
+        <Route path="notificacoes" element={<AdminNotificacoes />} />
+        <Route path="config" element={<AdminConfig />} />
+      </Route>
+
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
@@ -62,71 +150,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/testes" element={<Testes />} />
-              <Route path="/testes/:id" element={<TesteDetalhe />} />
-              <Route path="/empresas" element={<Empresas />} />
-              <Route path="/profissionais" element={<Profissionais />} />
-              <Route path="/planos" element={<Planos />} />
-              <Route path="/sobre" element={<Sobre />} />
-              <Route path="/contato" element={<Contato />} />
-              <Route path="/nr1" element={<NR1 />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/relatorio/:id" element={<Relatorio />} />
-              <Route path="/teste/respond/:token" element={<EmployeeRespondFlow />} />
-              {/* Legacy route redirect */}
-              <Route path="/mapso/respond/:token" element={<EmployeeRespondFlow />} />
-              <Route path="/mapso/*" element={<MapsoApp />} />
-              <Route path="/testes/disc/aplicar" element={<DiscApp />} />
-              <Route path="/testes/mbti/aplicar" element={<MbtiApp />} />
-              <Route path="/testes/temperamento/aplicar" element={<TemperamentoApp />} />
-              <Route path="/testes/eneagrama/aplicar" element={<EneagramaApp />} />
-
-              {/* Gerência - empresa/profissional dashboard */}
-              <Route path="/gerencia" element={<GerenciaLayout />}>
-                <Route index element={<GerenciaPainel />} />
-                <Route path="disc" element={<GerenciaTesteDashboard testType="disc" />} />
-                <Route path="mbti" element={<GerenciaTesteDashboard testType="mbti" />} />
-                <Route path="temperamento" element={<GerenciaTesteDashboard testType="temperamento" />} />
-                <Route path="eneagrama" element={<GerenciaTesteDashboard testType="eneagrama" />} />
-                <Route path="historico" element={<GerenciaHistorico />} />
-                <Route path="colaboradores" element={<GerenciaColaboradores />} />
-                <Route path="setores" element={<GerenciaSetores />} />
-                <Route path="pacientes" element={<GerenciaPacientes />} />
-                <Route path="mapso" element={<DashboardEmpresaMapso />} />
-                <Route path="pagamentos" element={<GerenciaPagamentos />} />
-                <Route path="notificacoes" element={<GerenciaNotificacoes />} />
-                <Route path="configuracoes" element={<GerenciaConfiguracoes />} />
-              </Route>
-
-              {/* Keep old dashboard routes for user */}
-              <Route path="/dashboard/usuario" element={
-                <ProtectedRoute allowedRoles={["user", "admin"]}>
-                  <DashboardUsuario />
-                </ProtectedRoute>
-              } />
-              {/* Redirect old empresa/profissional routes */}
-              <Route path="/dashboard/empresa" element={<GerenciaLayout />} />
-              <Route path="/dashboard/empresa/mapso" element={<DashboardEmpresaMapso />} />
-              <Route path="/dashboard/profissional" element={<GerenciaLayout />} />
-
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="mapso" element={<AdminMapso />} />
-                <Route path="testes" element={<AdminTestes />} />
-                <Route path="perguntas" element={<AdminPerguntas />} />
-                <Route path="relatorios" element={<AdminRelatorios />} />
-                <Route path="usuarios" element={<AdminUsuarios />} />
-                <Route path="planos" element={<AdminPlanos />} />
-                <Route path="auditoria" element={<AdminAuditLogs />} />
-                <Route path="notificacoes" element={<AdminNotificacoes />} />
-                <Route path="config" element={<AdminConfig />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            {appMode === "sistema" ? <SistemaRoutes /> : <SalesRoutes />}
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
