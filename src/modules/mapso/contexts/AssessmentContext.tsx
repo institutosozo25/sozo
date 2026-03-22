@@ -133,6 +133,24 @@ export const AssessmentProvider = ({ children }: { children: ReactNode }) => {
 
         if (!error && data) {
           setAssessmentId((data as any).id);
+
+          // Save to test_history so notifications are generated
+          await supabase.from("test_history").insert({
+            user_id: user.id,
+            test_type: "mapso",
+            test_name: `MAPSO — ${organization.name}`,
+            metadata: {
+              assessment_id: (data as any).id,
+              irp: assessmentResult.irp,
+              irp_classification: assessmentResult.irpClassification.label,
+              ipp: assessmentResult.ipp,
+              ivo: assessmentResult.ivo,
+              scores: {
+                irp: assessmentResult.irp,
+                irpClassification: assessmentResult.irpClassification.label,
+              },
+            },
+          });
         }
       }
     } catch (e) {
