@@ -8,17 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Building2, Stethoscope, User } from "lucide-react";
+import { Building2, Stethoscope, User, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { loginSchema, signupSchema } from "@/lib/validation";
+import { getSistemaUrl } from "@/hooks/useAppMode";
 import EmpresaSignupFields from "@/components/auth/EmpresaSignupFields";
 import ProfissionalSignupFields from "@/components/auth/ProfissionalSignupFields";
 
-type AccountType = "empresa" | "profissional" | "usuario";
+type AccountType = "usuario";
 
 const accountTypes: { value: AccountType; label: string; description: string; icon: typeof Building2 }[] = [
-  { value: "empresa", label: "Empresa", description: "Gerencie colaboradores e clima organizacional", icon: Building2 },
-  { value: "profissional", label: "Profissional", description: "Gerencie pacientes e aplique testes", icon: Stethoscope },
   { value: "usuario", label: "Usuário", description: "Acesse testes e resultados pessoais", icon: User },
 ];
 
