@@ -8,19 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Building2, Stethoscope, User } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Building2, Stethoscope, ArrowRight } from "lucide-react";
 import { loginSchema, signupSchema } from "@/lib/validation";
-import EmpresaSignupFields from "@/components/auth/EmpresaSignupFields";
-import ProfissionalSignupFields from "@/components/auth/ProfissionalSignupFields";
-
-type AccountType = "empresa" | "profissional" | "usuario";
-
-const accountTypes: { value: AccountType; label: string; description: string; icon: typeof Building2 }[] = [
-  { value: "empresa", label: "Empresa", description: "Gerencie colaboradores e clima organizacional", icon: Building2 },
-  { value: "profissional", label: "Profissional", description: "Gerencie pacientes e aplique testes", icon: Stethoscope },
-  { value: "usuario", label: "Usuário", description: "Acesse testes e resultados pessoais", icon: User },
-];
+import { getSistemaUrl } from "@/hooks/useAppMode";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -29,26 +19,10 @@ export default function Auth() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [telefone, setTelefone] = useState("");
-  const [accountType, setAccountType] = useState<AccountType>("usuario");
   const [lgpdConsent, setLgpdConsent] = useState(false);
   const [termosConsent, setTermosConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Empresa-specific fields
-  const [cnpj, setCnpj] = useState("");
-  const [razaoSocial, setRazaoSocial] = useState("");
-  const [nomeFantasia, setNomeFantasia] = useState("");
-  const [responsavel, setResponsavel] = useState("");
-
-  // Profissional-specific fields
-  const [tipoPessoa, setTipoPessoa] = useState<"pf" | "pj">("pf");
-  const [profCpf, setProfCpf] = useState("");
-  const [profNomeMae, setProfNomeMae] = useState("");
-  const [profDataNascimento, setProfDataNascimento] = useState("");
-  const [profCnpj, setProfCnpj] = useState("");
-  const [profNomeFantasia, setProfNomeFantasia] = useState("");
-  const [profRazaoSocial, setProfRazaoSocial] = useState("");
 
   const { signIn, signUp, user, plan } = useAuth();
   const navigate = useNavigate();
@@ -57,38 +31,13 @@ export default function Auth() {
   useEffect(() => {
     if (user) {
       if (plan === "enterprise" || plan === "professional") {
-        navigate("/gerencia");
+        // Redirect enterprise/professional to sistema
+        window.location.href = getSistemaUrl();
       } else {
         navigate("/dashboard/usuario");
       }
     }
   }, [user, plan, navigate]);
-
-  const validateEmpresaFields = (): Record<string, string> => {
-    const fieldErrors: Record<string, string> = {};
-    const cnpjDigits = cnpj.replace(/\D/g, "");
-    if (cnpjDigits.length !== 14) fieldErrors.cnpj = "CNPJ deve ter 14 dígitos";
-    if (!razaoSocial.trim()) fieldErrors.razaoSocial = "Razão social é obrigatória";
-    if (!nomeFantasia.trim()) fieldErrors.nomeFantasia = "Nome fantasia é obrigatório";
-    if (!responsavel.trim()) fieldErrors.responsavel = "Responsável é obrigatório";
-    return fieldErrors;
-  };
-
-  const validateProfissionalFields = (): Record<string, string> => {
-    const fieldErrors: Record<string, string> = {};
-    if (tipoPessoa === "pf") {
-      const cpfDigits = profCpf.replace(/\D/g, "");
-      if (cpfDigits.length !== 11) fieldErrors.cpf = "CPF deve ter 11 dígitos";
-      if (!profNomeMae.trim()) fieldErrors.nomeMae = "Nome da mãe é obrigatório";
-      if (!profDataNascimento) fieldErrors.dataNascimento = "Data de nascimento é obrigatória";
-    } else {
-      const cnpjDigits = profCnpj.replace(/\D/g, "");
-      if (cnpjDigits.length !== 14) fieldErrors.profCnpj = "CNPJ deve ter 14 dígitos";
-      if (!profNomeFantasia.trim()) fieldErrors.profNomeFantasia = "Nome fantasia é obrigatório";
-      if (!profRazaoSocial.trim()) fieldErrors.profRazaoSocial = "Razão social é obrigatória";
-    }
-    return fieldErrors;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,25 +81,6 @@ export default function Auth() {
           return;
         }
 
-        // Validate type-specific fields
-        if (accountType === "empresa") {
-          const empresaErrors = validateEmpresaFields();
-          if (Object.keys(empresaErrors).length > 0) {
-            setErrors(empresaErrors);
-            setIsSubmitting(false);
-            return;
-          }
-        }
-
-        if (accountType === "profissional") {
-          const profErrors = validateProfissionalFields();
-          if (Object.keys(profErrors).length > 0) {
-            setErrors(profErrors);
-            setIsSubmitting(false);
-            return;
-          }
-        }
-
         if (!lgpdConsent) {
           setErrors({ lgpd: "Você deve aceitar a Política de Privacidade para continuar." });
           setIsSubmitting(false);
@@ -163,17 +93,7 @@ export default function Auth() {
           return;
         }
 
-        const empresaData = accountType === "empresa"
-          ? { cnpj: cnpj.replace(/\D/g, ""), razaoSocial, nomeFantasia, responsavel }
-          : undefined;
-
-        const profissionalData = accountType === "profissional"
-          ? tipoPessoa === "pf"
-            ? { tipoPessoa: "pf" as const, cpf: profCpf.replace(/\D/g, ""), nomeMae: profNomeMae, dataNascimento: profDataNascimento }
-            : { tipoPessoa: "pj" as const, cnpj: profCnpj.replace(/\D/g, ""), nomeFantasia: profNomeFantasia, razaoSocial: profRazaoSocial }
-          : undefined;
-
-        const { error } = await signUp(email, password, fullName, accountType, telefone, empresaData, profissionalData);
+        const { error } = await signUp(email, password, fullName, "usuario", telefone);
         if (error) {
           let message = error.message;
           if (error.message.includes("already registered")) {
@@ -200,50 +120,22 @@ export default function Auth() {
       <Header />
       <section className="pt-32 pb-20">
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="max-w-md mx-auto">
+          <div className="max-w-md mx-auto space-y-4">
             <div className="bg-card rounded-2xl border border-border p-8 shadow-sozo-lg">
               <h1 className="font-heading text-2xl font-bold text-foreground text-center mb-2">
                 {isLogin ? "Entrar" : "Criar Conta"}
               </h1>
               <p className="text-muted-foreground text-center mb-8">
-                {isLogin ? "Acesse sua conta para continuar" : "Preencha seus dados para criar sua conta"}
+                {isLogin ? "Acesse sua conta para continuar" : "Crie sua conta individual para acessar os testes"}
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {!isLogin && (
-                  <>
-                    {/* Account Type Selector */}
-                    <div className="space-y-2">
-                      <Label>Tipo de conta</Label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {accountTypes.map((type) => (
-                          <button
-                            key={type.value}
-                            type="button"
-                            onClick={() => setAccountType(type.value)}
-                            className={cn(
-                              "flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all text-center",
-                              accountType === type.value
-                                ? "border-primary bg-primary/10 text-primary"
-                                : "border-border hover:border-muted-foreground text-muted-foreground"
-                            )}
-                          >
-                            <type.icon className="w-5 h-5" />
-                            <span className="text-xs font-semibold">{type.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                      <p className="text-xs text-muted-foreground text-center">
-                        {accountTypes.find(t => t.value === accountType)?.description}
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="fullName">Nome completo</Label>
-                      <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome" maxLength={100} className={errors.fullName ? "border-destructive" : ""} />
-                      {errors.fullName && <p className="text-destructive text-sm">{errors.fullName}</p>}
-                    </div>
-                  </>
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName">Nome completo</Label>
+                    <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome" maxLength={100} className={errors.fullName ? "border-destructive" : ""} />
+                    {errors.fullName && <p className="text-destructive text-sm">{errors.fullName}</p>}
+                  </div>
                 )}
 
                 <div className="space-y-2">
@@ -286,31 +178,6 @@ export default function Auth() {
                       <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" className={errors.confirmPassword ? "border-destructive" : ""} />
                       {errors.confirmPassword && <p className="text-destructive text-sm">{errors.confirmPassword}</p>}
                     </div>
-
-                    {/* Empresa-specific fields */}
-                    {accountType === "empresa" && (
-                      <EmpresaSignupFields
-                        cnpj={cnpj} setCnpj={setCnpj}
-                        razaoSocial={razaoSocial} setRazaoSocial={setRazaoSocial}
-                        nomeFantasia={nomeFantasia} setNomeFantasia={setNomeFantasia}
-                        responsavel={responsavel} setResponsavel={setResponsavel}
-                        errors={errors}
-                      />
-                    )}
-
-                    {/* Profissional-specific fields */}
-                    {accountType === "profissional" && (
-                      <ProfissionalSignupFields
-                        tipoPessoa={tipoPessoa} setTipoPessoa={setTipoPessoa}
-                        cpf={profCpf} setCpf={setProfCpf}
-                        nomeMae={profNomeMae} setNomeMae={setProfNomeMae}
-                        dataNascimento={profDataNascimento} setDataNascimento={setProfDataNascimento}
-                        cnpj={profCnpj} setCnpj={setProfCnpj}
-                        nomeFantasia={profNomeFantasia} setNomeFantasia={setProfNomeFantasia}
-                        razaoSocial={profRazaoSocial} setRazaoSocial={setProfRazaoSocial}
-                        errors={errors}
-                      />
-                    )}
 
                     <div className="flex items-start gap-3 rounded-lg border border-border p-3">
                       <Checkbox
@@ -360,6 +227,28 @@ export default function Auth() {
                 )}
               </div>
             </div>
+
+            {/* CTA for enterprise/professional */}
+            <a
+              href={getSistemaUrl()}
+              className="flex items-center justify-between gap-3 bg-card rounded-2xl border border-border p-5 shadow-sozo hover:border-primary/50 hover:shadow-sozo-lg transition-all group cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex -space-x-2">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center border-2 border-card">
+                    <Building2 className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center border-2 border-card">
+                    <Stethoscope className="w-4 h-4 text-primary" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Sou empresa ou profissional</p>
+                  <p className="text-xs text-muted-foreground">Acessar o sistema de gestão</p>
+                </div>
+              </div>
+              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            </a>
           </div>
         </div>
       </section>
